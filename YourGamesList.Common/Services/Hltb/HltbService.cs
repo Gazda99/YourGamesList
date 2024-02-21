@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Lib.ServerTiming;
+using Microsoft.Extensions.Logging;
 using YourGamesList.Common.Http;
 using YourGamesList.Common.Services.Hltb.Requests;
 using YourGamesList.Common.Services.Hltb.Responses;
@@ -7,23 +8,29 @@ namespace YourGamesList.Common.Services.Hltb;
 
 public class HltbService : IHltbService
 {
+    private const string ServerTimingMetric = "hltb";
+
     private readonly ILogger<HltbService> _logger;
+    private readonly IServerTiming _serverTiming;
     private readonly HttpClient _httpClient;
 
 
-    public HltbService(ILogger<HltbService> logger, HttpClient httpClient)
+    public HltbService(ILogger<HltbService> logger, IServerTiming serverTiming, HttpClient httpClient)
     {
         _logger = logger;
+        _serverTiming = serverTiming;
         _httpClient = httpClient;
     }
 
     public async Task<HltbSearchResponse?> GetHowLongToBeatDataForGame(string gameName)
     {
+        using var _ = _serverTiming.TimeAction(ServerTimingMetric);
+
         _logger.LogInformation($"Getting HowLongToBeat data for game: {gameName}");
         var request = PrepareSearchRequestMessage(gameName);
         var res = await _httpClient.SendAsync(request);
         var content = await res.Content.ReadAsStringAsync();
-        
+
         try
         {
             var parsedResponse =
