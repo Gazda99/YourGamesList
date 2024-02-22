@@ -2,9 +2,9 @@
 
 public static class OptionsValidatorRules
 {
-    public static bool IsValidUrl(string urlToCheck)
+    public static bool IsValidUrl(string urlToCheck, UriKind uriKind = UriKind.Absolute)
     {
-        return Uri.TryCreate(urlToCheck, UriKind.Absolute, out var uriResult) &&
+        return Uri.TryCreate(urlToCheck, uriKind, out var uriResult) &&
                (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
     }
 }

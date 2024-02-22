@@ -17,7 +17,7 @@ public class TwitchAuthHttpClientOptionsValidator : AbstractValidator<TwitchAuth
         RuleFor(x => x.BaseAddress)
             .NotEmpty();
         RuleFor(x => x.BaseAddress)
-            .Must(OptionsValidatorRules.IsValidUrl)
+            .Must(x => OptionsValidatorRules.IsValidUrl(x))
             .WithMessage(x =>
                 $"{nameof(TwitchAuthHttpClientOptions.BaseAddress)} \"{x.BaseAddress}\" is not a valid URL");
     }
