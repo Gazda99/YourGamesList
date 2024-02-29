@@ -33,6 +33,7 @@ public static class AppBuilder
 
         //options
         builder.Services.AddValidatorsFromAssembly(typeof(AppBuilder).Assembly);
+        // builder.Services.AddValidatorsFromAssembly(typeof(AppBuilder).Assembly);
         builder.Services
             .AddOptionsWithFluentValidation<TwitchAuthOptions>(TwitchAuthOptions.OptionsName)
             .AddOptionsWithFluentValidation<TwitchAuthHttpClientOptions>(TwitchAuthHttpClientOptions.OptionsName)

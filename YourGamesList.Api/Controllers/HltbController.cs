@@ -1,14 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Filters;
-using YourGamesList.Api.Log;
 using YourGamesList.Common.Services.Hltb;
 using YourGamesList.Common.Services.Hltb.Model;
 
 namespace YourGamesList.Api.Controllers;
 
 [ApiController]
-[TypeFilter(typeof(InputsFilterAttribute))]
 [TypeFilter(typeof(YglExceptionFilterAttribute))]
 [Route("hltb")]
 public class HltbController : YglControllerBase
@@ -25,7 +23,6 @@ public class HltbController : YglControllerBase
     [HttpGet("getHltbData/{gameName}")]
     public async Task<IActionResult> GetHowLongToBeatDataForGame(string gameName)
     {
-        using var l1 = _logger.WithCorrelationId(InputArguments.CorrelationId);
         var hltbResponse = await _hltbService.GetHowLongToBeatDataForGame(gameName);
         return Ok(new HltbSimple(hltbResponse!.Data[0]));
     }

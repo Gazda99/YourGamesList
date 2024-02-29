@@ -6,10 +6,10 @@
 # Custom files
 
 # ygl wsl related scripts
-start_ygl_wsl.sh
-stop_ygl_wsl.sh
+wsl/start_ygl_wsl.sh
+wsl/stop_ygl_wsl.sh
+wsl/test.sh
 
-SeqData/
 
 serilog-output.txt
 TIPS.txt

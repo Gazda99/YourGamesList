@@ -2,14 +2,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Filters;
-using YourGamesList.Api.Log;
 using YourGamesList.Common.Services.TwitchAuth;
 using YourGamesList.Common.Services.TwitchAuth.Exceptions;
 
 namespace YourGamesList.Api.Controllers;
 
 [ApiController]
-[TypeFilter(typeof(InputsFilterAttribute))]
 [TypeFilter(typeof(YglExceptionFilterAttribute))]
 [Route("twitchAuth")]
 public class TwitchAuthController : YglControllerBase
@@ -26,7 +24,6 @@ public class TwitchAuthController : YglControllerBase
     [HttpPost("obtainAccessToken")]
     public async Task<IActionResult> ObtainAccessToken()
     {
-        using var l1 = _logger.WithCorrelationId(InputArguments.CorrelationId);
         try
         {
             var twitchAuthResponse = await _twitchAuthService.ObtainAccessToken();

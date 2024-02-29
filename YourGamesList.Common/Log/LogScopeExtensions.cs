@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using YourGamesList.Common.Http;
 
-namespace YourGamesList.Api.Log;
+namespace YourGamesList.Common.Log;
 
 public static class LogScopeExtensions
 {
