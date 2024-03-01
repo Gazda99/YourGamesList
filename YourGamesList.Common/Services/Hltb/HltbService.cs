@@ -14,12 +14,17 @@ public class HltbService : IHltbService
     private readonly IServerTiming _serverTiming;
     private readonly HttpClient _httpClient;
 
-
-    public HltbService(ILogger<HltbService> logger, IServerTiming serverTiming, HttpClient httpClient)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="logger"></param>
+    /// <param name="httpClientFactory">Needs named client: "HltbHttpClient"</param>
+    /// <param name="serverTiming"></param>
+    public HltbService(ILogger<HltbService> logger, IHttpClientFactory httpClientFactory, IServerTiming serverTiming)
     {
         _logger = logger;
         _serverTiming = serverTiming;
-        _httpClient = httpClient;
+        _httpClient = httpClientFactory.CreateClient("HltbHttpClient");
     }
 
     public async Task<HltbSearchResponse?> GetHowLongToBeatDataForGame(string gameName)

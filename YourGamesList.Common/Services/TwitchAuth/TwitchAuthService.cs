@@ -20,14 +20,23 @@ public class TwitchAuthService : ITwitchAuthService
     private readonly HttpClient _httpClient;
     private readonly IMemoryCache _memoryCache;
 
-    public TwitchAuthService(ILogger<TwitchAuthService> logger, IOptions<TwitchAuthOptions> options,
-        IServerTiming serverTiming, TimeProvider timeProvider, HttpClient httpClient, IMemoryCache memoryCache)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="logger"></param>
+    /// <param name="httpClientFactory">Needs named client: "TwitchAuthHttpClient"</param>
+    /// <param name="options"></param>
+    /// <param name="serverTiming"></param>
+    /// <param name="timeProvider"></param>
+    /// <param name="memoryCache"></param>
+    public TwitchAuthService(ILogger<TwitchAuthService> logger,  IHttpClientFactory httpClientFactory, IOptions<TwitchAuthOptions> options,
+        IServerTiming serverTiming, TimeProvider timeProvider,  IMemoryCache memoryCache)
     {
         _logger = logger;
         _serverTiming = serverTiming;
         _timeProvider = timeProvider;
         _options = options.Value;
-        _httpClient = httpClient;
+        _httpClient = httpClientFactory.CreateClient("TwitchAuthHttpClient");
         _memoryCache = memoryCache;
     }
 

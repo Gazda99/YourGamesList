@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using YourGamesList.Common.Options;
 using YourGamesList.Common.Options.Validators;
 
 namespace YourGamesList.Api.Options;

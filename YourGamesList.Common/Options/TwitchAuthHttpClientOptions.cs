@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using YourGamesList.Common.Options.Validators;
 
-namespace YourGamesList.Api.Options;
+namespace YourGamesList.Common.Options;
 
 public class TwitchAuthHttpClientOptions
 {

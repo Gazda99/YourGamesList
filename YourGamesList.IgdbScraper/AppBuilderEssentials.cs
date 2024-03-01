@@ -2,10 +2,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using YourGamesList.Api.Options;
 using YourGamesList.Common.Options;
 
-namespace YourGamesList.Api;
+namespace YourGamesList.IgdbScraper;
 
 public static class AppBuilderEssentials
 {
@@ -37,13 +36,8 @@ public static class AppBuilderEssentials
             httpClient.BaseAddress = new Uri(httpClientOptions.BaseAddress);
         });
 
-        builder.Services.AddHttpClient("HltbHttpClient", (serviceProvider, httpClient) =>
-        {
-            var httpClientOptions =
-                serviceProvider.GetRequiredService<IOptions<HltbHttpClientOptions>>().Value;
+        builder.Services.AddHttpClient("IgdbHttpClient", (serviceProvider, httpClient) => { });
 
-            httpClient.BaseAddress = new Uri(httpClientOptions.BaseAddress);
-        });
 
         return builder;
     }
