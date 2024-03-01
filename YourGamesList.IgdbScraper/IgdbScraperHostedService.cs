@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using YourGamesList.Common.Log;
 using YourGamesList.Common.Services.TwitchAuth;
 
 namespace YourGamesList.IgdbScraper;
@@ -26,6 +27,7 @@ public class IgdbScraperHostedService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        using var l = _logger.WithCorrelationId();
         _logger.LogInformation("Starting IGDB Scraper service.");
         var twitchToken = await _twitchAuthService.ObtainAccessToken(stoppingToken);
 
