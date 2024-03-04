@@ -6,6 +6,8 @@ using YourGamesList.Common.Options;
 using YourGamesList.Common.Options.Validators;
 using YourGamesList.Common.Services.Serilog;
 using YourGamesList.Common.Services.TwitchAuth;
+using YourGamesList.IgdbScraper.Options;
+using YourGamesList.IgdbScraper.Services;
 
 namespace YourGamesList.IgdbScraper;
 
@@ -29,18 +31,19 @@ public static class AppBuilder
 
         //options
         builder.Services.AddValidatorsFromAssembly(typeof(TwitchAuthOptionsValidator).Assembly);
+        builder.Services.AddValidatorsFromAssembly(typeof(IgdbHttpClientOptions).Assembly);
         builder.Services
             .AddOptionsWithFluentValidation<TwitchAuthOptions>(TwitchAuthOptions.OptionsName)
             .AddOptionsWithFluentValidation<TwitchAuthHttpClientOptions>(TwitchAuthHttpClientOptions.OptionsName)
+            .AddOptionsWithFluentValidation<IgdbHttpClientOptions>(IgdbHttpClientOptions.OptionsName)
             ;
-        //other services
-
 
         //http clients
         builder.AddHttpClients();
 
         //other services
         builder.Services.AddScoped<ITwitchAuthService, TwitchAuthService>();
+        builder.Services.AddScoped<IMaxIdChecker, MaxIdChecker>();
         builder.Services.AddHostedService<IgdbScraperHostedService>();
 
         var app = builder.Build();
