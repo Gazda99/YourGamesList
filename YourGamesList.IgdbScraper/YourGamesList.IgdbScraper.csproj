@@ -12,8 +12,4 @@
       <ProjectReference Include="..\YourGamesList.Common\YourGamesList.Common.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Services\Scraper\" />
-    </ItemGroup>
-
 </Project>
