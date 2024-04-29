@@ -10,7 +10,7 @@ public class Search : IHasChecksum
     public IdentityOrValue<Game> Game { get; set; }
     public string Name { get; set; }
     public IdentityOrValue<Platform> Platform { get; set; }
-    public DateTimeOffset? PublishedAt { get; set; }
+    public long? PublishedAt { get; set; }
     public IdentityOrValue<Theme> Theme { get; set; }
     public string Checksum { get; set; }
 }

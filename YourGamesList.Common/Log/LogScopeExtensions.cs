@@ -1,10 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
-using YourGamesList.Common.Http;
 
 namespace YourGamesList.Common.Log;
 
 public static class LogScopeExtensions
 {
+    private const string CorrelationIdPropertyName = "CorrelationId";
+
     public static IDisposable? With<T>(this ILogger<T> logger, string prop, string value)
     {
         return logger.BeginScope(
@@ -14,7 +15,7 @@ public static class LogScopeExtensions
     public static IDisposable? WithCorrelationId<T>(this ILogger<T> logger)
     {
         return logger.BeginScope(
-            new Dictionary<string, object> { [HeaderDefs.HeaderCorrelationIdName] = CreateCorrelationId() });
+            new Dictionary<string, object> { [CorrelationIdPropertyName] = CreateCorrelationId() });
     }
 
     public static IDisposable? WithCorrelationId<T>(this ILogger<T> logger, string? corId)
@@ -23,11 +24,11 @@ public static class LogScopeExtensions
             return logger.WithCorrelationId();
 
         return logger.BeginScope(
-            new Dictionary<string, object> { [HeaderDefs.HeaderCorrelationIdName] = corId });
+            new Dictionary<string, object> { [CorrelationIdPropertyName] = corId });
     }
 
     public static string CreateCorrelationId()
     {
-        return Guid.NewGuid().ToString("N");
+        return Guid.NewGuid().ToString("D");
     }
 }

@@ -34,7 +34,8 @@ public static class AppBuilder
         builder.Services.AddServerTiming();
 
         //options
-        builder.Services.AddValidatorsFromAssembly(typeof(HltbHttpClientOptionsValidator).Assembly);
+        builder.Services.AddValidatorsFromAssembly(typeof(YourGamesList.Api.Options.HltbHttpClientOptionsValidator)
+            .Assembly);
         builder.Services.AddValidatorsFromAssembly(typeof(YourGamesList.Common.Options.TwitchAuthOptionsValidator)
             .Assembly);
         builder.Services

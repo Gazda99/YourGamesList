@@ -28,6 +28,7 @@ public class YglExceptionFilterAttribute : IExceptionFilter, IActionFilter
     {
         _logger.LogWarning(context.Exception, "Exception filter fired.");
 
+        //TODO: Is this exception still being thrown by YGL app?
         if (context.Exception is InvalidRequestException invalidRequestException)
         {
             context.Result = new BadRequestObjectResult(invalidRequestException.Message);

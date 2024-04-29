@@ -8,4 +8,9 @@ public class TwitchAuthResult
     }
 
     public string AccessToken { get; init; }
+
+    public override string ToString()
+    {
+        return AccessToken;
+    }
 }

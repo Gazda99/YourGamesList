@@ -20,9 +20,9 @@ public class ExternalGame : ITimestamps, IIdentifier, IHasChecksum
 
     public string Checksum { get; set; }
     public long? Id { get; set; }
-    public DateTimeOffset? CreatedAt { get; set; }
+    public long? CreatedAt { get; set; }
 
-    public DateTimeOffset? UpdatedAt { get; set; }
+    public long? UpdatedAt { get; set; }
 }
 
 public enum ExternalGameMedia

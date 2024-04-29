@@ -30,7 +30,7 @@ public class Game : ITimestamps, IIdentifier, IHasChecksum
 
     public IdentitiesOrValues<ExternalGame> ExternalGames { get; set; }
 
-    public DateTimeOffset? FirstReleaseDate { get; set; }
+    public long? FirstReleaseDate { get; set; }
 
     public int? Follows { get; set; }
 
@@ -114,9 +114,9 @@ public class Game : ITimestamps, IIdentifier, IHasChecksum
 
     public long? Id { get; set; }
 
-    public DateTimeOffset? CreatedAt { get; set; }
+    public long? CreatedAt { get; set; }
 
-    public DateTimeOffset? UpdatedAt { get; set; }
+    public long? UpdatedAt { get; set; }
 }
 
 public enum Category

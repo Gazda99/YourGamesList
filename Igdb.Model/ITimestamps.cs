@@ -2,6 +2,6 @@ namespace Igdb.Model;
 
 public interface ITimestamps
 {
-    DateTimeOffset? CreatedAt { get; set; }
-    DateTimeOffset? UpdatedAt { get; set; }
+    long? CreatedAt { get; set; }
+    long? UpdatedAt { get; set; }
 }

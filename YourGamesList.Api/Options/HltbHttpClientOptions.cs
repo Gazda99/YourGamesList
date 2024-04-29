@@ -8,7 +8,7 @@ public class HltbHttpClientOptions
 {
     public const string OptionsName = nameof(HltbHttpClientOptions);
 
-    public string BaseAddress { get; set; } = string.Empty;
+    public string BaseAddress { get; init; } = string.Empty;
 }
 
 public class HltbHttpClientOptionsValidator : AbstractValidator<HltbHttpClientOptions>

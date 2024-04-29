@@ -30,12 +30,15 @@ public static class AppBuilder
         builder.Services.AddServerTiming();
 
         //options
-        builder.Services.AddValidatorsFromAssembly(typeof(TwitchAuthOptionsValidator).Assembly);
-        builder.Services.AddValidatorsFromAssembly(typeof(IgdbHttpClientOptions).Assembly);
+        builder.Services.AddValidatorsFromAssembly(typeof(YourGamesList.Common.Options.TwitchAuthOptionsValidator)
+            .Assembly);
+        builder.Services.AddValidatorsFromAssembly(typeof(YourGamesList.IgdbScraper.Options.IgdbHttpClientOptions)
+            .Assembly);
         builder.Services
             .AddOptionsWithFluentValidation<TwitchAuthOptions>(TwitchAuthOptions.OptionsName)
             .AddOptionsWithFluentValidation<TwitchAuthHttpClientOptions>(TwitchAuthHttpClientOptions.OptionsName)
             .AddOptionsWithFluentValidation<IgdbHttpClientOptions>(IgdbHttpClientOptions.OptionsName)
+            .AddOptionsWithFluentValidation<ScraperOptions>(ScraperOptions.OptionsName)
             ;
 
         //http clients
@@ -44,6 +47,7 @@ public static class AppBuilder
         //other services
         builder.Services.AddScoped<ITwitchAuthService, TwitchAuthService>();
         builder.Services.AddScoped<IMaxIdChecker, MaxIdChecker>();
+        builder.Services.AddScoped<IScraper, Scraper>();
         builder.Services.AddHostedService<IgdbScraperHostedService>();
 
         var app = builder.Build();

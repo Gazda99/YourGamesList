@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YourGamesList.Common.Tests"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YourGamesList.IgdbScraper", "YourGamesList.IgdbScraper\YourGamesList.IgdbScraper.csproj", "{EFC2A7F5-31FF-410E-B85E-42E65406DE1C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YourGamesList.IgdbScraper.Tests", "YourGamesList.IgdbScraper.Tests\YourGamesList.IgdbScraper.Tests.csproj", "{463EBA80-635C-4B62-B9AB-6FF628BA340B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{EFC2A7F5-31FF-410E-B85E-42E65406DE1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EFC2A7F5-31FF-410E-B85E-42E65406DE1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EFC2A7F5-31FF-410E-B85E-42E65406DE1C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{463EBA80-635C-4B62-B9AB-6FF628BA340B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{463EBA80-635C-4B62-B9AB-6FF628BA340B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{463EBA80-635C-4B62-B9AB-6FF628BA340B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{463EBA80-635C-4B62-B9AB-6FF628BA340B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

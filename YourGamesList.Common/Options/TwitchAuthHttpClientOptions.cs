@@ -7,7 +7,7 @@ public class TwitchAuthHttpClientOptions
 {
     public const string OptionsName = nameof(TwitchAuthHttpClientOptions);
 
-    public string BaseAddress { get; set; } = string.Empty;
+    public string BaseAddress { get; init; } = string.Empty;
 }
 
 public class TwitchAuthHttpClientOptionsValidator : AbstractValidator<TwitchAuthHttpClientOptions>

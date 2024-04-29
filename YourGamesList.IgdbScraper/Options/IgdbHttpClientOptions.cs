@@ -7,7 +7,7 @@ public class IgdbHttpClientOptions
 {
     public const string OptionsName = nameof(IgdbHttpClientOptions);
 
-    public string BaseAddress { get; set; } = string.Empty;
+    public string BaseAddress { get; init; } = string.Empty;
 }
 
 public class IgdbHttpClientOptionsValidator : AbstractValidator<IgdbHttpClientOptions>

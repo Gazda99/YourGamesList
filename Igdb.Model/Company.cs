@@ -2,7 +2,7 @@ namespace Igdb.Model;
 
 public class Company : ITimestamps, IIdentifier, IHasChecksum
 {
-    public DateTimeOffset? ChangeDate { get; set; }
+    public long? ChangeDate { get; set; }
     public ChangeDateCategory ChangeDateCategory { get; set; }
     public IdentityOrValue<Company> ChangedCompanyId { get; set; }
 
@@ -20,15 +20,15 @@ public class Company : ITimestamps, IIdentifier, IHasChecksum
     public IdentityOrValue<Company> Parent { get; set; }
     public IdentitiesOrValues<Game> Published { get; set; }
     public string Slug { get; set; }
-    public DateTimeOffset? StartDate { get; set; }
+    public long? StartDate { get; set; }
     public StartDateCategory? StartDateCategory { get; set; }
     public string Url { get; set; }
     public IdentitiesOrValues<CompanyWebsite> Websites { get; set; }
     public string Checksum { get; set; }
     public long? Id { get; set; }
 
-    public DateTimeOffset? CreatedAt { get; set; }
-    public DateTimeOffset? UpdatedAt { get; set; }
+    public long? CreatedAt { get; set; }
+    public long? UpdatedAt { get; set; }
 }
 
 public enum ChangeDateCategory

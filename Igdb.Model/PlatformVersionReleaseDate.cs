@@ -5,7 +5,7 @@ namespace Igdb.Model;
 public class PlatformVersionReleaseDate : ITimestamps, IIdentifier, IHasChecksum
 {
     public ReleaseDateCategory? Category { get; set; }
-    public DateTimeOffset? Date { get; set; }
+    public long? Date { get; set; }
     public string Human { get; set; }
 
     [JsonProperty("m")] public int? Month { get; set; }
@@ -17,6 +17,6 @@ public class PlatformVersionReleaseDate : ITimestamps, IIdentifier, IHasChecksum
 
     public string Checksum { get; set; }
     public long? Id { get; set; }
-    public DateTimeOffset? CreatedAt { get; set; }
-    public DateTimeOffset? UpdatedAt { get; set; }
+    public long? CreatedAt { get; set; }
+    public long? UpdatedAt { get; set; }
 }

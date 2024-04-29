@@ -12,27 +12,31 @@ public class IgdbScraperHostedService : BackgroundService
     private readonly ILogger<IgdbScraperHostedService> _logger;
     private readonly ITwitchAuthService _twitchAuthService;
     private readonly IMaxIdChecker _maxIdChecker;
+    private readonly IScraper _scraper;
 
 
     public IgdbScraperHostedService(
         ILogger<IgdbScraperHostedService> logger,
         ITwitchAuthService twitchAuthService,
-        IMaxIdChecker maxIdChecker)
+        IMaxIdChecker maxIdChecker,
+        IScraper scraper)
     {
         _logger = logger;
         _twitchAuthService = twitchAuthService;
         _maxIdChecker = maxIdChecker;
+        _scraper = scraper;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var l = _logger.WithCorrelationId();
         _logger.LogInformation("Starting IGDB Scraper service.");
-        var twitchToken = await _twitchAuthService.ObtainAccessToken(stoppingToken);
 
-        var x = await _maxIdChecker.GetCount<Game>(_twitchAuthService.GetClientId(), twitchToken.AccessToken);
-        _logger.LogInformation($"Max Id for Game is {x}");
+        var res = await _scraper.Scrape<Platform>(stoppingToken);
+        _logger.LogInformation(string.Join("\n", res.Select(x => x.Name)));
 
         _logger.LogInformation("IGDB Scraper service finished.");
+
+        //TODO: stop application after this method finishes
     }
 }

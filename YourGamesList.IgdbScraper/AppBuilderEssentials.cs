@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using YourGamesList.Common.Http;
 using YourGamesList.Common.Options;
 using YourGamesList.IgdbScraper.Options;
 
@@ -35,7 +36,7 @@ public static class AppBuilderEssentials
                 serviceProvider.GetRequiredService<IOptions<TwitchAuthHttpClientOptions>>().Value;
 
             httpClient.BaseAddress = new Uri(httpClientOptions.BaseAddress);
-        });
+        }).ConfigureLogging();
 
         builder.Services.AddHttpClient("IgdbHttpClient", (serviceProvider, httpClient) =>
         {
@@ -43,7 +44,7 @@ public static class AppBuilderEssentials
                 serviceProvider.GetRequiredService<IOptions<IgdbHttpClientOptions>>().Value;
 
             httpClient.BaseAddress = new Uri(httpClientOptions.BaseAddress);
-        });
+        }).ConfigureLogging();
 
 
         return builder;

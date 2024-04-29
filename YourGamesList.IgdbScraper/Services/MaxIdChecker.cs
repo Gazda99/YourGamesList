@@ -3,6 +3,7 @@ using Igdb.Model.Custom;
 using Igdb.Model.Helpers;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Common.Http;
+using YourGamesList.Common.Services.TwitchAuth;
 
 namespace YourGamesList.IgdbScraper.Services;
 
@@ -11,6 +12,7 @@ public class MaxIdChecker : IMaxIdChecker
     private const string MaxIdQueryBody = "fields id; sort id desc; limit 1;";
 
     private readonly ILogger<MaxIdChecker> _logger;
+    private readonly ITwitchAuthService _twitchAuthService;
     private readonly HttpClient _httpClient;
 
     /// <summary>
@@ -18,30 +20,36 @@ public class MaxIdChecker : IMaxIdChecker
     /// </summary>
     /// <param name="logger"></param>
     /// <param name="httpClientFactory">Needs named client: "IgdbHttpClient"</param>
-    public MaxIdChecker(ILogger<MaxIdChecker> logger, IHttpClientFactory httpClientFactory)
+    /// <param name="twitchAuthService"></param>
+    public MaxIdChecker(ILogger<MaxIdChecker> logger, IHttpClientFactory httpClientFactory,
+        ITwitchAuthService twitchAuthService)
     {
         _logger = logger;
+        _twitchAuthService = twitchAuthService;
         _httpClient = httpClientFactory.CreateClient("IgdbHttpClient");
     }
 
-    public async Task<long> GetMaxId<T>(string clientId, string bearerToken)
+    public async Task<long> GetMaxId<T>(CancellationToken cancellationToken = default)
     {
         var endpoint = IgdbEndpoints.GetEndpointBasedOnType<T>();
-        return await GetMaxId(clientId, bearerToken, endpoint);
+        return await GetMaxId(endpoint, cancellationToken);
     }
 
-    public async Task<long> GetMaxId(string clientId, string bearerToken, string endpoint)
+    // TODO: change return -1 to throw exception
+    public async Task<long> GetMaxId(string endpoint, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation($"Trying to find max id using endpoint: {endpoint}");
+
+        var bearerToken = await _twitchAuthService.ObtainAccessToken(cancellationToken);
 
         var message = HttpRequestMessageBuilder.Create
             .WithMethod(HttpMethod.Post)
             .WithUri(endpoint, uriKind: UriKind.Relative)
-            .WithHeaders(GetHeaderWithClientId(clientId))
-            .WithBearerToken(bearerToken)
+            .WithHeaders(GetHeaderWithClientId(_twitchAuthService.GetClientId()))
+            .WithBearerToken(bearerToken.ToString())
             .WithStringContent(MaxIdQueryBody)
             .Build();
-        var res = await _httpClient.SendAsync(message);
+        var res = await _httpClient.SendAsync(message, cancellationToken);
 
         if (res.StatusCode != HttpStatusCode.OK)
         {
@@ -50,7 +58,7 @@ public class MaxIdChecker : IMaxIdChecker
             return -1;
         }
 
-        var content = await res.Content.ReadAsStringAsync();
+        var content = await res.Content.ReadAsStringAsync(cancellationToken);
         var returnedObject = JsonConvert.DeserializeObject<IEnumerable<IdAndName>>(content) ?? Array.Empty<IdAndName>();
 
         if (!returnedObject.Any())
@@ -76,24 +84,26 @@ public class MaxIdChecker : IMaxIdChecker
         return first.Id.Value;
     }
 
-    public async Task<long> GetCount<T>(string clientId, string bearerToken)
+    public async Task<long> GetCount<T>(CancellationToken cancellationToken = default)
     {
         var endpoint = IgdbEndpoints.GetEndpointBasedOnType<T>();
-        return await GetCount(clientId, bearerToken, endpoint);
+        return await GetCount(endpoint, cancellationToken);
     }
 
-    public async Task<long> GetCount(string clientId, string bearerToken, string endpoint)
+    public async Task<long> GetCount(string endpoint, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation($"Trying to find count using endpoint: {endpoint}");
+
+        var bearerToken = await _twitchAuthService.ObtainAccessToken(cancellationToken);
 
         var message = HttpRequestMessageBuilder.Create
             .WithMethod(HttpMethod.Post)
             .WithUri(IgdbEndpoints.MultiQuery, uriKind: UriKind.Relative)
-            .WithHeaders(GetHeaderWithClientId(clientId))
-            .WithBearerToken(bearerToken)
+            .WithHeaders(GetHeaderWithClientId(_twitchAuthService.GetClientId()))
+            .WithBearerToken(bearerToken.ToString())
             .WithStringContent(CountQueryBody(endpoint))
             .Build();
-        var res = await _httpClient.SendAsync(message);
+        var res = await _httpClient.SendAsync(message, cancellationToken);
 
         if (res.StatusCode != HttpStatusCode.OK)
         {
@@ -102,7 +112,7 @@ public class MaxIdChecker : IMaxIdChecker
             return -1;
         }
 
-        var content = await res.Content.ReadAsStringAsync();
+        var content = await res.Content.ReadAsStringAsync(cancellationToken);
         var returnedObject = JsonConvert.DeserializeObject<IEnumerable<MultiQueryCount>>(content) ??
                              Array.Empty<MultiQueryCount>();
 

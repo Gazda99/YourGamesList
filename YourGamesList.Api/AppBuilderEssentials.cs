@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using YourGamesList.Api.Options;
+using YourGamesList.Common.Http;
 using YourGamesList.Common.Options;
 
 namespace YourGamesList.Api;
@@ -35,7 +36,7 @@ public static class AppBuilderEssentials
                 serviceProvider.GetRequiredService<IOptions<TwitchAuthHttpClientOptions>>().Value;
 
             httpClient.BaseAddress = new Uri(httpClientOptions.BaseAddress);
-        });
+        }).ConfigureLogging();
 
         builder.Services.AddHttpClient("HltbHttpClient", (serviceProvider, httpClient) =>
         {
@@ -43,7 +44,7 @@ public static class AppBuilderEssentials
                 serviceProvider.GetRequiredService<IOptions<HltbHttpClientOptions>>().Value;
 
             httpClient.BaseAddress = new Uri(httpClientOptions.BaseAddress);
-        });
+        }).ConfigureLogging();
 
         return builder;
     }
