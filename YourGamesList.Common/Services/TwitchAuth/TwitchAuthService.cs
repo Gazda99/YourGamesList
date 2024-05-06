@@ -49,7 +49,7 @@ public class TwitchAuthService : ITwitchAuthService
             && cachedResponse != null
             && cachedResponse.ExpiryDate > GetCurrentTimestampInSeconds())
         {
-            _logger.LogInformation("Obtained twitch auth data from cache.");
+            _logger.LogDebug("Obtained twitch auth data from cache.");
             return new TwitchAuthResult(cachedResponse.AccessToken);
         }
 

@@ -19,6 +19,7 @@
 
     <ItemGroup>
         <Folder Include="Installers\"/>
+        <Folder Include="Options\" />
         <Folder Include="Services\" />
     </ItemGroup>
 

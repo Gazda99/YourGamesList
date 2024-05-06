@@ -170,4 +170,67 @@ public static class IgdbEndpoints
 
         throw new ArgumentException($"Couldn't resolve endpoint for type: {type}", nameof(type));
     }
+
+    public static readonly string[] AllEndpoints = new[]
+    {
+        AgeRatings,
+        AgeRatingContentDescriptions,
+        AlternativeNames,
+        Artworks,
+        Characters,
+        CharacterMugShots,
+        Collections,
+        CollectionMembership,
+        CollectionMembershipType,
+        CollectionRelations,
+        CollectionRelationTypes,
+        CollectionType,
+        Companies,
+        CompanyLogos,
+        CompanyWebsites,
+        Covers,
+        Event,
+        EventLogos,
+        EventNetworks,
+        ExternalGames,
+        Franchises,
+        Games,
+        GameEngines,
+        GameEngineLogos,
+        GameLocalizations,
+        GameModes,
+        GameVersions,
+        GameVersionFeatures,
+        GameVersionFeatureValues,
+        GameVideos,
+        Genres,
+        InvolvedCompanies,
+        Keywords,
+        Languages,
+        LanguageSupports,
+        LanguageSupportTypes,
+        MultiplayerModes,
+        NetworkTypes,
+        Platforms,
+        PlatformFamilies,
+        PlatformLogos,
+        PlatformVersions,
+        PlatformVersionCompanies,
+        PlatformVersionReleaseDates,
+        PlatformWebsites,
+        PlayerPerspectives,
+        Regions,
+        ReleaseDates,
+        ReleaseDateStatus,
+        Screenshots,
+        Search,
+        Themes,
+        Websites,
+        MultiQuery
+    };
+
+    public static bool ValidateEndpoint(string endpoint)
+    {
+        return AllEndpoints.Contains(endpoint);
+    }
 }

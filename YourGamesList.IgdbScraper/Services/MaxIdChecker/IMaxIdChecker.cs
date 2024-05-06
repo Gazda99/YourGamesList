@@ -1,4 +1,4 @@
-﻿namespace YourGamesList.IgdbScraper.Services;
+﻿namespace YourGamesList.IgdbScraper.Services.MaxIdChecker;
 
 public interface IMaxIdChecker
 {

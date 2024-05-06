@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using YourGamesList.Api.Options;
 using YourGamesList.Common.Options;
 using YourGamesList.Common.Options.Validators;
 using YourGamesList.Common.Services.Hltb;
@@ -34,7 +33,7 @@ public static class AppBuilder
         builder.Services.AddServerTiming();
 
         //options
-        builder.Services.AddValidatorsFromAssembly(typeof(YourGamesList.Api.Options.HltbHttpClientOptionsValidator)
+        builder.Services.AddValidatorsFromAssembly(typeof(HltbHttpClientOptionsValidator)
             .Assembly);
         builder.Services.AddValidatorsFromAssembly(typeof(YourGamesList.Common.Options.TwitchAuthOptionsValidator)
             .Assembly);

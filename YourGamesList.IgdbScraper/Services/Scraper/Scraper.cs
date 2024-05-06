@@ -1,38 +1,30 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
-using Igdb.Model.Helpers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using YourGamesList.Common.Http;
 using YourGamesList.Common.Log;
 using YourGamesList.Common.Services.TwitchAuth;
 using YourGamesList.IgdbScraper.Options;
+using YourGamesList.IgdbScraper.Services.IgdbClient;
+using YourGamesList.IgdbScraper.Services.IgdbClient.Exceptions;
+using YourGamesList.IgdbScraper.Services.MaxIdChecker;
 
-namespace YourGamesList.IgdbScraper.Services;
+namespace YourGamesList.IgdbScraper.Services.Scraper;
 
 public class Scraper : IScraper
 {
     private readonly ILogger<Scraper> _logger;
-    private readonly HttpClient _httpClient;
-    private readonly ITwitchAuthService _twitchAuthService;
+    private readonly IIgdbClient _igdbClient;
     private readonly IMaxIdChecker _maxIdChecker;
     private readonly ScraperOptions _options;
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="httpClientFactory">Needs named client: "IgdbHttpClient"</param>
-    /// <param name="twitchAuthService"></param>
-    /// <param name="maxIdChecker"></param>
-    public Scraper(ILogger<Scraper> logger, IHttpClientFactory httpClientFactory,
-        IOptions<ScraperOptions> options,
-        ITwitchAuthService twitchAuthService, IMaxIdChecker maxIdChecker)
+
+    public Scraper(ILogger<Scraper> logger, IOptions<ScraperOptions> options, ITwitchAuthService twitchAuthService,
+        IIgdbClient igdbClient, IMaxIdChecker maxIdChecker)
     {
         _logger = logger;
-        _twitchAuthService = twitchAuthService;
-        _httpClient = httpClientFactory.CreateClient("IgdbHttpClient");
         _options = options.Value;
+        _igdbClient = igdbClient;
         _maxIdChecker = maxIdChecker;
     }
 
@@ -40,8 +32,6 @@ public class Scraper : IScraper
     {
         using var l = _logger.With("CurrentlyScraped", typeof(T).Name);
 
-        var accessToken = await _twitchAuthService.ObtainAccessToken(cancellationToken);
-        
         var maxConcurrentConnections = _options.RpsLimit;
         var delayBetweenRequestsInMilliseconds = _options.DelayBetweenRequestsInMilliseconds;
         var batchSize = _options.BathSize;
@@ -73,7 +63,7 @@ public class Scraper : IScraper
                     end = maxId;
                 }
 
-                tasks.Add(ScrapeSingleBatch<T>(bag, start, end, accessToken.ToString()));
+                tasks.Add(ScrapeSingleBatchWithRetry<T>(bag, start, end));
 
                 i = end + 1;
                 if (i >= maxId)
@@ -84,7 +74,6 @@ public class Scraper : IScraper
             }
 
             var results = await Task.WhenAll(tasks);
-            //Interlocked.Add(ref currentTotal, results.Sum());
             currentTotal += results.Sum();
 
             PrintProgress<T>(currentTotal, totalCount);
@@ -102,29 +91,36 @@ public class Scraper : IScraper
         return bag;
     }
 
+    private async Task<int> ScrapeSingleBatchWithRetry<T>(ConcurrentBag<T> bag, long start, long end)
+    {
+        const int maxAttempts = 2;
+        var attempts = 0;
+        do
+        {
+            try
+            {
+                attempts++;
+                return await ScrapeSingleBatch<T>(bag, start, end);
+            }
+            catch (IgdbClientException ex) when (ex is
+                                                 {
+                                                     Reason: IgdbClientExceptionReason.StatusCodeNotSuccess,
+                                                     StatusCode: 429
+                                                 })
+            {
+                if (attempts >= maxAttempts)
+                    throw;
 
-    private async Task<int> ScrapeSingleBatch<T>(ConcurrentBag<T> bag, long start, long end, string bearerToken)
+                await Task.Delay((attempts + 1) * 100);
+            }
+        } while (true);
+    }
+
+    private async Task<int> ScrapeSingleBatch<T>(ConcurrentBag<T> bag, long start, long end)
     {
         var requestBodyContent = $"fields *; where id >= {start} & id <= {end}; limit {_options.BathSize};";
 
-        var uri = IgdbEndpoints.GetEndpointBasedOnType<T>();
-
-        var message = HttpRequestMessageBuilder.Create
-            .WithMethod(HttpMethod.Post)
-            .WithUri(uri, uriKind: UriKind.Relative)
-            .WithHeaders(GetHeaderWithClientId(_twitchAuthService.GetClientId()))
-            .WithBearerToken(bearerToken)
-            .WithStringContent(requestBodyContent)
-            .Build();
-
-        _logger.LogInformation($"Scraping IDs from {start} to {end} ");
-
-        var res = await _httpClient.SendAsync(message);
-        var content = await res.Content.ReadAsStringAsync();
-
-        var igdbEntities =
-            JsonConvert.DeserializeObject<IEnumerable<T>>(content, IgdbSerializers.IgdbResponseSerializer)!;
-
+        var igdbEntities = await _igdbClient.FetchData<T>(requestBodyContent);
         var count = igdbEntities.Count();
         _logger.LogInformation($"Obtained {count} entities of type '{typeof(T)}'");
 
@@ -151,13 +147,5 @@ public class Scraper : IScraper
     {
         var progress = (double) currentTotal / totalCount * 100;
         _logger.LogInformation($"Total progress of {typeof(T)} {Math.Round(progress, 2)}% {currentTotal}/{totalCount}");
-    }
-
-    private static Dictionary<string, string> GetHeaderWithClientId(string clientId)
-    {
-        return new Dictionary<string, string>()
-        {
-            { "Client-ID", clientId }
-        };
     }
 }

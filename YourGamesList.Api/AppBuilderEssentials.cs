@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using YourGamesList.Api.Options;
 using YourGamesList.Common.Http;
 using YourGamesList.Common.Options;
 
