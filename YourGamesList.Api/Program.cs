@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Builder;
-using YourGamesList.Common.Middleware;
+using YourGamesList.Common.Middlewares;
 
 namespace YourGamesList.Api;
 
@@ -14,7 +14,7 @@ public static class Program
 
         app.UseServerTiming();
         app.UseMiddleware<CorrelationIdMiddleware>();
-        app.UseMiddleware<ServerTimingMiddleware>();
+        app.UseMiddleware<ServerTimingsMiddleware>();
 
         app.MapControllers();
 

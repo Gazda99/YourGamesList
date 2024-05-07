@@ -1,17 +1,13 @@
 ﻿using FluentValidation;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using YourGamesList.Common.Options.Validators;
 using YourGamesList.Common.Services.Serilog;
-using YourGamesList.Common.Services.Swagger;
-using YourGamesList.Services.Hltb.Options;
-using YourGamesList.Services.Hltb.Services;
+using YourGamesList.Services.Igdb.HostedServices;
+using YourGamesList.Services.Igdb.Options;
+using YourGamesList.Services.Igdb.Services;
 using YourGamesList.Services.Twitch.Options;
 using YourGamesList.Services.Twitch.Services;
 
-
-namespace YourGamesList.Api;
+namespace YourGamesList.Application.IgdbScraper;
 
 public static class AppBuilder
 {
@@ -27,8 +23,6 @@ public static class AppBuilder
 
         builder.Services.AddControllers();
         builder.Services.AddMemoryCache();
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerDefinitions();
 
         builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
         builder.Services.AddServerTiming();
@@ -39,18 +33,20 @@ public static class AppBuilder
             .AddOptionsWithFluentValidation<TwitchAuthOptions>(TwitchAuthOptions.OptionsName)
             .AddOptionsWithFluentValidation<TwitchAuthHttpClientOptions>(TwitchAuthHttpClientOptions.OptionsName);
 
-        builder.Services.AddValidatorsFromAssembly(typeof(HltbHttpClientOptionsValidator).Assembly);
-        builder.Services.AddOptionsWithFluentValidation<HltbHttpClientOptions>(HltbHttpClientOptions.OptionsName);
-
-        //other services
-
+        builder.Services.AddValidatorsFromAssembly(typeof(IgdbHttpClientOptions).Assembly);
+        builder.Services
+            .AddOptionsWithFluentValidation<IgdbHttpClientOptions>(IgdbHttpClientOptions.OptionsName)
+            .AddOptionsWithFluentValidation<ScraperOptions>(ScraperOptions.OptionsName);
 
         //http clients
         builder.AddHttpClients();
 
         //other services
         builder.Services.AddScoped<ITwitchAuthService, TwitchAuthService>();
-        builder.Services.AddScoped<IHltbService, HltbService>();
+        builder.Services.AddScoped<IIgdbClient, IgdbClient>();
+        builder.Services.AddScoped<IMaxIdChecker, MaxIdChecker>();
+        builder.Services.AddScoped<IScraper, Scraper>();
+        builder.Services.AddHostedService<IgdbScraperHostedService>();
 
         var app = builder.Build();
 

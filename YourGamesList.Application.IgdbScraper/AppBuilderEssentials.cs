@@ -1,12 +1,9 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using YourGamesList.Common.Http;
-using YourGamesList.Services.Hltb.Options;
+using YourGamesList.Services.Igdb.Options;
 using YourGamesList.Services.Twitch.Options;
 
-namespace YourGamesList.Api;
+namespace YourGamesList.Application.IgdbScraper;
 
 public static class AppBuilderEssentials
 {
@@ -38,13 +35,14 @@ public static class AppBuilderEssentials
             httpClient.BaseAddress = new Uri(httpClientOptions.BaseAddress);
         }).ConfigureLogging();
 
-        builder.Services.AddHttpClient("HltbHttpClient", (serviceProvider, httpClient) =>
+        builder.Services.AddHttpClient("IgdbHttpClient", (serviceProvider, httpClient) =>
         {
             var httpClientOptions =
-                serviceProvider.GetRequiredService<IOptions<HltbHttpClientOptions>>().Value;
+                serviceProvider.GetRequiredService<IOptions<IgdbHttpClientOptions>>().Value;
 
             httpClient.BaseAddress = new Uri(httpClientOptions.BaseAddress);
         }).ConfigureLogging();
+
 
         return builder;
     }

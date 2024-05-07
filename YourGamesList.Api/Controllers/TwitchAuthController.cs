@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Filters;
-using YourGamesList.Common.Services.TwitchAuth;
-using YourGamesList.Common.Services.TwitchAuth.Exceptions;
+using YourGamesList.Services.Twitch.Exceptions;
+using YourGamesList.Services.Twitch.Services;
 
 namespace YourGamesList.Api.Controllers;
 
@@ -28,6 +28,8 @@ public class TwitchAuthController : YglControllerBase
         {
             var twitchAuthResponse = await _twitchAuthService.ObtainAccessToken();
             _logger.LogInformation(twitchAuthResponse.AccessToken);
+            
+            return Ok(twitchAuthResponse.AccessToken);
         }
         catch (TwitchAuthException ex)
         {
@@ -35,6 +37,5 @@ public class TwitchAuthController : YglControllerBase
             return StatusCode((int) HttpStatusCode.ServiceUnavailable);
         }
 
-        return Ok();
     }
 }
