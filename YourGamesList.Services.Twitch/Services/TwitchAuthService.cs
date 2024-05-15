@@ -6,7 +6,6 @@ using YourGamesList.Common;
 using YourGamesList.Common.Http;
 using YourGamesList.Services.Twitch.Exceptions;
 using YourGamesList.Services.Twitch.Internal.Model;
-using YourGamesList.Services.Twitch.Model;
 using YourGamesList.Services.Twitch.Options;
 
 namespace YourGamesList.Services.Twitch.Services;
@@ -43,7 +42,7 @@ public class TwitchAuthService : ITwitchAuthService
     }
 
 
-    public async Task<TwitchAuthResult> ObtainAccessToken(CancellationToken token = default)
+    public async Task<string> ObtainAccessToken(CancellationToken token = default)
     {
         using var _ = _serverTiming.TimeAction(ServerTimingMetric);
 
@@ -52,7 +51,7 @@ public class TwitchAuthService : ITwitchAuthService
             && cachedResponse.ExpiryDate > GetCurrentTimestampInSeconds())
         {
             _logger.LogDebug("Obtained twitch auth data from cache.");
-            return new TwitchAuthResult(cachedResponse.AccessToken);
+            return cachedResponse.AccessToken;
         }
 
         var message = new HttpRequestMessageBuilder()
@@ -83,7 +82,7 @@ public class TwitchAuthService : ITwitchAuthService
 
         SetCacheEntry(twitchAuthResponse);
 
-        return new TwitchAuthResult(twitchAuthResponse.AccessToken);
+        return twitchAuthResponse.AccessToken;
     }
 
     private void SetCacheEntry(TwitchAuthResponse twitchAuthResponse)

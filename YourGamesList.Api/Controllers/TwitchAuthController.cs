@@ -26,10 +26,10 @@ public class TwitchAuthController : YglControllerBase
     {
         try
         {
-            var twitchAuthResponse = await _twitchAuthService.ObtainAccessToken();
-            _logger.LogInformation(twitchAuthResponse.AccessToken);
+            var twitchAuthToken = await _twitchAuthService.ObtainAccessToken();
+            _logger.LogDebug($"Access token: {twitchAuthToken}");
             
-            return Ok(twitchAuthResponse.AccessToken);
+            return Ok(twitchAuthToken);
         }
         catch (TwitchAuthException ex)
         {

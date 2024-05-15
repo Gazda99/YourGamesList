@@ -1,10 +1,8 @@
-﻿using YourGamesList.Services.Twitch.Model;
-
-namespace YourGamesList.Services.Twitch.Services;
+﻿namespace YourGamesList.Services.Twitch.Services;
 
 public interface ITwitchAuthService
 {
-    Task<TwitchAuthResult> ObtainAccessToken(CancellationToken token = default);
+    Task<string> ObtainAccessToken(CancellationToken token = default);
 
     string GetClientId();
 }

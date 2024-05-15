@@ -25,9 +25,9 @@ public class TwitchAuthServiceTests
         var logger = Substitute.For<ILogger<TwitchAuthService>>();
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
         var mockHttpMessageHandler = new MockHttpMessageHandler();
-        var accessToken = Any.String();
+        var expectedAccessToken = Any.String();
         var mockedResponse = mockHttpMessageHandler
-            .PrepareMockResponse(TwitchResponse(accessToken, (DateTime.UtcNow.AddMonths(2) - DateTime.UtcNow).Seconds))
+            .PrepareMockResponse(TwitchResponse(expectedAccessToken, (DateTime.UtcNow.AddMonths(2) - DateTime.UtcNow).Seconds))
             .ForMethod(HttpMethod.Post);
 
         var client = mockHttpMessageHandler.ToHttpClient();
@@ -47,12 +47,12 @@ public class TwitchAuthServiceTests
 
         //WHEN
 
-        var twitchAuthResult = await twitchAuthService.ObtainAccessToken();
+        var accessToken = await twitchAuthService.ObtainAccessToken();
 
         //THEN
 
-        twitchAuthResult.Should().NotBeNull();
-        twitchAuthResult.AccessToken.Should().BeEquivalentTo(accessToken);
+        accessToken.Should().NotBeNull();
+        accessToken.Should().BeEquivalentTo(expectedAccessToken);
         mockHttpMessageHandler.CountResponseReturns(mockedResponse).Should().Be(1);
         Received.InOrder(() =>
         {
@@ -69,7 +69,7 @@ public class TwitchAuthServiceTests
         //GIVEN
         var logger = Substitute.For<ILogger<TwitchAuthService>>();
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
-        var accessToken = Any.String();
+        var expectedAccessToken = Any.String();
         var client = Substitute.For<HttpClient>();
         httpClientFactory.CreateClient("TwitchAuthHttpClient").Returns(client);
         var clientId = Any.String();
@@ -80,7 +80,7 @@ public class TwitchAuthServiceTests
         var serverTiming = Substitute.For<IServerTiming>();
         var timeProvider = Substitute.For<TimeProvider>();
         var memoryCache = Substitute.For<IMemoryCache>();
-        var twitchAuthCacheEntry = new TwitchAuthCacheEntry(accessToken, long.MaxValue);
+        var twitchAuthCacheEntry = new TwitchAuthCacheEntry(expectedAccessToken, long.MaxValue);
         memoryCache.TryGetValue(GetCacheKey(clientId), out Arg.Any<TwitchAuthCacheEntry?>())
             .Returns(x =>
             {
@@ -93,12 +93,12 @@ public class TwitchAuthServiceTests
 
         //WHEN
 
-        var twitchAuthResult = await twitchAuthService.ObtainAccessToken();
+        var accessToken = await twitchAuthService.ObtainAccessToken();
 
         //THEN
 
-        twitchAuthResult.Should().NotBeNull();
-        twitchAuthResult.AccessToken.Should().BeEquivalentTo(accessToken);
+        accessToken.Should().NotBeNull();
+        accessToken.Should().BeEquivalentTo(expectedAccessToken);
 
         Received.InOrder(() =>
         {

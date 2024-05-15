@@ -11,4 +11,8 @@
       <ProjectReference Include="..\YourGamesList.Common\YourGamesList.Common.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Model\" />
+    </ItemGroup>
+
 </Project>

@@ -52,12 +52,12 @@ public class IgdbClient : IIgdbClient
     {
         try
         {
-            var bearerToken = await _twitchAuthService.ObtainAccessToken();
+            var twitchAccessToken = await _twitchAuthService.ObtainAccessToken();
             var message = HttpRequestMessageBuilder.Create
                 .WithMethod(HttpMethod.Post)
                 .WithUri(endpoint, uriKind: UriKind.Relative)
                 .WithHeaders(GetHeaderWithClientId(_twitchAuthService.GetClientId()))
-                .WithBearerToken(bearerToken.ToString())
+                .WithBearerToken(twitchAccessToken)
                 .WithStringContent(requestBody)
                 .Build();
 

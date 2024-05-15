@@ -80,7 +80,6 @@ public class Scraper : IScraper
             await WaitIfNeeded(requestsTime, delayBetweenRequestsInMilliseconds);
         }
 
-
         if (bag.Count == totalCount)
             _logger.LogInformation($"Obtained {bag.Count} items, when expected {totalCount} of type: {typeof(T)}.");
         else

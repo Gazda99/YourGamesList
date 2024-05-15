@@ -46,6 +46,7 @@ public class HltbService : IHltbService
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Could not parse HowLongToBeatResponse. Response: {content}");
+            //TODO: throw meaningful exception
             return null;
         }
     }
