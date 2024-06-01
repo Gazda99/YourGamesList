@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 
 namespace YourGamesList.Common.Services.Swagger;
 
+[ExcludeFromCodeCoverage]
 public static class SwaggerInstaller
 {
     public static IServiceCollection AddSwaggerDefinitions(this IServiceCollection services)

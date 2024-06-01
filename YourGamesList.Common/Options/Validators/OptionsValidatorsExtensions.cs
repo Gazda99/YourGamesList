@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace YourGamesList.Common.Options.Validators;
 
+[ExcludeFromCodeCoverage]
 public static class OptionsValidatorsExtensions
 {
     public static IServiceCollection AddOptionsWithFluentValidation<TOptions>(this IServiceCollection services,

@@ -1,9 +1,11 @@
-﻿using FluentValidation;
+﻿using System.Diagnostics.CodeAnalysis;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace YourGamesList.Common.Options.Validators;
 
+[ExcludeFromCodeCoverage]
 public class FluentValidateOptions<TOptions> : IValidateOptions<TOptions> where TOptions : class
 {
     private readonly IServiceProvider _serviceProvider;

@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 
 namespace YourGamesList.Common.Services.Serilog;
 
+[ExcludeFromCodeCoverage]
 public static class SerilogInstaller
 {
     public static ConfigureHostBuilder AddLogger(this ConfigureHostBuilder host, IConfiguration configuration)
