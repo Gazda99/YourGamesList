@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Refit;
 using Serilog;
+using YourGamesList.Api.Services.Igdb;
+using YourGamesList.Api.Services.Igdb.Options;
 using YourGamesList.Api.Services.Twitch;
 using YourGamesList.Api.Services.Twitch.Options;
 using YourGamesList.Common.Http;
@@ -42,6 +44,7 @@ public static partial class AppBuilder
         builder.Services.AddRequestModelValidators();
 
         builder.Services.AddTwitchAuthService();
+        builder.Services.AddIgdbService();
 
         var app = builder.Build();
         return app;
@@ -69,6 +72,21 @@ public static partial class AppBuilder
             .ConfigureLogging();
 
         services.AddScoped<ITwitchAuthService, TwitchAuthService>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddIgdbService(this IServiceCollection services)
+    {
+        services.AddOptionsWithFluentValidation<IgdbHttpClientOptions, IgdbHttpClientOptionsValidator>(IgdbHttpClientOptions.SectionName);
+        services.AddRefitClient<IIgdbApi>().ConfigureHttpClient((provider, client) =>
+            {
+                var options = provider.GetRequiredService<IOptions<IgdbHttpClientOptions>>();
+                client.BaseAddress = new Uri(options.Value.BaseAddress);
+            })
+            .ConfigureLogging();
+
+        services.AddScoped<IIgdbService, IgdbService>();
 
         return services;
     }

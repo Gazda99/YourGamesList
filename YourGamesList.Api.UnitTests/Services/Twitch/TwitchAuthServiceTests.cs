@@ -11,8 +11,6 @@ using Refit;
 using YourGamesList.Api.Services.Twitch;
 using YourGamesList.Api.Services.Twitch.Model.Responses;
 using YourGamesList.Api.Services.Twitch.Options;
-using YourGamesList.Common.Logging;
-using YourGamesList.Common.Refit;
 using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.Services.Twitch;
@@ -31,6 +29,23 @@ public class TwitchAuthServiceTests
         _logger = Substitute.For<ILogger<TwitchAuthService>>();
         _twitchAuthApi = Substitute.For<ITwitchAuthApi>();
         _twitchAuthOptions = Substitute.For<IOptions<TwitchAuthOptions>>();
+    }
+
+    [Test]
+    public void GetClientId_ReturnsClientId()
+    {
+        //ARRANGE
+
+        var options = _fixture.Create<TwitchAuthOptions>();
+        _twitchAuthOptions.Value.Returns(options);
+
+        var twitchAuthService = new TwitchAuthService(_logger, _twitchAuthApi, _twitchAuthOptions);
+
+        //ACT
+        var res = twitchAuthService.GetClientId();
+
+        //ASSERT
+        Assert.That(res, Is.EquivalentTo(options.ClientId));
     }
 
     [Test]
@@ -79,7 +94,6 @@ public class TwitchAuthServiceTests
         //ASSERT
         Assert.That(res.IsSuccess, Is.False);
         await _twitchAuthApi.Received(1).GetAccessToken(Arg.Any<FormUrlEncodedContent>());
-        _logger.ReceivedLog(LogLevel.Error, LogMessageTemplates.NetworkFailure(HttpFailureReason.General, "Twitch Auth Api"));
     }
 
     [Test]

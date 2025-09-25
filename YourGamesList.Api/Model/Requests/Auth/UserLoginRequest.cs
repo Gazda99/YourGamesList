@@ -2,6 +2,7 @@
 
 namespace YourGamesList.Api.Model.Requests.Auth;
 
+//TODO: This is only a placeholder for now
 public class UserLoginRequest
 {
     public string? Username { get; init; }
