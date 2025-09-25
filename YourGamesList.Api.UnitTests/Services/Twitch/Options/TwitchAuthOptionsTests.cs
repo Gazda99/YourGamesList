@@ -31,7 +31,6 @@ public class TwitchAuthOptionsTests
         Assert.That(res.IsValid, Is.True);
     }
 
-
     [Test]
     public void Validate_InvalidClientId_ReturnsFalse()
     {
