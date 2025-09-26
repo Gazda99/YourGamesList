@@ -6,6 +6,9 @@ using YourGamesList.Common.Caching;
 
 namespace YourGamesList.Api.Services.Twitch;
 
+/// <summary>
+/// Decorator for ITwitchAuthService that adds caching functionality.
+/// </summary>
 public class TwitchAuthServiceWithCaching : ITwitchAuthService
 {
     private const string TwitchAuthTokenCacheKey = "twitch-auth-token";
