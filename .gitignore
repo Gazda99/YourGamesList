@@ -19,7 +19,6 @@ launchSettings.json
 appsettings.json
 appsettings.dev.json
 serilogsettings.dev.json
-serilogsettings.debug.json
 HttpTester.http
 
 http-client.env.json
