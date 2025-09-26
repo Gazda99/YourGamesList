@@ -21,10 +21,10 @@ public class SearchGamesController : YourGamesListBaseController
         _igdbService = igdbService;
     }
 
-    [HttpGet("search")]
+    [HttpGet("games")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [TypeFilter(typeof(RequestValidatorAttribute<SearchGamesRequest>), Arguments = ["searchGamesRequest"])]
-    public async Task<IActionResult> Login(SearchGamesRequest searchGamesRequest)
+    public async Task<IActionResult> SearchGameByName(SearchGamesRequest searchGamesRequest)
     {
         var gameName = searchGamesRequest.GameName.Trim();
 
