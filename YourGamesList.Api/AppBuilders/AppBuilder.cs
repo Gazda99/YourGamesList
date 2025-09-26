@@ -11,6 +11,7 @@ using YourGamesList.Api.Services.Igdb;
 using YourGamesList.Api.Services.Igdb.Options;
 using YourGamesList.Api.Services.Twitch;
 using YourGamesList.Api.Services.Twitch.Options;
+using YourGamesList.Common.Caching;
 using YourGamesList.Common.Http;
 using YourGamesList.Common.Options.Validators;
 
@@ -39,6 +40,7 @@ public static partial class AppBuilder
         //Base services
         builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
         builder.Services.AddMemoryCache();
+        builder.Services.AddSingleton<ICacheProvider, InMemoryCacheProvider>();
 
         //Other services
         builder.Services.AddRequestModelValidators();
@@ -71,7 +73,13 @@ public static partial class AppBuilder
             })
             .ConfigureLogging();
 
-        services.AddScoped<ITwitchAuthService, TwitchAuthService>();
+        services.AddScoped<TwitchAuthService>();
+        services.AddScoped<ITwitchAuthService>(x =>
+            new TwitchAuthServiceWithCaching(
+                x.GetRequiredService<ILogger<TwitchAuthServiceWithCaching>>(),
+                x.GetRequiredService<ICacheProvider>(),
+                x.GetRequiredService<TwitchAuthService>()
+            ));
 
         return services;
     }

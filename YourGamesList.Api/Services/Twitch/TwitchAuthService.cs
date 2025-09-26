@@ -9,19 +9,6 @@ using YourGamesList.Common.Refit;
 
 namespace YourGamesList.Api.Services.Twitch;
 
-public interface ITwitchAuthService
-{
-    /// <summary>
-    /// Returns Client ID
-    /// </summary>
-    string GetClientId();
-
-    /// <summary>
-    /// Calls Twitch Auth Service in order to obtain Access Token
-    /// </summary>
-    Task<ValueResult<string>> GetAccessToken();
-}
-
 public class TwitchAuthService : ITwitchAuthService
 {
     private readonly ILogger<TwitchAuthService> _logger;
@@ -52,7 +39,8 @@ public class TwitchAuthService : ITwitchAuthService
             ClientSecret = _twitchAuthOptions.Value.ClientSecret
         };
 
-        var callResult = await _twitchAuthApi.TryRefit(() => _twitchAuthApi.GetAccessToken(request.ToFormUrlEncodedContent()), _logger, "Twitch Auth Api");
+        var callResult = await _twitchAuthApi.TryRefit(
+            () => _twitchAuthApi.GetAccessToken(request.ToFormUrlEncodedContent()), _logger, "Twitch Auth Api");
 
         if (callResult.IsFailure)
         {
