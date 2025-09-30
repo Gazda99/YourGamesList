@@ -43,7 +43,7 @@ public class IgdbService : IIgdbService
         var ids = string.Join(",", gameIds);
         var query = $"where id = ({ids}); {RequestGameFields};";
 
-        _logger.LogInformation($"Searching for games with ids: '{ids}'");
+        _logger.LogInformation($"Searching for '{gameIds.Length}' games with ids: '{ids}'");
 
         return await CallIgdb<IgdbGame[]>(IgdbEndpoints.Game, query);
     }
