@@ -4,7 +4,7 @@ using YourGamesList.Api.Model.Requests.SearchGames;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.SearchGames;
 
-public class SearchGamesRequestTests
+public class SearchGameByNameRequestTests
 {
     private IFixture _fixture;
 
@@ -18,11 +18,11 @@ public class SearchGamesRequestTests
     public void Validate_ValidOptions_ReturnsTrue()
     {
         //ARRANGE
-        var options = _fixture.Build<SearchGamesRequest>()
+        var options = _fixture.Build<SearchGameByNameRequest>()
             .WithAutoProperties()
             .Create();
 
-        var validator = new SearchGamesRequestValidator();
+        var validator = new SearchGameByNameRequestValidator();
 
         //ACT
         var res = validator.Validate(options);
@@ -37,12 +37,12 @@ public class SearchGamesRequestTests
     public void Validate_InvalidGameName_ReturnsFalse(string invalidGameName)
     {
         //ARRANGE
-        var options = _fixture.Build<SearchGamesRequest>()
+        var options = _fixture.Build<SearchGameByNameRequest>()
             .With(x => x.GameName, invalidGameName)
             .WithAutoProperties()
             .Create();
 
-        var validator = new SearchGamesRequestValidator();
+        var validator = new SearchGameByNameRequestValidator();
 
         //ACT
         var res = validator.Validate(options);
@@ -50,6 +50,6 @@ public class SearchGamesRequestTests
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(SearchGamesRequest.GameName)));
+        Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(SearchGameByNameRequest.GameName)));
     }
 }

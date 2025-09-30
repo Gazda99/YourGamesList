@@ -25,7 +25,8 @@ public static partial class AppBuilder
 
         //Search Games controller validators
         services
-            .AddScoped<IValidator<SearchGamesRequest>, SearchGamesRequestValidator>()
+            .AddScoped<IValidator<SearchGameByNameRequest>, SearchGameByNameRequestValidator>()
+            .AddScoped<IValidator<SearchGamesByIdsRequest>, SearchGamesByIdsRequestValidator>()
             ;
 
         return services;

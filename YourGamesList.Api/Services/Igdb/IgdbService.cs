@@ -11,6 +11,7 @@ namespace YourGamesList.Api.Services.Igdb;
 public interface IIgdbService
 {
     Task<ValueResult<IgdbGame[]>> GetGamesByName(string gameName);
+    Task<ValueResult<IgdbGame[]>> GetGamesByIds(int[] gameIds);
 }
 
 public class IgdbService : IIgdbService
@@ -33,6 +34,16 @@ public class IgdbService : IIgdbService
         var query = $"where name ~ *\"{gameName}\"*; {RequestGameFields}; sort rating_count desc;";
 
         _logger.LogInformation($"Searching for game '{gameName}'");
+
+        return await CallIgdb<IgdbGame[]>(IgdbEndpoints.Game, query);
+    }
+
+    public async Task<ValueResult<IgdbGame[]>> GetGamesByIds(int[] gameIds)
+    {
+        var ids = string.Join(",", gameIds);
+        var query = $"where id = ({ids}); {RequestGameFields};";
+
+        _logger.LogInformation($"Searching for games with ids: '{ids}'");
 
         return await CallIgdb<IgdbGame[]>(IgdbEndpoints.Game, query);
     }

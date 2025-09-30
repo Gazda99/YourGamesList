@@ -3,15 +3,15 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace YourGamesList.Api.Model.Requests.SearchGames;
 
-public class SearchGamesRequest
+public class SearchGameByNameRequest
 {
     [FromQuery(Name = "gameName")]
     public required string GameName { get; init; }
 }
 
-internal sealed class SearchGamesRequestValidator : AbstractValidator<SearchGamesRequest>
+internal sealed class SearchGameByNameRequestValidator : AbstractValidator<SearchGameByNameRequest>
 {
-    public SearchGamesRequestValidator()
+    public SearchGameByNameRequestValidator()
     {
         RuleFor(x => x.GameName)
             .NotEmpty();
