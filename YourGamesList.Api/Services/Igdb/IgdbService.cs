@@ -10,14 +10,12 @@ namespace YourGamesList.Api.Services.Igdb;
 
 public interface IIgdbService
 {
-    Task<ValueResult<IgdbGame[]>> GetGamesByName(string gameName);
-    Task<ValueResult<IgdbGame[]>> GetGamesByIds(int[] gameIds);
+    Task<ValueResult<TResponseFormat>> CallIgdb<TResponseFormat>(IgdbEndpoint endpoint, string query) where TResponseFormat : class;
 }
 
+//TODO: unit tests
 public class IgdbService : IIgdbService
 {
-    private const string RequestGameFields = "fields cover.*,first_release_date,game_type.type,genres.name,id,name,rating_count,storyline,summary";
-
     private readonly ILogger<IgdbService> _logger;
     private readonly IIgdbApi _igdbApi;
     private readonly ITwitchAuthService _twitchAuthService;
@@ -29,26 +27,7 @@ public class IgdbService : IIgdbService
         _twitchAuthService = twitchAuthService;
     }
 
-    public async Task<ValueResult<IgdbGame[]>> GetGamesByName(string gameName)
-    {
-        var query = $"where name ~ *\"{gameName}\"*; {RequestGameFields}; sort rating_count desc;";
-
-        _logger.LogInformation($"Searching for game '{gameName}'");
-
-        return await CallIgdb<IgdbGame[]>(IgdbEndpoints.Game, query);
-    }
-
-    public async Task<ValueResult<IgdbGame[]>> GetGamesByIds(int[] gameIds)
-    {
-        var ids = string.Join(",", gameIds);
-        var query = $"where id = ({ids}); {RequestGameFields};";
-
-        _logger.LogInformation($"Searching for '{gameIds.Length}' games with ids: '{ids}'");
-
-        return await CallIgdb<IgdbGame[]>(IgdbEndpoints.Game, query);
-    }
-
-    private async Task<ValueResult<TResponseFormat>> CallIgdb<TResponseFormat>(IgdbEndpoint endpoint, string query)
+    public async Task<ValueResult<TResponseFormat>> CallIgdb<TResponseFormat>(IgdbEndpoint endpoint, string query) where TResponseFormat : class
     {
         var clientId = _twitchAuthService.GetClientId();
         var accessToken = await _twitchAuthService.GetAccessToken();

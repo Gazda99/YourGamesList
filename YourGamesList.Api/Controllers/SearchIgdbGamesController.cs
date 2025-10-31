@@ -3,45 +3,46 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Attributes;
-using YourGamesList.Api.Model.Requests.SearchGames;
+using YourGamesList.Api.Model.Requests.SearchIgdbGames;
 using YourGamesList.Api.Services.Igdb;
 using YourGamesList.Api.Services.Igdb.Model;
 using YourGamesList.Common;
 
 namespace YourGamesList.Api.Controllers;
 
+//TODO: unit tests
 [ApiController]
-[Route("search")]
-public class SearchGamesController : YourGamesListBaseController
+[Route("igdb/search")]
+public class SearchIgdbGamesController : YourGamesListBaseController
 {
-    private readonly ILogger<SearchGamesController> _logger;
-    private readonly IIgdbService _igdbService;
+    private readonly ILogger<SearchIgdbGamesController> _logger;
+    private readonly IGamesIgdbService _gamesIgdbService;
 
-    public SearchGamesController(ILogger<SearchGamesController> logger, IIgdbService igdbService)
+    public SearchIgdbGamesController(ILogger<SearchIgdbGamesController> logger, IGamesIgdbService gamesIgdbService)
     {
         _logger = logger;
-        _igdbService = igdbService;
+        _gamesIgdbService = gamesIgdbService;
     }
 
     [HttpGet("searchGameByName")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [TypeFilter(typeof(RequestValidatorAttribute<SearchGameByNameRequest>), Arguments = ["searchGameByNameRequest"])]
-    public async Task<IActionResult> SearchGameByName(SearchGameByNameRequest searchGameByNameRequest)
+    [TypeFilter(typeof(RequestValidatorAttribute<SearchIgdbGameByNameRequest>), Arguments = ["searchIgdbGameByNameRequest"])]
+    public async Task<IActionResult> SearchGameByName(SearchIgdbGameByNameRequest searchIgdbGameByNameRequest)
     {
-        var gameName = searchGameByNameRequest.GameName.Trim();
+        var gameName = searchIgdbGameByNameRequest.GameName.Trim();
 
-        var res = await _igdbService.GetGamesByName(gameName);
+        var res = await _gamesIgdbService.GetGamesByName(gameName);
 
         return HandleGetGamesResult(res);
     }
 
     [HttpGet("searchGameByIds")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [TypeFilter(typeof(RequestValidatorAttribute<SearchGamesByIdsRequest>), Arguments = ["searchGamesByIdsRequest"])]
-    public async Task<IActionResult> SearchGameByIds(SearchGamesByIdsRequest searchGamesByIdsRequest)
+    [TypeFilter(typeof(RequestValidatorAttribute<SearchIgdbGamesByIdsRequest>), Arguments = ["searchIgdbGamesByIdsRequest"])]
+    public async Task<IActionResult> SearchGameByIds(SearchIgdbGamesByIdsRequest searchIgdbGamesByIdsRequest)
     {
-        var gameIds = searchGamesByIdsRequest.GameIds;
-        var res = await _igdbService.GetGamesByIds(gameIds);
+        var gameIds = searchIgdbGamesByIdsRequest.GameIds;
+        var res = await _gamesIgdbService.GetGamesByIds(gameIds);
 
         return HandleGetGamesResult(res);
     }

@@ -2,7 +2,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using YourGamesList.Api.ControllerModelValidators;
 using YourGamesList.Api.Model.Requests.Auth;
-using YourGamesList.Api.Model.Requests.SearchGames;
+using YourGamesList.Api.Model.Requests.Lists;
+using YourGamesList.Api.Model.Requests.SearchIgdbGames;
 
 namespace YourGamesList.Api.AppBuilders;
 
@@ -25,8 +26,16 @@ public static partial class AppBuilder
 
         //Search Games controller validators
         services
-            .AddScoped<IValidator<SearchGameByNameRequest>, SearchGameByNameRequestValidator>()
-            .AddScoped<IValidator<SearchGamesByIdsRequest>, SearchGamesByIdsRequestValidator>()
+            .AddScoped<IValidator<SearchIgdbGameByNameRequest>, SearchGameByNameRequestValidator>()
+            .AddScoped<IValidator<SearchIgdbGamesByIdsRequest>, SearchGamesByIdsRequestValidator>()
+            ;
+
+        //Lists controller validators
+        services
+            .AddScoped<IValidator<CreateListRequest>, CreateListRequestValidator>()
+            .AddScoped<IValidator<GetListsRequest>, GetListsRequestValidator>()
+            .AddScoped<IValidator<UpdateListRequest>, UpdateListRequestValidator>()
+            .AddScoped<IValidator<DeleteListRequest>, DeleteListRequestValidator>()
             ;
 
         return services;

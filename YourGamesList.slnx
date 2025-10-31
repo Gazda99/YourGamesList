@@ -6,4 +6,5 @@
   </Folder>
   <Project Path="YourGamesList.Api\YourGamesList.Api.csproj" Type="Classic C#" />
   <Project Path="YourGamesList.Common\YourGamesList.Common.csproj" Type="Classic C#" />
+  <Project Path="YourGamesList.Database\YourGamesList.Database.csproj" Type="Classic C#" />
 </Solution>

@@ -13,4 +13,5 @@ public class IgdbGame
     [JsonPropertyName("rating_count")] public int RatingCount { get; init; } = 0;
     [JsonPropertyName("storyline")] public string StoryLine { get; init; } = string.Empty;
     [JsonPropertyName("summary")] public string Summary { get; init; } = string.Empty;
+    [JsonPropertyName("themes")] public IgdbTheme[] Themes { get; init; } = [];
 }

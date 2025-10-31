@@ -24,7 +24,7 @@ public class ExceptionMiddlewareTests
     {
         //ARANGE
         var ex = new Exception();
-        RequestDelegate next = context => throw ex;
+        RequestDelegate next = _ => throw ex;
 
         var exceptionMiddleware = new ExceptionMiddleware(next, _logger);
         var context = new DefaultHttpContext();

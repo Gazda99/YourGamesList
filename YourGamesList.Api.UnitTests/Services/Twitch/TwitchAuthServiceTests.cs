@@ -49,7 +49,7 @@ public class TwitchAuthServiceTests
     }
 
     [Test]
-    public async Task GetAccessToken_OnSuccessReturnsAuthToken()
+    public async Task GetAccessToken_OnSuccess_ReturnsAuthToken()
     {
         //ARRANGE
         var options = _fixture.Create<TwitchAuthOptions>();

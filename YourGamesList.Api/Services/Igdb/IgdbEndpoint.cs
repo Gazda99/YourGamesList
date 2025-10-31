@@ -6,6 +6,11 @@ public static class IgdbEndpoints
     {
         Endpoint = "games"
     };
+
+    public static readonly IgdbEndpoint MultiQuery = new IgdbEndpoint()
+    {
+        Endpoint = "multiquery"
+    };
 }
 
 public class IgdbEndpoint

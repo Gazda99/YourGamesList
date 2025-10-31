@@ -7,7 +7,7 @@ public class IgdbHttpClientOptions
 {
     public const string SectionName = "IgdbHttpClient";
 
-    public required string BaseAddress { get; set; }
+    public required string BaseAddress { get; init; }
 }
 
 internal sealed class IgdbHttpClientOptionsValidator : AbstractValidator<IgdbHttpClientOptions>

@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Common;
 using YourGamesList.Common.Caching;
@@ -20,6 +21,7 @@ public class TwitchAuthServiceWithCaching : ITwitchAuthService
 
     public TwitchAuthServiceWithCaching(
         ILogger<TwitchAuthServiceWithCaching> logger,
+        [FromKeyedServices(CacheProviders.InMemory)]
         ICacheProvider cacheProvider,
         ITwitchAuthService innerService
     )

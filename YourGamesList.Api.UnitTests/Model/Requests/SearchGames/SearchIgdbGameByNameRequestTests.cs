@@ -1,10 +1,10 @@
 ﻿using System.Linq;
 using AutoFixture;
-using YourGamesList.Api.Model.Requests.SearchGames;
+using YourGamesList.Api.Model.Requests.SearchIgdbGames;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.SearchGames;
 
-public class SearchGameByNameRequestTests
+public class SearchIgdbGameByNameRequestTests
 {
     private IFixture _fixture;
 
@@ -18,7 +18,7 @@ public class SearchGameByNameRequestTests
     public void Validate_ValidOptions_ReturnsTrue()
     {
         //ARRANGE
-        var options = _fixture.Build<SearchGameByNameRequest>()
+        var options = _fixture.Build<SearchIgdbGameByNameRequest>()
             .WithAutoProperties()
             .Create();
 
@@ -37,7 +37,7 @@ public class SearchGameByNameRequestTests
     public void Validate_InvalidGameName_ReturnsFalse(string invalidGameName)
     {
         //ARRANGE
-        var options = _fixture.Build<SearchGameByNameRequest>()
+        var options = _fixture.Build<SearchIgdbGameByNameRequest>()
             .With(x => x.GameName, invalidGameName)
             .WithAutoProperties()
             .Create();
@@ -50,6 +50,6 @@ public class SearchGameByNameRequestTests
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(SearchGameByNameRequest.GameName)));
+        Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(SearchIgdbGameByNameRequest.GameName)));
     }
 }

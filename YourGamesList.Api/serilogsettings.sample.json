@@ -1,7 +1,8 @@
-{
+﻿{
   "Serilog": {
     "Using": [
-      "Serilog.Sinks.Console"
+      "Serilog.Sinks.Console",
+      "Serilog.Sinks.Seq"
     ],
     "MinimumLevel": {
       "Default": "Debug",
@@ -20,7 +21,14 @@
       {
         "Name": "Console",
         "Args": {
-          "outputTemplate": "[{Timestamp:u}][{Level:u3}]{NewLine}{Message}{NewLine}{Properties}{NewLine}{Exception}"
+          "outputTemplate": "[{Timestamp:u}][{Level:u3}] {Message}{NewLine}{Properties}{NewLine}{Exception}"
+        }
+      },
+      {
+        "Name": "Seq",
+        "Args": {
+          "serverUrl": "<REPLACE_ME>",
+          "apiKey": "<REPLACE_ME>"
         }
       }
     ],

@@ -7,7 +7,7 @@ public class TwitchAuthHttpClientOptions
 {
     public const string SectionName = "TwitchAuthHttpClient";
 
-    public required string BaseAddress { get; set; }
+    public required string BaseAddress { get; init; }
 }
 
 internal sealed class TwitchAuthHttpClientOptionsValidator : AbstractValidator<TwitchAuthHttpClientOptions>
