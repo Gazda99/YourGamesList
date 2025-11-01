@@ -2,7 +2,6 @@
 
 namespace YourGamesList.Api.Services.Auth.Options;
 
-//TODO: unit tests
 public class PasswordValidatorOptions
 {
     public const string SectionName = "PasswordValidator";
@@ -21,5 +20,9 @@ public class PasswordValidatorOptionsValidator : AbstractValidator<PasswordValid
         RuleFor(x => x.MaximumPasswordLength)
             .NotEmpty()
             .GreaterThan(0);
+
+        RuleFor(x => new { x.MinimumPasswordLength, x.MaximumPasswordLength })
+            .Must(x => x.MinimumPasswordLength <= x.MaximumPasswordLength)
+            .WithMessage("Minimum password length must be less or  equal than maximum password length.");
     }
 }

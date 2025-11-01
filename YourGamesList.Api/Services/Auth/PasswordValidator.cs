@@ -11,7 +11,6 @@ public interface IPasswordValidator
     ErrorResult<UserAuthError> ValidatePassword(string password);
 }
 
-//TODO: unit tests
 public class PasswordValidator : IPasswordValidator
 {
     private readonly ILogger<PasswordValidator> _logger;

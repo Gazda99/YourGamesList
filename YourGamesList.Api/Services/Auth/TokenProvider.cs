@@ -13,8 +13,6 @@ public interface ITokenProvider
     string CreateToken(string username, Guid userId);
 }
 
-//TODO: unit tests
-
 public class TokenProvider : ITokenProvider
 {
     private readonly IOptions<TokenAuthOptions> _options;

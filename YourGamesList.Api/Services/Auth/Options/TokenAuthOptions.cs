@@ -2,7 +2,6 @@
 
 namespace YourGamesList.Api.Services.Auth.Options;
 
-//TODO: unit tests
 public class TokenAuthOptions
 {
     public const string SectionName = "TokenAuth";
