@@ -97,6 +97,7 @@ public static partial class AppBuilder
         services.AddOptionsWithFluentValidation<PasswordValidatorOptions, PasswordValidatorOptionsValidator>(PasswordValidatorOptions.SectionName);
         services.AddOptionsWithFluentValidation<ApiKeysOptions, ApiKeysOptionsValidator>(ApiKeysOptions.SectionName);
 
+        services.AddSingleton<ITokenParser, TokenParser>();
         services.AddSingleton<ITokenProvider, TokenProvider>();
         services.AddSingleton<IPasswordValidator, PasswordValidator>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
