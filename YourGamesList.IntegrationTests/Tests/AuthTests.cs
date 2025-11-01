@@ -6,6 +6,7 @@ using YourGamesList.IntegrationTests.Utility;
 namespace YourGamesList.IntegrationTests.Tests;
 
 [TestFixture]
+[Parallelizable(ParallelScope.None)]
 public class AuthTests
 {
     private YglApi _yglApi;
