@@ -8,7 +8,6 @@ public class JwtUserInformation
     public required string UserId { get; init; }
 }
 
-//TODO: unit tests
 internal sealed class JwtUserInformationValidator : AbstractValidator<JwtUserInformation>
 {
     public JwtUserInformationValidator()

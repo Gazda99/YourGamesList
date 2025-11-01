@@ -5,7 +5,6 @@ using YourGamesList.Api.Model;
 
 namespace YourGamesList.Api.ModelBinders;
 
-//TODO: unit tests
 public class JwtUserInformationModelBinderProvider : IModelBinderProvider
 {
     public IModelBinder GetBinder(ModelBinderProviderContext context)

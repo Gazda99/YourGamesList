@@ -10,14 +10,15 @@ using YourGamesList.Api.Services.Auth;
 
 namespace YourGamesList.Api.ModelBinders;
 
-//TODO: unit tests
 public class JwtUserInformationModelBinder : IModelBinder
 {
     private readonly ILogger<JwtUserInformationModelBinder> _logger;
+    private readonly ITokenParser _tokenParser;
 
-    public JwtUserInformationModelBinder(ILogger<JwtUserInformationModelBinder> logger)
+    public JwtUserInformationModelBinder(ILogger<JwtUserInformationModelBinder> logger, ITokenParser tokenParser)
     {
         _logger = logger;
+        _tokenParser = tokenParser;
     }
 
     public Task BindModelAsync(ModelBindingContext bindingContext)
@@ -42,33 +43,33 @@ public class JwtUserInformationModelBinder : IModelBinder
 
         if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Bearer "))
         {
-            _logger.LogInformation("Authorization header missing or not in 'Bearer' format.");
+            const string errorMessage = "Authorization header missing or not in 'Bearer' format.";
+            _logger.LogInformation(errorMessage);
             bindingContext.Result = ModelBindingResult.Failed();
             throw new ModelBindingException()
             {
                 ModelName = bindingContext.OriginalModelName,
                 ModelType = bindingContext.ModelType,
-                ErrorDescription = "Authorization header missing or not in 'Bearer' format."
+                ErrorDescription = errorMessage
             };
         }
 
         var token = authorizationHeader.Substring("Bearer ".Length).Trim();
 
-        var handler = new JsonWebTokenHandler();
-
-        if (!handler.CanReadToken(token))
+        if (!_tokenParser.CanReadToken(token))
         {
-            _logger.LogWarning("Cannot read JWT.");
+            const string errorMessage = "Cannot read JWT from authorization header.";
+            _logger.LogInformation(errorMessage);
             bindingContext.Result = ModelBindingResult.Failed();
             throw new ModelBindingException()
             {
                 ModelName = bindingContext.OriginalModelName,
                 ModelType = bindingContext.ModelType,
-                ErrorDescription = "Cannot read JWT from authorization header."
+                ErrorDescription = errorMessage
             };
         }
 
-        var jwtToken = handler.ReadJsonWebToken(token);
+        var jwtToken = _tokenParser.ReadJsonWebToken(token);
 
         var userInformation = new JwtUserInformation
         {
@@ -81,13 +82,21 @@ public class JwtUserInformationModelBinder : IModelBinder
         return Task.CompletedTask;
     }
 
-    private static string ReadClaimOrThrow(ModelBindingContext bindingContext, IEnumerable<Claim> claims, string claimType)
+    private string ReadClaimOrThrow(ModelBindingContext bindingContext, IEnumerable<Claim> claims, string claimType)
     {
-        return claims.FirstOrDefault(c => c.Type == claimType)?.Value ?? throw new ModelBindingException()
+        var claim = claims.FirstOrDefault(c => c.Type == claimType)?.Value;
+        if (claim == null)
         {
-            ModelName = bindingContext.OriginalModelName,
-            ModelType = bindingContext.ModelType,
-            ErrorDescription = "Cannot read JWT from authorization header."
-        };
+            var errorMessage = $"Cannot read JWT '{claimType}' claim.";
+            _logger.LogInformation(errorMessage);
+            throw new ModelBindingException()
+            {
+                ModelName = bindingContext.OriginalModelName,
+                ModelType = bindingContext.ModelType,
+                ErrorDescription = errorMessage
+            };
+        }
+
+        return claim;
     }
 }
