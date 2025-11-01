@@ -11,8 +11,12 @@ public static class Configuration
     
     public static string YourGamesListBaseUrl => ReadOrThrow("YOUR_GAMES_LIST_BASE_URL");
     
+    
     public static string UserName => ReadOrThrow("TEST_USER_NAME");
     public static string UserPassword => ReadOrThrow("TEST_USER_PASSWORD");
+    
+    public static string OneTimeUserName => ReadOrThrow("ONE_TIME_USER_NAME");
+    public static string OneTimeUserPassword => ReadOrThrow("ONE_TIME_USER_PASSWORD");
 
 
     private static string ReadOrThrow(string varName)

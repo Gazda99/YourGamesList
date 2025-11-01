@@ -15,8 +15,8 @@ public class AuthTests
     [OneTimeSetUp]
     public void OneTimeSetup()
     {
-        _userName = Configuration.UserName;
-        _userPassword = Configuration.UserPassword;
+        _userName = Configuration.OneTimeUserName;
+        _userPassword = Configuration.OneTimeUserPassword;
 
         _yglApi = new YglApi();
     }
@@ -39,7 +39,7 @@ public class AuthTests
 
     [Test]
     [Order(10)]
-    public async Task CreateUser()
+    public async Task CreateLoginDeleteUser()
     {
         //---------------------------------------
         var registerRequest = new UserRegisterRequest()
