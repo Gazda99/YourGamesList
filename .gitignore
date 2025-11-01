@@ -21,7 +21,7 @@ appsettings.dev.json
 serilogsettings.dev.json
 serilogsettings.debug.json
 HttpTester.http
-
+testSettings.json
 http-client.env.json
 
 your-games-list-web-app-angular/
