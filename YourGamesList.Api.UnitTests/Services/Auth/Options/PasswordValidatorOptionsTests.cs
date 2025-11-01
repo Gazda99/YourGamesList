@@ -19,6 +19,8 @@ public class PasswordValidatorOptionsTests
     {
         //ARRANGE
         var options = _fixture.Build<PasswordValidatorOptions>()
+            .With(x => x.MinimumPasswordLength, 10)
+            .With(x => x.MaximumPasswordLength, 100)
             .WithAutoProperties()
             .Create();
 

@@ -19,7 +19,6 @@ public class ExceptionMiddleware
         _logger = logger;
     }
 
-    //TODO: unit tests
     public async Task Invoke(HttpContext context)
     {
         try
