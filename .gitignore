@@ -23,6 +23,7 @@ serilogsettings.debug.json
 HttpTester.http
 testSettings.json
 http-client.env.json
+integration_tests_log.txt
 
 your-games-list-web-app-angular/
 your-games-list-web-app-vue/
