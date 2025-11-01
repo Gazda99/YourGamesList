@@ -10,7 +10,6 @@ using YourGamesList.Common;
 
 namespace YourGamesList.Api.Controllers;
 
-//TODO: unit tests
 [ApiController]
 [Route("igdb/search")]
 public class SearchIgdbGamesController : YourGamesListBaseController
