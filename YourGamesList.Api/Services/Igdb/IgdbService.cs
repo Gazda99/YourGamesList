@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using YourGamesList.Api.Services.Igdb.Model;
 using YourGamesList.Api.Services.Twitch;
 using YourGamesList.Common;
 using YourGamesList.Common.Refit;

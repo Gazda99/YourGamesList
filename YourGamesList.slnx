@@ -2,6 +2,7 @@
   <Folder Name="/tests/">
     <Project Path="YourGamesList.Api.UnitTests\YourGamesList.Api.UnitTests.csproj" Type="Classic C#" />
     <Project Path="YourGamesList.Common.UnitTests\YourGamesList.Common.UnitTests.csproj" Type="Classic C#" />
+    <Project Path="YourGamesList.IntegrationTests\YourGamesList.IntegrationTests.csproj" Type="Classic C#" />
     <Project Path="YourGamesList.TestsUtils\YourGamesList.TestsUtils.csproj" Type="Classic C#" />
   </Folder>
   <Project Path="YourGamesList.Api\YourGamesList.Api.csproj" Type="Classic C#" />

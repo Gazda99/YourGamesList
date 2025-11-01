@@ -45,6 +45,8 @@ public class UserManagerService : IUserManagerService
 
     public async Task<ErrorResult<UserAuthError>> RegisterUser(string username, string password)
     {
+        username = username.ToLower();
+
         if (string.IsNullOrWhiteSpace(username))
         {
             _logger.LogWarning("Username is null or empty.");
@@ -56,8 +58,6 @@ public class UserManagerService : IUserManagerService
             _logger.LogWarning("Password is null or empty.");
             return ErrorResult<UserAuthError>.Failure(UserAuthError.WrongPassword);
         }
-
-        username = username.ToLower();
 
         var doesUserExists = await FindUserByUserName(username);
         if (doesUserExists.IsSuccess)
@@ -95,6 +95,8 @@ public class UserManagerService : IUserManagerService
 
     public async Task<CombinedResult<string, UserAuthError>> Login(string username, string password)
     {
+        username = username.ToLower();
+
         if (string.IsNullOrWhiteSpace(username))
         {
             _logger.LogWarning("Username is null or empty.");
@@ -106,8 +108,6 @@ public class UserManagerService : IUserManagerService
             _logger.LogWarning("Password is null or empty.");
             return CombinedResult<string, UserAuthError>.Failure(UserAuthError.WrongPassword);
         }
-
-        username = username.ToLower();
 
         var findUser = await FindUserByUserName(username);
         if (findUser.IsFailure)
@@ -132,6 +132,8 @@ public class UserManagerService : IUserManagerService
 
     public async Task<ErrorResult<UserAuthError>> Delete(string username, string password)
     {
+        username = username.ToLower();
+
         if (string.IsNullOrWhiteSpace(username))
         {
             _logger.LogWarning("Username is null or empty.");
@@ -170,6 +172,8 @@ public class UserManagerService : IUserManagerService
 
     private async Task<ValueResult<User>> FindUserByUserName(string username)
     {
+        //ToLower here as well, just to be safe
+        username = username.ToLower();
         var user = await _yglDbContext.Users.FirstOrDefaultAsync(x => string.Equals(x.Username, username));
         return user == null ? ValueResult<User>.Failure() : ValueResult<User>.Success(user);
     }
