@@ -33,7 +33,6 @@ public class GamesIgdbService : IGamesIgdbService
             .WithWhere($"name ~ *\"{gameName}\"*")
             .WithFields(RequestGameFields)
             .WithSort("rating_count desc")
-            .WithOffset(15000000)
             .CreateQuery();
 
         _logger.LogInformation($"Searching for game '{gameName}'");

@@ -4,7 +4,6 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace YourGamesList.Common.Caching;
 
-//TODO: unit tests
 public class InMemoryCacheProvider : ICacheProvider
 {
     private readonly IMemoryCache _cache;
@@ -29,13 +28,17 @@ public class InMemoryCacheProvider : ICacheProvider
     public void Set<T>(string key, T value, TimeSpan? expiration = null, JsonSerializerOptions? options = null)
     {
         var serializedValue = JsonSerializer.Serialize(value, options);
-        var cacheOptions = new MemoryCacheEntryOptions();
+
+        using var entry = _cache.CreateEntry(key);
+
         if (expiration.HasValue)
         {
+            var cacheOptions = new MemoryCacheEntryOptions();
             cacheOptions.SetAbsoluteExpiration(expiration.Value);
+            entry.SetOptions(cacheOptions);
         }
 
-        _cache.Set(key, serializedValue, cacheOptions);
+        entry.Value = serializedValue;
     }
 
     public void Remove(string key)
