@@ -94,8 +94,7 @@ public class ScraperService : IScraperService
         _scraperCache.WriteCache(newCacheEntry);
 
         Task.Run(async () => await _backgroundScraper.Scrape(
-           // count,
-            1500,
+            count,
             _options.Value.BatchSize,
             _options.Value.ConcurrencyLevel,
             _options.Value.RateLimitTimeFrameInMilliseconds,
