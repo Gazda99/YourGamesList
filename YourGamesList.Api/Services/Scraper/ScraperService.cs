@@ -17,7 +17,6 @@ public interface IScraperService
     ScrapeStatus CheckScrapeStatus();
 }
 
-//TODO: unit tests
 public class ScraperService : IScraperService
 {
     private readonly ILogger<ScraperService> _logger;
@@ -114,6 +113,8 @@ public class ScraperService : IScraperService
 
         cacheEntry.IsCancellationRequested = true;
         _scraperCache.WriteCache(cacheEntry);
+        
+        _logger.LogInformation("Scrape will be stopped.");
 
         return true;
     }
