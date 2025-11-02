@@ -18,14 +18,14 @@ public class SearchIgdbGamesControllerTests
 {
     private IFixture _fixture;
     private ILogger<SearchIgdbGamesController> _logger;
-    private IGamesIgdbService _gamesIgdbService;
+    private IIgdbGamesService _igdbGamesService;
 
     [SetUp]
     public void Setup()
     {
         _fixture = new Fixture();
         _logger = Substitute.For<ILogger<SearchIgdbGamesController>>();
-        _gamesIgdbService = Substitute.For<IGamesIgdbService>();
+        _igdbGamesService = Substitute.For<IIgdbGamesService>();
     }
 
     #region SearchGameByName
@@ -40,8 +40,8 @@ public class SearchIgdbGamesControllerTests
             GameName = gameName
         };
         var games = _fixture.Create<IgdbGame[]>();
-        _gamesIgdbService.GetGamesByName(gameName).Returns(ValueResult<IgdbGame[]>.Success(games));
-        var controller = new SearchIgdbGamesController(_logger, _gamesIgdbService);
+        _igdbGamesService.GetGamesByName(gameName).Returns(ValueResult<IgdbGame[]>.Success(games));
+        var controller = new SearchIgdbGamesController(_logger, _igdbGamesService);
 
         //ACT
         var res = await controller.SearchGameByName(request);
@@ -64,8 +64,8 @@ public class SearchIgdbGamesControllerTests
             GameName = gameName
         };
         var games = Array.Empty<IgdbGame>();
-        _gamesIgdbService.GetGamesByName(gameName).Returns(ValueResult<IgdbGame[]>.Success(games));
-        var controller = new SearchIgdbGamesController(_logger, _gamesIgdbService);
+        _igdbGamesService.GetGamesByName(gameName).Returns(ValueResult<IgdbGame[]>.Success(games));
+        var controller = new SearchIgdbGamesController(_logger, _igdbGamesService);
 
         //ACT
         var res = await controller.SearchGameByName(request);
@@ -92,8 +92,8 @@ public class SearchIgdbGamesControllerTests
             GameIds = gameIds
         };
         var games = _fixture.Create<IgdbGame[]>();
-        _gamesIgdbService.GetGamesByIds(gameIds).Returns(ValueResult<IgdbGame[]>.Success(games));
-        var controller = new SearchIgdbGamesController(_logger, _gamesIgdbService);
+        _igdbGamesService.GetGamesByIds(gameIds).Returns(ValueResult<IgdbGame[]>.Success(games));
+        var controller = new SearchIgdbGamesController(_logger, _igdbGamesService);
 
         //ACT
         var res = await controller.SearchGameByIds(request);
@@ -116,8 +116,8 @@ public class SearchIgdbGamesControllerTests
             GameIds = gameIds
         };
         var games = Array.Empty<IgdbGame>();
-        _gamesIgdbService.GetGamesByIds(gameIds).Returns(ValueResult<IgdbGame[]>.Success(games));
-        var controller = new SearchIgdbGamesController(_logger, _gamesIgdbService);
+        _igdbGamesService.GetGamesByIds(gameIds).Returns(ValueResult<IgdbGame[]>.Success(games));
+        var controller = new SearchIgdbGamesController(_logger, _igdbGamesService);
 
         //ACT
         var res = await controller.SearchGameByIds(request);

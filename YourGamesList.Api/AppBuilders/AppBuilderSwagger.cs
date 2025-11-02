@@ -1,5 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using YourGamesList.Api.Services.Scraper;
 using YourGamesList.Common.Http;
 
 namespace YourGamesList.Api.AppBuilders;
@@ -62,10 +67,31 @@ public static partial class AppBuilder
             };
 
             c.AddSecurityRequirement(bearerTokenRequirements);
+
+            c.SchemaFilter<EnumSchemaFilter>();
         });
 
         services.AddEndpointsApiExplorer();
 
         return services;
+    }
+
+    private class EnumSchemaFilter : ISchemaFilter
+    {
+        private static readonly Type[] EnumTypesToBeDisplayedAsStrings =
+        [
+            typeof(ScrapeStatus)
+        ];
+
+        public void Apply(OpenApiSchema schema, SchemaFilterContext context)
+        {
+            if (context.Type.IsEnum && EnumTypesToBeDisplayedAsStrings.Contains(context.Type))
+            {
+                schema.Enum.Clear();
+                Enum.GetNames(context.Type)
+                    .ToList()
+                    .ForEach(name => schema.Enum.Add(new OpenApiString(name)));
+            }
+        }
     }
 }

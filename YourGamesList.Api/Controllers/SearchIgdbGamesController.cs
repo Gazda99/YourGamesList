@@ -15,12 +15,12 @@ namespace YourGamesList.Api.Controllers;
 public class SearchIgdbGamesController : YourGamesListBaseController
 {
     private readonly ILogger<SearchIgdbGamesController> _logger;
-    private readonly IGamesIgdbService _gamesIgdbService;
+    private readonly IIgdbGamesService _igdbGamesService;
 
-    public SearchIgdbGamesController(ILogger<SearchIgdbGamesController> logger, IGamesIgdbService gamesIgdbService)
+    public SearchIgdbGamesController(ILogger<SearchIgdbGamesController> logger, IIgdbGamesService igdbGamesService)
     {
         _logger = logger;
-        _gamesIgdbService = gamesIgdbService;
+        _igdbGamesService = igdbGamesService;
     }
 
     [HttpGet("searchGameByName")]
@@ -30,7 +30,7 @@ public class SearchIgdbGamesController : YourGamesListBaseController
     {
         var gameName = searchIgdbGameByNameRequest.GameName.Trim();
 
-        var res = await _gamesIgdbService.GetGamesByName(gameName);
+        var res = await _igdbGamesService.GetGamesByName(gameName);
 
         return HandleGetGamesResult(res);
     }
@@ -41,7 +41,7 @@ public class SearchIgdbGamesController : YourGamesListBaseController
     public async Task<IActionResult> SearchGameByIds(SearchIgdbGamesByIdsRequest searchIgdbGamesByIdsRequest)
     {
         var gameIds = searchIgdbGamesByIdsRequest.GameIds;
-        var res = await _gamesIgdbService.GetGamesByIds(gameIds);
+        var res = await _igdbGamesService.GetGamesByIds(gameIds);
 
         return HandleGetGamesResult(res);
     }

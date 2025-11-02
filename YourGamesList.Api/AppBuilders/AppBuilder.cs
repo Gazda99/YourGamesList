@@ -141,7 +141,7 @@ public static partial class AppBuilder
             .ConfigureLogging();
 
         services.AddScoped<IIgdbService, IgdbService>();
-        services.AddScoped<IGamesIgdbService, GamesIgdbService>();
+        services.AddScoped<IIgdbGamesService, IgdbGamesService>();
 
         return services;
     }

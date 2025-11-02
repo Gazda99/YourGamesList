@@ -12,7 +12,6 @@ public interface IIgdbService
     Task<ValueResult<TResponseFormat>> CallIgdb<TResponseFormat>(IgdbEndpoint endpoint, string query) where TResponseFormat : class;
 }
 
-//TODO: unit tests
 public class IgdbService : IIgdbService
 {
     private readonly ILogger<IgdbService> _logger;

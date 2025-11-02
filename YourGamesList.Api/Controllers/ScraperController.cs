@@ -71,7 +71,6 @@ public class ScraperController : YourGamesListBaseController
 
     [TypeFilter(typeof(ApiKeyAuthFilterAttribute), Arguments = [ApiKeys.ScraperApiKeyName])]
     [HttpGet("scrapeGames")]
-    //TODO: swagger show string value of that enum instead of number
     [ProducesResponseType(typeof(ScrapeStatus), StatusCodes.Status200OK)]
     public async Task<IActionResult> CheckScrapeStatus()
     {

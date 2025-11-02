@@ -5,21 +5,20 @@ using YourGamesList.Common;
 
 namespace YourGamesList.Api.Services.Igdb;
 
-public interface IGamesIgdbService
+public interface IIgdbGamesService
 {
     Task<ValueResult<IgdbGame[]>> GetGamesByName(string gameName);
     Task<ValueResult<IgdbGame[]>> GetGamesByIds(int[] gameIds);
 }
 
-//TODO: unit tests
-public class GamesIgdbService : IGamesIgdbService
+public class IgdbGamesService : IIgdbGamesService
 {
     private const string RequestGameFields = "cover.*,first_release_date,game_type.type,genres.name,id,name,rating_count,storyline,summary,themes.name";
 
-    private readonly ILogger<GamesIgdbService> _logger;
+    private readonly ILogger<IgdbGamesService> _logger;
     private readonly IIgdbService _igdbService;
 
-    public GamesIgdbService(ILogger<GamesIgdbService> logger, IIgdbService igdbService)
+    public IgdbGamesService(ILogger<IgdbGamesService> logger, IIgdbService igdbService)
     {
         _logger = logger;
 
