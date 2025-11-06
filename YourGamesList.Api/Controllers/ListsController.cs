@@ -29,6 +29,8 @@ public class ListsController : YourGamesListBaseController
         _listsService = listsService;
     }
 
+    #region List
+
     [HttpPost("create")]
     [Authorize]
     [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
@@ -154,4 +156,28 @@ public class ListsController : YourGamesListBaseController
             return Result(StatusCodes.Status500InternalServerError);
         }
     }
+
+    #endregion
+
+    #region ListEntry
+
+    [HttpPost("entries/add")]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
+    [TypeFilter(typeof(RequestValidatorAttribute<AddEntriesToListRequest>), Arguments = ["addEntriesToListRequest"])]
+    public async Task<IActionResult> AddListEntries(AddEntriesToListRequest addEntriesToListRequest)
+    {
+        var parameters = _requestToParametersMapper.Map(addEntriesToListRequest);
+
+        var res = await _listsService.AddEntriesToList(parameters);
+        if (res.IsSuccess)
+        {
+            return Result(StatusCodes.Status200OK, res.Value);
+        }
+        else
+        {
+            return Result(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    #endregion
 }

@@ -15,4 +15,7 @@ public class Game
     public string StoryLine { get; set; } = string.Empty;
     public string Summary { get; set; } = string.Empty;
     public List<string> Themes { get; set; } = [];
+
+
+    public virtual ICollection<GameListEntry> GameListEntries { get; set; } = [];
 }

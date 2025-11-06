@@ -5,7 +5,7 @@ using YourGamesList.Database.Entities;
 
 namespace YourGamesList.Api.Services.ModelMapper;
 
-public interface IYglDatabaseToDtoMapper
+public interface IYglDatabaseAndDtoMapper
 {
     GamesListDto Map(GamesList gamesList);
     GameListEntryDto Map(GameListEntry gameListEntry);
@@ -13,11 +13,15 @@ public interface IYglDatabaseToDtoMapper
     CompletionStatusDto Map(CompletionStatus completionStatus);
     GameDistributionDto Map(GameDistribution gameDistribution);
     PlatformDto Map(Platform platform);
+
+
+    CompletionStatus Map(CompletionStatusDto completionStatus);
+    GameDistribution Map(GameDistributionDto gameDistribution);
+    Platform Map(PlatformDto platform);
 }
 
-
 //TODO: unit tests
-public class YglDatabaseToDtoMapper : IYglDatabaseToDtoMapper
+public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
 {
     public GamesListDto Map(GamesList gamesList)
     {
@@ -78,6 +82,21 @@ public class YglDatabaseToDtoMapper : IYglDatabaseToDtoMapper
     public PlatformDto Map(Platform platform)
     {
         return MapEnums<Platform, PlatformDto>(platform);
+    }
+
+    public CompletionStatus Map(CompletionStatusDto completionStatus)
+    {
+        return MapEnums<CompletionStatusDto, CompletionStatus>(completionStatus);
+    }
+
+    public GameDistribution Map(GameDistributionDto gameDistribution)
+    {
+        return MapEnums<GameDistributionDto, GameDistribution>(gameDistribution);
+    }
+
+    public Platform Map(PlatformDto platform)
+    {
+        return MapEnums<PlatformDto, Platform>(platform);
     }
 
     private static TDestination MapEnums<TSource, TDestination>(TSource source)

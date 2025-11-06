@@ -34,22 +34,37 @@ public class YglDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<User>()
-            .HasMany(x => x.GamesLists)
-            .WithOne(x => x.User)
-            .HasForeignKey(x => x.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasMany(x => x.GamesLists)
+                .WithOne(x => x.User)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Game>().HasKey(x => x.Id);
+            entity.HasIndex(x => x.Username);
+        });
 
-        modelBuilder.Entity<GameListEntry>().HasKey(x => x.Id);
+        modelBuilder.Entity<Game>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.IgdbGameId);
+        });
 
-        modelBuilder.Entity<GamesList>().HasKey(x => x.Id);
-        modelBuilder.Entity<GamesList>()
-            .HasMany(x => x.Games)
-            .WithOne(x => x.GamesList)
-            .HasForeignKey(x => x.GamesListId)
-            .HasForeignKey(x => x.GameId)
-            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<GameListEntry>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasOne(x => x.Game)
+                .WithMany(x => x.GameListEntries)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<GamesList>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasMany(x => x.Games)
+                .WithOne(x => x.GamesList)
+                .HasForeignKey(x => x.GamesListId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }

@@ -16,24 +16,36 @@ namespace YourGamesList.Api.Services.Ygl.Lists;
 
 public interface IListsService
 {
+    #region List
+
     Task<CombinedResult<Guid, ListsError>> CreateList(JwtUserInformation userInfo, string listName, string description);
     Task<CombinedResult<List<GamesListDto>, ListsError>> SearchLists(SearchListsParameters parameters);
     Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelfLists(JwtUserInformation userInfo, bool includeGames);
     Task<ErrorResult<ListsError>> UpdateLists(UpdateListsParameters parameters);
-    Task<ErrorResult<ListsError>> DeleteList(JwtUserInformation userInfo, Guid id );
+    Task<ErrorResult<ListsError>> DeleteList(JwtUserInformation userInfo, Guid listId);
+
+    #endregion
+
+    #region ListEntry
+
+    Task<CombinedResult<List<Guid>, ListsError>> AddEntriesToList(AddEntriesToListParameter parameters);
+
+    #endregion
 }
 
 //TODO: unit tests
 public class ListsService : IListsService
 {
     private readonly ILogger<ListsService> _logger;
-    private readonly IYglDatabaseToDtoMapper _yglDatabaseToDtoMapper;
+    private readonly IYglDatabaseAndDtoMapper _yglDatabaseAndDtoMapper;
     private readonly YglDbContext _yglDbContext;
 
-    public ListsService(ILogger<ListsService> logger, IDbContextFactory<YglDbContext> yglDbContext, IYglDatabaseToDtoMapper yglDatabaseToDtoMapper)
+    #region List
+
+    public ListsService(ILogger<ListsService> logger, IDbContextFactory<YglDbContext> yglDbContext, IYglDatabaseAndDtoMapper yglDatabaseAndDtoMapper)
     {
         _logger = logger;
-        _yglDatabaseToDtoMapper = yglDatabaseToDtoMapper;
+        _yglDatabaseAndDtoMapper = yglDatabaseAndDtoMapper;
         _yglDbContext = yglDbContext.CreateDbContext();
     }
 
@@ -113,11 +125,15 @@ public class ListsService : IListsService
 
     public async Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelfLists(JwtUserInformation userInfo, bool includeGames)
     {
-        var listsQuery = _yglDbContext.Lists.AsNoTracking().Where(x => x.UserId == userInfo.UserId);
+        var listsQuery = _yglDbContext.Lists
+            .AsNoTracking();
+
         if (includeGames)
         {
-            listsQuery = listsQuery.Include(x => x.Games);
+            listsQuery = listsQuery.Include(x => x.Games).ThenInclude(x => x.Game);
         }
+
+        listsQuery = listsQuery.Where(x => x.UserId == userInfo.UserId);
 
         var lists = await listsQuery.ToListAsync();
 
@@ -135,10 +151,10 @@ public class ListsService : IListsService
 
     public async Task<ErrorResult<ListsError>> UpdateLists(UpdateListsParameters parameters)
     {
-        var list = await _yglDbContext.Lists.FirstOrDefaultAsync(x => x.Id == parameters.Id);
+        var list = await _yglDbContext.Lists.FirstOrDefaultAsync(x => x.UserId == parameters.UserInformation.UserId && x.Id == parameters.ListId);
         if (list == null)
         {
-            _logger.LogInformation($"No lists found for id '{parameters.Id}'.");
+            _logger.LogInformation($"No lists found for id '{parameters.ListId}' and user '{parameters.UserInformation.UserId}'.");
             return ErrorResult<ListsError>.Failure(ListsError.ListNotFound);
         }
 
@@ -171,29 +187,29 @@ public class ListsService : IListsService
         return ErrorResult<ListsError>.Clear();
     }
 
-    public async Task<ErrorResult<ListsError>> DeleteList(JwtUserInformation userInfo, Guid id)
+    public async Task<ErrorResult<ListsError>> DeleteList(JwtUserInformation userInfo, Guid listId)
     {
-        _logger.LogInformation($"Search for list '{id}' which belongs to user '{userInfo.Username}'.");
+        _logger.LogInformation($"Search for list '{listId}' which belongs to user '{userInfo.Username}'.");
         var list = await _yglDbContext.Lists.FirstOrDefaultAsync(x =>
             x.UserId == userInfo.UserId &&
-            x.Id == id
+            x.Id == listId
         );
 
         if (list == null)
         {
-            _logger.LogInformation($"List with id '{id}' not found.");
+            _logger.LogInformation($"List with id '{listId}' not found.");
             return ErrorResult<ListsError>.Failure(ListsError.ListNotFound);
         }
         else
         {
             if (!list.CanBeDeleted)
             {
-                _logger.LogInformation($"List with id '{id}' cannot be deleted due to hard lock.");
+                _logger.LogInformation($"List with id '{listId}' cannot be deleted due to hard lock.");
                 return ErrorResult<ListsError>.Failure(ListsError.ListHardLocked);
             }
             else
             {
-                _logger.LogInformation($"Deleting list '{id}'");
+                _logger.LogInformation($"Deleting list '{listId}'");
                 _yglDbContext.Lists.Remove(list);
                 await _yglDbContext.SaveChangesAsync();
                 return ErrorResult<ListsError>.Clear();
@@ -201,12 +217,74 @@ public class ListsService : IListsService
         }
     }
 
+    #endregion
+
+    #region ListEntry
+
+    public async Task<CombinedResult<List<Guid>, ListsError>> AddEntriesToList(AddEntriesToListParameter parameters)
+    {
+        var list = await _yglDbContext.Lists
+            .Include(x => x.Games)
+            .FirstOrDefaultAsync(x => x.UserId == parameters.UserInformation.UserId && x.Id == parameters.ListId);
+
+        if (list == null)
+        {
+            _logger.LogInformation($"No lists found for id '{parameters.ListId}' and user '{parameters.UserInformation.UserId}'.");
+            return CombinedResult<List<Guid>, ListsError>.Failure(ListsError.ListNotFound);
+        }
+
+        // Filter out entries that are already in the list
+        var entriesToAdd = parameters.EntriesToAdd.Where(entryToAdd => list.Games.All(x => x.GameId != entryToAdd.GameId)).ToList();
+
+        if (entriesToAdd.Count == 0)
+        {
+            
+        }
+        
+        var listEntries = new List<GameListEntry>();
+        foreach (var entryToAdd in entriesToAdd)
+        {
+            var listEntry = new GameListEntry()
+            {
+                GamesListId = list.Id,
+                GameId = entryToAdd.GameId,
+                Desc = entryToAdd.Desc ?? string.Empty,
+                IsStarred = entryToAdd.IsStarred ?? false,
+                Rating = entryToAdd.Rating ?? null,
+                CompletionStatus = entryToAdd.CompletionStatus == null
+                    ? CompletionStatus.Unspecified
+                    : _yglDatabaseAndDtoMapper.Map(entryToAdd.CompletionStatus.Value)
+            };
+
+            if (entryToAdd.Platforms != null)
+            {
+                listEntry.Platforms = entryToAdd.Platforms.Select(x => _yglDatabaseAndDtoMapper.Map(x)).ToArray();
+            }
+
+            if (entryToAdd.GameDistributions != null)
+            {
+                listEntry.GameDistributions = entryToAdd.GameDistributions.Select(x => _yglDatabaseAndDtoMapper.Map(x)).ToArray();
+            }
+
+            // await _yglDbContext.GameListEntries.AddAsync(listEntry);
+            listEntries.Add(listEntry);
+        }
+
+        await _yglDbContext.GameListEntries.AddRangeAsync(listEntries);
+        await _yglDbContext.SaveChangesAsync();
+
+        var gameIds = entriesToAdd.Select(x => x.GameId).ToList();
+        return CombinedResult<List<Guid>, ListsError>.Success(gameIds);
+    }
+
+    #endregion
+
     private List<GamesListDto> GamesListToDto(IEnumerable<GamesList> gamesLists)
     {
         var listDtos = new List<GamesListDto>();
         foreach (var list in gamesLists)
         {
-            var listDto = _yglDatabaseToDtoMapper.Map(list);
+            var listDto = _yglDatabaseAndDtoMapper.Map(list);
             listDtos.Add(listDto);
         }
 

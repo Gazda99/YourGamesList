@@ -18,13 +18,13 @@ public interface IYglGamesService
 public class YglGamesService : IYglGamesService
 {
     private readonly ILogger<YglGamesService> _logger;
-    private readonly IYglDatabaseToDtoMapper _yglDatabaseToDtoMapper;
+    private readonly IYglDatabaseAndDtoMapper _yglDatabaseAndDtoMapper;
     private readonly YglDbContext _yglDbContext;
 
-    public YglGamesService(ILogger<YglGamesService> logger, IDbContextFactory<YglDbContext> yglDbContext, IYglDatabaseToDtoMapper yglDatabaseToDtoMapper)
+    public YglGamesService(ILogger<YglGamesService> logger, IDbContextFactory<YglDbContext> yglDbContext, IYglDatabaseAndDtoMapper yglDatabaseAndDtoMapper)
     {
         _logger = logger;
-        _yglDatabaseToDtoMapper = yglDatabaseToDtoMapper;
+        _yglDatabaseAndDtoMapper = yglDatabaseAndDtoMapper;
         _yglDbContext = yglDbContext.CreateDbContext();
     }
 
@@ -37,7 +37,7 @@ public class YglGamesService : IYglGamesService
             .ToListAsync();
 
         var gameDtos = games
-            .Select(game => _yglDatabaseToDtoMapper.Map(game))
+            .Select(game => _yglDatabaseAndDtoMapper.Map(game))
             .OrderBy(x => x.Name.StartsWith(gameName, System.StringComparison.InvariantCultureIgnoreCase))
             .ToList();
 

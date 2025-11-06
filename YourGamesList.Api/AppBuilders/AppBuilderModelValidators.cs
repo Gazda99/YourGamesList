@@ -38,11 +38,14 @@ public static partial class AppBuilder
 
         //Lists controller validators
         services
+            //list
             .AddScoped<IValidator<CreateListRequest>, CreateListRequestValidator>()
             .AddScoped<IValidator<SearchListsRequest>, SearchListsRequestValidator>()
             .AddScoped<IValidator<GetSelfListsRequest>, GetSelfListsRequestValidator>()
             .AddScoped<IValidator<UpdateListsRequest>, UpdateListsRequestValidator>()
             .AddScoped<IValidator<DeleteListRequest>, DeleteListRequestValidator>()
+            //list entries
+            .AddScoped<IValidator<AddEntriesToListRequest>, AddEntriesToListRequestValidator>()
             ;
 
         return services;

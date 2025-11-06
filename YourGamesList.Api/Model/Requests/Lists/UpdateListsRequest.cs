@@ -14,7 +14,7 @@ public class UpdateListsRequest
 
 public class UpdateListsRequestBody
 {
-    public Guid Id { get; init; }
+    public Guid ListId { get; init; }
     public string? Name { get; set; }
     public string? Desc { get; set; }
     public bool? IsPublic { get; set; }
