@@ -7,7 +7,7 @@ namespace YourGamesList.Api.Model.Requests.Lists;
 public class GetSelfListsRequest
 {
     [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
-    [FromQuery] public bool IncludeGames { get; init; } = false;
+    [FromQuery] public bool? IncludeGames { get; init; } = false;
 }
 
 //TODO: unit tests

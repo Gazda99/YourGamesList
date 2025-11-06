@@ -39,7 +39,7 @@ public class ListsController : YourGamesListBaseController
         var res = await _listsService.CreateList(createListRequest.UserInformation, createListRequest.Body!.ListName, createListRequest.Body.Description);
         if (res.IsSuccess)
         {
-            return Result(StatusCodes.Status200OK);
+            return Result(StatusCodes.Status200OK, res.Value.ToString());
         }
 
         else if (res.Error == ListsError.ListAlreadyExists)
@@ -83,7 +83,7 @@ public class ListsController : YourGamesListBaseController
     [TypeFilter(typeof(RequestValidatorAttribute<GetSelfListsRequest>), Arguments = ["getSelfListsRequest"])]
     public async Task<IActionResult> GetSelfLists(GetSelfListsRequest getSelfListsRequest)
     {
-        var res = await _listsService.GetSelfLists(getSelfListsRequest.UserInformation, getSelfListsRequest.IncludeGames);
+        var res = await _listsService.GetSelfLists(getSelfListsRequest.UserInformation, getSelfListsRequest.IncludeGames ?? false);
         if (res.IsSuccess)
         {
             return Result(StatusCodes.Status200OK, res.Value);
@@ -134,7 +134,7 @@ public class ListsController : YourGamesListBaseController
     [TypeFilter(typeof(RequestValidatorAttribute<DeleteListRequest>), Arguments = ["deleteListRequest"])]
     public async Task<IActionResult> DeleteList(DeleteListRequest deleteListRequest)
     {
-        var res = await _listsService.DeleteList(deleteListRequest.UserInformation, deleteListRequest.ListName);
+        var res = await _listsService.DeleteList(deleteListRequest.UserInformation, deleteListRequest.Id);
 
         if (res.IsSuccess)
         {

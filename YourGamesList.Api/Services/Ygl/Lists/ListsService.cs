@@ -20,7 +20,7 @@ public interface IListsService
     Task<CombinedResult<List<GamesListDto>, ListsError>> SearchLists(SearchListsParameters parameters);
     Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelfLists(JwtUserInformation userInfo, bool includeGames);
     Task<ErrorResult<ListsError>> UpdateLists(UpdateListsParameters parameters);
-    Task<ErrorResult<ListsError>> DeleteList(JwtUserInformation userInfo, string listName);
+    Task<ErrorResult<ListsError>> DeleteList(JwtUserInformation userInfo, Guid id );
 }
 
 //TODO: unit tests
@@ -171,29 +171,29 @@ public class ListsService : IListsService
         return ErrorResult<ListsError>.Clear();
     }
 
-    public async Task<ErrorResult<ListsError>> DeleteList(JwtUserInformation userInfo, string listName)
+    public async Task<ErrorResult<ListsError>> DeleteList(JwtUserInformation userInfo, Guid id)
     {
-        _logger.LogInformation($"Search for list '{listName}' which belongs to user '{userInfo.Username}'.");
+        _logger.LogInformation($"Search for list '{id}' which belongs to user '{userInfo.Username}'.");
         var list = await _yglDbContext.Lists.FirstOrDefaultAsync(x =>
             x.UserId == userInfo.UserId &&
-            x.Name.ToLower() == listName.ToLower()
+            x.Id == id
         );
 
         if (list == null)
         {
-            _logger.LogInformation($"List with name '{listName}' not found.");
+            _logger.LogInformation($"List with id '{id}' not found.");
             return ErrorResult<ListsError>.Failure(ListsError.ListNotFound);
         }
         else
         {
             if (!list.CanBeDeleted)
             {
-                _logger.LogInformation($"List with name '{listName}' cannot be deleted due to hard lock.");
+                _logger.LogInformation($"List with id '{id}' cannot be deleted due to hard lock.");
                 return ErrorResult<ListsError>.Failure(ListsError.ListHardLocked);
             }
             else
             {
-                _logger.LogInformation($"Deleting list '{listName}'");
+                _logger.LogInformation($"Deleting list '{id}'");
                 _yglDbContext.Lists.Remove(list);
                 await _yglDbContext.SaveChangesAsync();
                 return ErrorResult<ListsError>.Clear();
