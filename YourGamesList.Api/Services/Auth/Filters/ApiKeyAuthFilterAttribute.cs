@@ -23,14 +23,14 @@ public class ApiKeyAuthFilterAttribute : Attribute, IAsyncActionFilter
         _logger = logger;
         _apiKeysOptions = apiKeysOptions;
 
-        if (string.IsNullOrEmpty(_requiredApiKeyName))
+        if (string.IsNullOrEmpty(requiredApiKeyName))
         {
-            throw new Exception("Required api key is empty/null");
+            throw new ArgumentNullException(nameof(requiredApiKeyName), "Required api key is empty/null");
         }
 
         if (!_apiKeysOptions.Value.Keys.ContainsKey(_requiredApiKeyName))
         {
-            throw new Exception("Required api key is missing from configuration");
+            throw new InvalidOperationException("Required api key is missing from configuration");
         }
     }
 

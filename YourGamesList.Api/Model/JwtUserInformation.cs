@@ -1,11 +1,12 @@
-﻿using FluentValidation;
+﻿using System;
+using FluentValidation;
 
 namespace YourGamesList.Api.Model;
 
 public class JwtUserInformation
 {
     public required string Username { get; init; }
-    public required string UserId { get; init; }
+    public required Guid UserId { get; init; }
 }
 
 internal sealed class JwtUserInformationValidator : AbstractValidator<JwtUserInformation>

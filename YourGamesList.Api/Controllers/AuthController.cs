@@ -10,6 +10,7 @@ using YourGamesList.Api.Services.Auth.Model;
 
 namespace YourGamesList.Api.Controllers;
 
+//TODO: update unit tests
 [ApiController]
 [Route("auth")]
 public class AuthController : YourGamesListBaseController
@@ -91,7 +92,7 @@ public class AuthController : YourGamesListBaseController
         return Result(StatusCodes.Status200OK, response);
     }
 
-    [HttpPost("delete")]
+    [HttpDelete("delete")]
     [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]

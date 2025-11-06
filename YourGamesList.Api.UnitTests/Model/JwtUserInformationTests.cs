@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using AutoFixture;
 using YourGamesList.Api.Model;
 
@@ -57,7 +58,7 @@ public class JwtUserInformationTests
     {
         //ARRANGE
         var options = _fixture.Build<JwtUserInformation>()
-            .With(x => x.UserId, string.Empty)
+            .With(x => x.UserId, Guid.Empty)
             .WithAutoProperties()
             .Create();
 

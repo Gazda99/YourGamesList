@@ -34,7 +34,7 @@ public interface IYglAuthApi
         [Body] UserLoginRequest loginRequest
     );
 
-    [Post("/auth/delete")]
+    [Delete("/auth/delete")]
     Task<IApiResponse> Delete(
         [Body] UserDeleteRequest deleteRequest
     );

@@ -1,56 +1,157 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Attributes;
+using YourGamesList.Api.Model.Dto;
 using YourGamesList.Api.Model.Requests.Lists;
-using YourGamesList.Api.Services.Ygl;
+using YourGamesList.Api.Services.ModelMapper;
+using YourGamesList.Api.Services.Ygl.Lists;
+using YourGamesList.Api.Services.Ygl.Lists.Model;
 
 namespace YourGamesList.Api.Controllers;
 
 [ApiController]
-[Route("lists")]
+[Route("ygl/lists")]
 public class ListsController : YourGamesListBaseController
 {
     private readonly ILogger<ListsController> _logger;
+    private readonly IRequestToParametersMapper _requestToParametersMapper;
     private readonly IListsService _listsService;
 
-    public ListsController(ILogger<ListsController> logger, IListsService listsService)
+    public ListsController(ILogger<ListsController> logger, IRequestToParametersMapper requestToParametersMapper, IListsService listsService)
     {
         _logger = logger;
+        _requestToParametersMapper = requestToParametersMapper;
         _listsService = listsService;
     }
 
     [HttpPost("create")]
     [Authorize]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status409Conflict)]
     [TypeFilter(typeof(RequestValidatorAttribute<CreateListRequest>), Arguments = ["createListRequest"])]
     public async Task<IActionResult> CreateList(CreateListRequest createListRequest)
     {
-        return Result(StatusCodes.Status200OK);
+        var res = await _listsService.CreateList(createListRequest.UserInformation, createListRequest.Body!.ListName, createListRequest.Body.Description);
+        if (res.IsSuccess)
+        {
+            return Result(StatusCodes.Status200OK);
+        }
+
+        else if (res.Error == ListsError.ListAlreadyExists)
+        {
+            return Result(StatusCodes.Status409Conflict);
+        }
+        else
+        {
+            return Result(StatusCodes.Status500InternalServerError);
+        }
     }
 
-    [HttpPost("get")]
+    [HttpPost("search")]
     [Authorize]
-    [TypeFilter(typeof(RequestValidatorAttribute<GetListsRequest>), Arguments = ["getListsRequest"])]
-    public async Task<IActionResult> GetLists(GetListsRequest getListsRequest)
+    [TypeFilter(typeof(RequestValidatorAttribute<SearchListsRequest>), Arguments = ["searchListsRequest"])]
+    public async Task<IActionResult> SearchLists(SearchListsRequest searchListsRequest)
     {
-        return Result(StatusCodes.Status200OK);
+        var parameters = _requestToParametersMapper.Map(searchListsRequest);
+
+        var res = await _listsService.SearchLists(parameters);
+
+        if (res.IsSuccess)
+        {
+            return Result(StatusCodes.Status200OK, res.Value);
+        }
+
+        else if (res.Error == ListsError.ListNotFound)
+        {
+            return Result(StatusCodes.Status404NotFound);
+        }
+        else
+        {
+            return Result(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    [HttpPost("getSelf")]
+    [Authorize]
+    [ProducesResponseType(typeof(List<GamesListDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+    [TypeFilter(typeof(RequestValidatorAttribute<GetSelfListsRequest>), Arguments = ["getSelfListsRequest"])]
+    public async Task<IActionResult> GetSelfLists(GetSelfListsRequest getSelfListsRequest)
+    {
+        var res = await _listsService.GetSelfLists(getSelfListsRequest.UserInformation, getSelfListsRequest.IncludeGames);
+        if (res.IsSuccess)
+        {
+            return Result(StatusCodes.Status200OK, res.Value);
+        }
+        else if (res.Error == ListsError.ListNotFound)
+        {
+            return Result(StatusCodes.Status404NotFound);
+        }
+        else
+        {
+            return Result(StatusCodes.Status500InternalServerError);
+        }
     }
 
     [HttpPost("update")]
     [Authorize]
-    [TypeFilter(typeof(RequestValidatorAttribute<UpdateListRequest>), Arguments = ["updateListRequest"])]
-    public async Task<IActionResult> UpdateList(UpdateListRequest updateListRequest)
+    [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status409Conflict)]
+    [TypeFilter(typeof(RequestValidatorAttribute<UpdateListsRequest>), Arguments = ["updateListsRequest"])]
+    public async Task<IActionResult> UpdateList(UpdateListsRequest updateListsRequest)
     {
-        return Result(StatusCodes.Status200OK);
+        var parameters = _requestToParametersMapper.Map(updateListsRequest);
+        var res = await _listsService.UpdateLists(parameters);
+        if (res.IsSuccess)
+        {
+            return Result(StatusCodes.Status200OK);
+        }
+        else if (res.Error == ListsError.ListNotFound)
+        {
+            return Result(StatusCodes.Status404NotFound);
+        }
+        else if (res.Error == ListsError.ListAlreadyExists)
+        {
+            return Result(StatusCodes.Status409Conflict);
+        }
+        else
+        {
+            return Result(StatusCodes.Status500InternalServerError);
+        }
     }
 
-    [HttpPost("delete")]
+    [HttpDelete("delete")]
     [Authorize]
+    [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status423Locked)]
     [TypeFilter(typeof(RequestValidatorAttribute<DeleteListRequest>), Arguments = ["deleteListRequest"])]
     public async Task<IActionResult> DeleteList(DeleteListRequest deleteListRequest)
     {
-        return Result(StatusCodes.Status200OK);
+        var res = await _listsService.DeleteList(deleteListRequest.UserInformation, deleteListRequest.ListName);
+
+        if (res.IsSuccess)
+        {
+            return Result(StatusCodes.Status204NoContent);
+        }
+
+        if (res.Error == ListsError.ListNotFound)
+        {
+            return Result(StatusCodes.Status404NotFound);
+        }
+        else if (res.Error == ListsError.ListHardLocked)
+        {
+            return Result(StatusCodes.Status423Locked);
+        }
+        else
+        {
+            return Result(StatusCodes.Status500InternalServerError);
+        }
     }
 }

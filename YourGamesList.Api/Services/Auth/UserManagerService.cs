@@ -11,7 +11,7 @@ namespace YourGamesList.Api.Services.Auth;
 
 public interface IUserManagerService
 {
-    Task<ErrorResult<UserAuthError>> RegisterUser(string username, string password);
+    Task<CombinedResult<Guid, UserAuthError>> RegisterUser(string username, string password);
     Task<CombinedResult<string, UserAuthError>> Login(string username, string password);
     Task<ErrorResult<UserAuthError>> Delete(string username, string password);
 }
@@ -43,34 +43,34 @@ public class UserManagerService : IUserManagerService
         _yglDbContext = yglDbContext.CreateDbContext();
     }
 
-    public async Task<ErrorResult<UserAuthError>> RegisterUser(string username, string password)
+    public async Task<CombinedResult<Guid, UserAuthError>> RegisterUser(string username, string password)
     {
         username = username.ToLower();
 
         if (string.IsNullOrWhiteSpace(username))
         {
             _logger.LogWarning("Username is null or empty.");
-            return ErrorResult<UserAuthError>.Failure(UserAuthError.InvalidUsername);
+            return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.InvalidUsername);
         }
 
         if (string.IsNullOrWhiteSpace(password))
         {
             _logger.LogWarning("Password is null or empty.");
-            return ErrorResult<UserAuthError>.Failure(UserAuthError.WrongPassword);
+            return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.WrongPassword);
         }
 
         var doesUserExists = await FindUserByUserName(username);
         if (doesUserExists.IsSuccess)
         {
             _logger.LogInformation($"User with username '{username}' already exists.");
-            return ErrorResult<UserAuthError>.Failure(UserAuthError.RegisterNameAlreadyTaken);
+            return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.RegisterNameAlreadyTaken);
         }
 
         var isPasswordValid = _passwordValidator.ValidatePassword(password);
         if (isPasswordValid.IsFailure)
         {
             _logger.LogWarning($"Password for the username '{username}' is invalid. Reason: '{isPasswordValid.Error.ToString()}'");
-            return ErrorResult<UserAuthError>.Failure(isPasswordValid.Error);
+            return CombinedResult<Guid, UserAuthError>.Failure(isPasswordValid.Error);
         }
 
         var hashedPassword = _passwordHasher.HashPassword(password);
@@ -86,11 +86,21 @@ public class UserManagerService : IUserManagerService
         };
 
         _yglDbContext.Users.Add(newUser);
+        var defaultList = new GamesList()
+        {
+            Name = "Played",
+            User = newUser,
+            //We set can be deleted to false, as this is the main list that always should exists for each user
+            CanBeDeleted = false,
+            IsPublic = false
+        };
+
+        _yglDbContext.Lists.Add(defaultList);
         await _yglDbContext.SaveChangesAsync();
 
         _logger.LogInformation($"User with username '{username}' registered successfully.");
 
-        return ErrorResult<UserAuthError>.Clear();
+        return CombinedResult<Guid, UserAuthError>.Success(newUser.Id);
     }
 
     public async Task<CombinedResult<string, UserAuthError>> Login(string username, string password)

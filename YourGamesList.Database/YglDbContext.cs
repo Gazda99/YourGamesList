@@ -37,7 +37,8 @@ public class YglDbContext : DbContext
         modelBuilder.Entity<User>()
             .HasMany(x => x.GamesLists)
             .WithOne(x => x.User)
-            .HasForeignKey(x => x.UserId);
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Game>().HasKey(x => x.Id);
 
@@ -47,6 +48,8 @@ public class YglDbContext : DbContext
         modelBuilder.Entity<GamesList>()
             .HasMany(x => x.Games)
             .WithOne(x => x.GamesList)
-            .HasForeignKey(x => x.GamesListId);
+            .HasForeignKey(x => x.GamesListId)
+            .HasForeignKey(x => x.GameId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

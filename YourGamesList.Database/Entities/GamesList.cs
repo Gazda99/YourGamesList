@@ -11,9 +11,10 @@ public class GamesList
     [StringLength(500)] public string Desc { get; set; } = string.Empty;
     [StringLength(50)] public required string Name { get; set; }
     public bool IsPublic { get; set; } = true;
+    public bool CanBeDeleted { get; set; } = true;
 
     public virtual ICollection<GameListEntry> Games { get; } = [];
 
     public virtual User User { get; set; } = null!;
-    public Guid UserId { get; set; }
+    public virtual Guid UserId { get; set; }
 }

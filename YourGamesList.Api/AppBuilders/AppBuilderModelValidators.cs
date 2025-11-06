@@ -4,6 +4,7 @@ using YourGamesList.Api.ControllerModelValidators;
 using YourGamesList.Api.Model.Requests.Auth;
 using YourGamesList.Api.Model.Requests.Lists;
 using YourGamesList.Api.Model.Requests.SearchIgdbGames;
+using YourGamesList.Api.Model.Requests.SearchYglGames;
 
 namespace YourGamesList.Api.AppBuilders;
 
@@ -24,17 +25,23 @@ public static partial class AppBuilder
             .AddScoped<IValidator<UserDeleteRequest>, UserDeleteRequestValidator>()
             ;
 
-        //Search Games controller validators
+        //Search IGDB Games controller validators
         services
             .AddScoped<IValidator<SearchIgdbGameByNameRequest>, SearchGameByNameRequestValidator>()
             .AddScoped<IValidator<SearchIgdbGamesByIdsRequest>, SearchGamesByIdsRequestValidator>()
             ;
 
+        //Search YGL Games controller validators
+        services
+            .AddScoped<IValidator<SearchYglGamesRequest>, SearchYglGamesRequestValidator>()
+            ;
+
         //Lists controller validators
         services
             .AddScoped<IValidator<CreateListRequest>, CreateListRequestValidator>()
-            .AddScoped<IValidator<GetListsRequest>, GetListsRequestValidator>()
-            .AddScoped<IValidator<UpdateListRequest>, UpdateListRequestValidator>()
+            .AddScoped<IValidator<SearchListsRequest>, SearchListsRequestValidator>()
+            .AddScoped<IValidator<GetSelfListsRequest>, GetSelfListsRequestValidator>()
+            .AddScoped<IValidator<UpdateListsRequest>, UpdateListsRequestValidator>()
             .AddScoped<IValidator<DeleteListRequest>, DeleteListRequestValidator>()
             ;
 

@@ -15,11 +15,13 @@ using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Options;
 using YourGamesList.Api.Services.Igdb;
 using YourGamesList.Api.Services.Igdb.Options;
+using YourGamesList.Api.Services.ModelMapper;
 using YourGamesList.Api.Services.Scraper;
 using YourGamesList.Api.Services.Scraper.Options;
 using YourGamesList.Api.Services.Twitch;
 using YourGamesList.Api.Services.Twitch.Options;
-using YourGamesList.Api.Services.Ygl;
+using YourGamesList.Api.Services.Ygl.Games;
+using YourGamesList.Api.Services.Ygl.Lists;
 using YourGamesList.Common.Caching;
 using YourGamesList.Common.Http;
 using YourGamesList.Common.Options.Validators;
@@ -41,10 +43,7 @@ public static partial class AppBuilder
         builder.Logging.ClearProviders();
         builder.Host.AddLogger(builder.Configuration);
 
-        builder.Services.AddControllers(options =>
-        {
-            options.ModelBinderProviders.Insert(0, new JwtUserInformationModelBinderProvider());
-        });
+        builder.Services.AddControllers(options => { options.ModelBinderProviders.Insert(0, new JwtUserInformationModelBinderProvider()); });
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
         {
             o.RequireHttpsMetadata = false;
@@ -71,12 +70,15 @@ public static partial class AppBuilder
         builder.Services.AddAuth();
         builder.Services.AddDatabases();
 
-        builder.Services.AddTwitchAuthService();
-        builder.Services.AddIgdbService();
+        builder.Services.AddSingleton<IYglDatabaseToDtoMapper, YglDatabaseToDtoMapper>();
+        builder.Services.AddSingleton<IRequestToParametersMapper, RequestToParametersMapper>();
+
+        builder.Services.AddTwitchAuthServices();
+        builder.Services.AddIgdbServices();
 
         builder.Services.AddScraper();
 
-        builder.Services.AddScoped<IListsService, ListsService>();
+        builder.Services.AddYglServices();
 
         var app = builder.Build();
         return app;
@@ -107,7 +109,7 @@ public static partial class AppBuilder
         return services;
     }
 
-    private static IServiceCollection AddTwitchAuthService(this IServiceCollection services)
+    private static IServiceCollection AddTwitchAuthServices(this IServiceCollection services)
     {
         services.AddOptionsWithFluentValidation<TwitchAuthHttpClientOptions, TwitchAuthHttpClientOptionsValidator>(TwitchAuthHttpClientOptions.SectionName);
         services.AddOptionsWithFluentValidation<TwitchAuthOptions, TwitchAuthOptionsValidator>(TwitchAuthOptions.SectionName);
@@ -130,7 +132,7 @@ public static partial class AppBuilder
         return services;
     }
 
-    private static IServiceCollection AddIgdbService(this IServiceCollection services)
+    private static IServiceCollection AddIgdbServices(this IServiceCollection services)
     {
         services.AddOptionsWithFluentValidation<IgdbHttpClientOptions, IgdbHttpClientOptionsValidator>(IgdbHttpClientOptions.SectionName);
         services.AddRefitClient<IIgdbApi>().ConfigureHttpClient((provider, client) =>
@@ -142,6 +144,14 @@ public static partial class AppBuilder
 
         services.AddScoped<IIgdbService, IgdbService>();
         services.AddScoped<IIgdbGamesService, IgdbGamesService>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddYglServices(this IServiceCollection services)
+    {
+        services.AddScoped<IListsService, ListsService>();
+        services.AddScoped<IYglGamesService, YglGamesService>();
 
         return services;
     }

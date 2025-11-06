@@ -27,6 +27,6 @@ public static class Configuration
             return val;
         }
 
-        throw new Exception($"Could not read '{varName}' environment variable.");
+        throw new InvalidOperationException($"Could not read '{varName}' environment variable.");
     }
 }

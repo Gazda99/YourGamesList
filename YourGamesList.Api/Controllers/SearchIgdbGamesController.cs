@@ -25,6 +25,7 @@ public class SearchIgdbGamesController : YourGamesListBaseController
 
     [HttpGet("searchGameByName")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [TypeFilter(typeof(RequestValidatorAttribute<SearchIgdbGameByNameRequest>), Arguments = ["searchIgdbGameByNameRequest"])]
     public async Task<IActionResult> SearchGameByName(SearchIgdbGameByNameRequest searchIgdbGameByNameRequest)
     {
@@ -37,6 +38,7 @@ public class SearchIgdbGamesController : YourGamesListBaseController
 
     [HttpGet("searchGameByIds")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [TypeFilter(typeof(RequestValidatorAttribute<SearchIgdbGamesByIdsRequest>), Arguments = ["searchIgdbGamesByIdsRequest"])]
     public async Task<IActionResult> SearchGameByIds(SearchIgdbGamesByIdsRequest searchIgdbGamesByIdsRequest)
     {

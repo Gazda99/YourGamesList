@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using AutoFixture;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -36,12 +37,13 @@ public class AuthControllerTests
         //ARRANGE
         var userName = _fixture.Create<string>();
         var password = _fixture.Create<string>();
+        var newUserId = Guid.NewGuid();
         var registerRequest = new UserRegisterRequest()
         {
             Username = userName,
             Password = password
         };
-        _userManagerService.RegisterUser(userName, password).Returns(ErrorResult<UserAuthError>.Clear());
+        _userManagerService.RegisterUser(userName, password).Returns(CombinedResult<Guid, UserAuthError>.Success(newUserId));
         var controller = new AuthController(_logger, _userManagerService);
 
         //ACT
@@ -66,7 +68,7 @@ public class AuthControllerTests
             Username = userName,
             Password = password
         };
-        _userManagerService.RegisterUser(userName, password).Returns(ErrorResult<UserAuthError>.Failure(UserAuthError.RegisterNameAlreadyTaken));
+        _userManagerService.RegisterUser(userName, password).Returns(CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.RegisterNameAlreadyTaken));
         var controller = new AuthController(_logger, _userManagerService);
 
         //ACT
@@ -93,7 +95,7 @@ public class AuthControllerTests
             Username = userName,
             Password = password
         };
-        var error = ErrorResult<UserAuthError>.Failure(passwordRelatedError);
+        var error = CombinedResult<Guid, UserAuthError>.Failure(passwordRelatedError);
         _userManagerService.RegisterUser(userName, password).Returns(error);
         var controller = new AuthController(_logger, _userManagerService);
 

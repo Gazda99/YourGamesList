@@ -4,18 +4,17 @@ using YourGamesList.Api.Attributes;
 
 namespace YourGamesList.Api.Model.Requests.Lists;
 
-public class GetListsRequest
+public class GetSelfListsRequest
 {
     [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
-    [FromQuery(Name = "listName")] public string ListName { get; init; } = string.Empty;
+    [FromQuery] public bool IncludeGames { get; init; } = false;
 }
 
 //TODO: unit tests
-internal sealed class GetListsRequestValidator : AbstractValidator<GetListsRequest>
+internal sealed class GetSelfListsRequestValidator : AbstractValidator<GetSelfListsRequest>
 {
-    public GetListsRequestValidator()
+    public GetSelfListsRequestValidator()
     {
         RuleFor(x => x.UserInformation).SetValidator(new JwtUserInformationValidator());
-        RuleFor(x => x.ListName).NotEmpty();
     }
 }
