@@ -162,6 +162,7 @@ public class ListsController : YourGamesListBaseController
     #region ListEntry
 
     [HttpPost("entries/add")]
+    [Authorize]
     [ProducesResponseType(typeof(List<Guid>), StatusCodes.Status200OK)]
     [TypeFilter(typeof(RequestValidatorAttribute<AddEntriesToListRequest>), Arguments = ["addEntriesToListRequest"])]
     public async Task<IActionResult> AddListEntries(AddEntriesToListRequest addEntriesToListRequest)
@@ -180,6 +181,7 @@ public class ListsController : YourGamesListBaseController
     }
 
     [HttpPost("entries/delete")]
+    [Authorize]
     [ProducesResponseType(typeof(List<Guid>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [TypeFilter(typeof(RequestValidatorAttribute<DeleteEntriesFromListRequest>), Arguments = ["deleteEntriesFromListRequest"])]
@@ -203,6 +205,7 @@ public class ListsController : YourGamesListBaseController
     }
     
     [HttpPatch("entries/update")]
+    [Authorize]
     [ProducesResponseType(typeof(List<Guid>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [TypeFilter(typeof(RequestValidatorAttribute<UpdateEntriesInListRequest>), Arguments = ["updateEntriesInListRequest"])]

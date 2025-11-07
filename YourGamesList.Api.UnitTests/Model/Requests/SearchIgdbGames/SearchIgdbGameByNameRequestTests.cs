@@ -1,9 +1,8 @@
-﻿using System.Linq;
-using AutoFixture;
+﻿using AutoFixture;
 using FluentValidation.TestHelper;
 using YourGamesList.Api.Model.Requests.SearchIgdbGames;
 
-namespace YourGamesList.Api.UnitTests.Model.Requests.SearchGames;
+namespace YourGamesList.Api.UnitTests.Model.Requests.SearchIgdbGames;
 
 public class SearchIgdbGameByNameRequestTests
 {

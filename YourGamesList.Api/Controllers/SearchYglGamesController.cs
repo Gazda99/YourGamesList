@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -26,17 +27,19 @@ public class SearchYglGamesController : YourGamesListBaseController
     }
 
     [HttpGet("searchGames")]
+    [Authorize]
     [ProducesResponseType(typeof(List<GameDto>), StatusCodes.Status200OK)]
     [TypeFilter(typeof(RequestValidatorAttribute<SearchYglGamesRequest>), Arguments = ["searchYglGamesRequest"])]
     public async Task<IActionResult> SearchGames(SearchYglGamesRequest searchYglGamesRequest)
     {
         var command = new SearchGamesParameters()
         {
-            GameName = searchYglGamesRequest.SearchYglGamesRequestBody.GameName,
-        //    Skip = searchYglGamesRequest.SearchYglGamesRequestBody.Skip
+            GameName = searchYglGamesRequest.Body.GameName,
+            Skip = searchYglGamesRequest.Body.Skip,
+            Take = searchYglGamesRequest.Body.Take,
         };
-        
+
         var games = await _yglGamesService.SearchGames(command);
-        return Result(StatusCodes.Status200OK,games);
+        return Result(StatusCodes.Status200OK, games);
     }
 }

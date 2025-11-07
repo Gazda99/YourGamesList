@@ -15,6 +15,7 @@ public interface IYglGamesService
     Task<List<GameDto>> SearchGames(SearchGamesParameters parameters);
 }
 
+//TODO: unit tests
 public class YglGamesService : IYglGamesService
 {
     private readonly ILogger<YglGamesService> _logger;
@@ -30,6 +31,7 @@ public class YglGamesService : IYglGamesService
 
     public async Task<List<GameDto>> SearchGames(SearchGamesParameters parameters)
     {
+        //TODO: finish logic
         var gameName = parameters.GameName.ToLower();
         var games = await _yglDbContext.Games.Where(x => x.Name.ToLower().Contains(gameName))
             .Skip(parameters.Skip)
