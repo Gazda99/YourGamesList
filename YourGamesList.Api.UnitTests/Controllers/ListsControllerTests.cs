@@ -10,7 +10,7 @@ using NSubstitute;
 using YourGamesList.Api.Controllers;
 using YourGamesList.Api.Model.Dto;
 using YourGamesList.Api.Model.Requests.Lists;
-using YourGamesList.Api.Services.ModelMapper;
+using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Ygl.Lists;
 using YourGamesList.Api.Services.Ygl.Lists.Model;
 using YourGamesList.Common;

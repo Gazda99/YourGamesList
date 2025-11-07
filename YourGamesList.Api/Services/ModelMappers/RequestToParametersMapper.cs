@@ -3,7 +3,7 @@ using System.Linq;
 using YourGamesList.Api.Model.Requests.Lists;
 using YourGamesList.Api.Services.Ygl.Lists.Model;
 
-namespace YourGamesList.Api.Services.ModelMapper;
+namespace YourGamesList.Api.Services.ModelMappers;
 
 public interface IRequestToParametersMapper
 {
@@ -14,7 +14,6 @@ public interface IRequestToParametersMapper
     UpdateListEntriesParameter Map(UpdateListEntriesRequest request);
 }
 
-//TODO: unit tests
 public class RequestToParametersMapper : IRequestToParametersMapper
 {
     public UpdateListParameters Map(UpdateListRequest request)
