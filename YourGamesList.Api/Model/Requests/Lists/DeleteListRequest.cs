@@ -8,15 +8,14 @@ namespace YourGamesList.Api.Model.Requests.Lists;
 public class DeleteListRequest
 {
     [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
-    [FromQuery(Name = "id")] public required Guid Id { get; init; }
+    [FromQuery(Name = "listId")] public required Guid ListId { get; init; }
 }
 
-//TODO: unit tests
 internal sealed class DeleteListRequestValidator : AbstractValidator<DeleteListRequest>
 {
-    public DeleteListRequestValidator()
+    public DeleteListRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
     {
-        RuleFor(x => x.UserInformation).SetValidator(new JwtUserInformationValidator());
-        RuleFor(x => x.Id).NotEmpty();
+        RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
+        RuleFor(x => x.ListId).NotEmpty();
     }
 }

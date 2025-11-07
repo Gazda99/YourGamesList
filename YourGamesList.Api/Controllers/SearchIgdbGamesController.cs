@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -24,6 +25,7 @@ public class SearchIgdbGamesController : YourGamesListBaseController
     }
 
     [HttpGet("searchGameByName")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [TypeFilter(typeof(RequestValidatorAttribute<SearchIgdbGameByNameRequest>), Arguments = ["searchIgdbGameByNameRequest"])]
@@ -37,6 +39,7 @@ public class SearchIgdbGamesController : YourGamesListBaseController
     }
 
     [HttpGet("searchGameByIds")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [TypeFilter(typeof(RequestValidatorAttribute<SearchIgdbGamesByIdsRequest>), Arguments = ["searchIgdbGamesByIdsRequest"])]

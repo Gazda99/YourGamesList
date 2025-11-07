@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using AutoFixture;
+using FluentValidation.TestHelper;
 using YourGamesList.Api.Model.Requests.SearchIgdbGames;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.SearchGames;
@@ -25,7 +26,7 @@ public class SearchIgdbGameByNameRequestTests
         var validator = new SearchGameByNameRequestValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.True);
@@ -45,11 +46,11 @@ public class SearchIgdbGameByNameRequestTests
         var validator = new SearchGameByNameRequestValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(SearchIgdbGameByNameRequest.GameName)));
+        res.ShouldHaveValidationErrorFor(x => x.GameName);
     }
 }

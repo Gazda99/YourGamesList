@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using AutoFixture;
+using FluentValidation.TestHelper;
 using YourGamesList.Api.Services.Auth.Options;
 
 namespace YourGamesList.Api.UnitTests.Services.Auth.Options;
@@ -27,7 +28,7 @@ public class PasswordValidatorOptionsTests
         var validator = new PasswordValidatorOptionsValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.True);
@@ -47,12 +48,12 @@ public class PasswordValidatorOptionsTests
         var validator = new PasswordValidatorOptionsValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(PasswordValidatorOptions.MinimumPasswordLength)));
+        res.ShouldHaveValidationErrorFor(x => x.MinimumPasswordLength);
     }
 
 
@@ -70,12 +71,12 @@ public class PasswordValidatorOptionsTests
         var validator = new PasswordValidatorOptionsValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(PasswordValidatorOptions.MaximumPasswordLength)));
+        res.ShouldHaveValidationErrorFor(x => x.MaximumPasswordLength);
     }
 
     [Test]
@@ -91,11 +92,11 @@ public class PasswordValidatorOptionsTests
         var validator = new PasswordValidatorOptionsValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        Assert.That(res.Errors.Select(x => x.ErrorMessage), Contains.Item("Minimum password length must be less or  equal than maximum password length."));
+        Assert.That(res.Errors.Select(x => x.ErrorMessage), Contains.Item("Minimum password length must be less or equal than maximum password length."));
     }
 }

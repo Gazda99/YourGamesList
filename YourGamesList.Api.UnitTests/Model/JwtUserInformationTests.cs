@@ -2,6 +2,7 @@
 using System.Linq;
 using AutoFixture;
 using YourGamesList.Api.Model;
+using FluentValidation.TestHelper;
 
 namespace YourGamesList.Api.UnitTests.Model;
 
@@ -45,12 +46,13 @@ public class JwtUserInformationTests
         var validator = new JwtUserInformationValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(JwtUserInformation.Username)));
+        res.ShouldHaveValidationErrorFor(x => x.Username);
+      //  Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(JwtUserInformation.Username)));
     }
 
     [Test]

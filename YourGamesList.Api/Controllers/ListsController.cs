@@ -136,7 +136,7 @@ public class ListsController : YourGamesListBaseController
     [TypeFilter(typeof(RequestValidatorAttribute<DeleteListRequest>), Arguments = ["deleteListRequest"])]
     public async Task<IActionResult> DeleteList(DeleteListRequest deleteListRequest)
     {
-        var res = await _listsService.DeleteList(deleteListRequest.UserInformation, deleteListRequest.Id);
+        var res = await _listsService.DeleteList(deleteListRequest.UserInformation, deleteListRequest.ListId);
 
         if (res.IsSuccess)
         {

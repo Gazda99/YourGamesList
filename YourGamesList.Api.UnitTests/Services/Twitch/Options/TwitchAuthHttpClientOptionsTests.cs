@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using AutoFixture;
+using FluentValidation.TestHelper;
 using YourGamesList.Api.Services.Twitch.Options;
 
 namespace YourGamesList.Api.UnitTests.Services.Twitch.Options;
@@ -26,7 +27,7 @@ public class TwitchAuthHttpClientOptionsTests
         var validator = new TwitchAuthHttpClientOptionsValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.True);
@@ -48,11 +49,11 @@ public class TwitchAuthHttpClientOptionsTests
         var validator = new TwitchAuthHttpClientOptionsValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(TwitchAuthHttpClientOptions.BaseAddress)));
+        res.ShouldHaveValidationErrorFor(x => x.BaseAddress);
     }
 }

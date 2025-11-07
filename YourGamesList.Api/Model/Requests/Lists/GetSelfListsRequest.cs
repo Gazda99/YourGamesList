@@ -10,11 +10,10 @@ public class GetSelfListsRequest
     [FromQuery] public bool? IncludeGames { get; init; } = false;
 }
 
-//TODO: unit tests
 internal sealed class GetSelfListsRequestValidator : AbstractValidator<GetSelfListsRequest>
 {
-    public GetSelfListsRequestValidator()
+    public GetSelfListsRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
     {
-        RuleFor(x => x.UserInformation).SetValidator(new JwtUserInformationValidator());
+        RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using AutoFixture;
+using FluentValidation.TestHelper;
 using YourGamesList.Api.Model.Requests.Auth;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Auth;
@@ -25,7 +26,7 @@ public class UserDeleteRequestTests
         var validator = new UserDeleteRequestValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.True);
@@ -43,12 +44,12 @@ public class UserDeleteRequestTests
         var validator = new UserDeleteRequestValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(UserDeleteRequest.Username)));
+        res.ShouldHaveValidationErrorFor(x => x.Username);
     }
 
     [Test]
@@ -63,11 +64,11 @@ public class UserDeleteRequestTests
         var validator = new UserDeleteRequestValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(UserDeleteRequest.Password)));
+        res.ShouldHaveValidationErrorFor(x => x.Password);
     }
 }

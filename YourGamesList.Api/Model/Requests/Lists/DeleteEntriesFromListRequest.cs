@@ -18,12 +18,11 @@ public class DeleteEntriesFromListRequestBody
     public Guid[] EntriesToRemove { get; init; } = [];
 }
 
-//TODO: unit tests
 internal sealed class DeleteEntriesFromListRequestValidator : AbstractValidator<DeleteEntriesFromListRequest>
 {
-    public DeleteEntriesFromListRequestValidator()
+    public DeleteEntriesFromListRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
     {
-        RuleFor(x => x.UserInformation).SetValidator(new JwtUserInformationValidator());
+        RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
         RuleFor(x => x.Body)
             .NotEmpty()
             .WithMessage("Request body is empty");
@@ -31,7 +30,6 @@ internal sealed class DeleteEntriesFromListRequestValidator : AbstractValidator<
         {
             RuleFor(x => x.Body!.ListId)
                 .NotEmpty()
-                
                 .WithMessage("List id is required");
         });
     }

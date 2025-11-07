@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using AutoFixture;
+using FluentValidation.TestHelper;
 using YourGamesList.Api.Services.Scraper.Options;
 
 namespace YourGamesList.Api.UnitTests.Services.Scraper.Options;
@@ -25,7 +26,7 @@ public class ScraperOptionsTests
         var validator = new ScraperOptionsValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.True);
@@ -43,12 +44,12 @@ public class ScraperOptionsTests
         var validator = new ScraperOptionsValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(ScraperOptions.BatchSize)));
+        res.ShouldHaveValidationErrorFor(x => x.BatchSize);
     }
 
     [Test]
@@ -63,12 +64,12 @@ public class ScraperOptionsTests
         var validator = new ScraperOptionsValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(ScraperOptions.ConcurrencyLevel)));
+        res.ShouldHaveValidationErrorFor(x => x.ConcurrencyLevel);
     }
 
     [Test]
@@ -83,12 +84,12 @@ public class ScraperOptionsTests
         var validator = new ScraperOptionsValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(ScraperOptions.RateLimitTimeFrameInMilliseconds)));
+        res.ShouldHaveValidationErrorFor(x => x.RateLimitTimeFrameInMilliseconds);
     }
 
     [Test]
@@ -103,11 +104,11 @@ public class ScraperOptionsTests
         var validator = new ScraperOptionsValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(ScraperOptions.MaxConcurrentCallsWithinTimeFrame)));
+        res.ShouldHaveValidationErrorFor(x => x.MaxConcurrentCallsWithinTimeFrame);
     }
 }

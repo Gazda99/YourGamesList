@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using YourGamesList.Api.ControllerModelValidators;
+using YourGamesList.Api.Model;
 using YourGamesList.Api.Model.Requests.Auth;
 using YourGamesList.Api.Model.Requests.Lists;
 using YourGamesList.Api.Model.Requests.SearchIgdbGames;
@@ -16,6 +17,11 @@ public static partial class AppBuilder
         services
             .AddScoped<IBaseRequestValidator, BaseRequestValidator>()
             .AddScoped<IValidationFailedResultFactory, ValidationFailedResultFactory>()
+            ;
+
+        //Common
+        services
+            .AddScoped<IValidator<JwtUserInformation>, JwtUserInformationValidator>()
             ;
 
         //Auth controller validators

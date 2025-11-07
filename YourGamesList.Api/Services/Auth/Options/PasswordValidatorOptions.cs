@@ -23,6 +23,6 @@ public class PasswordValidatorOptionsValidator : AbstractValidator<PasswordValid
 
         RuleFor(x => new { x.MinimumPasswordLength, x.MaximumPasswordLength })
             .Must(x => x.MinimumPasswordLength <= x.MaximumPasswordLength)
-            .WithMessage("Minimum password length must be less or  equal than maximum password length.");
+            .WithMessage("Minimum password length must be less or equal than maximum password length.");
     }
 }
