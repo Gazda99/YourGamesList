@@ -32,7 +32,7 @@ public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
             Name = gamesList.Name,
             IsPublic = gamesList.IsPublic,
             CanBeDeleted = gamesList.CanBeDeleted,
-            Games = gamesList.Games.Select(Map).ToList(),
+            Entries = gamesList.Entries.Select(Map).ToList(),
         };
     }
 
@@ -42,7 +42,7 @@ public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
         return new GameListEntryDto()
         {
             Id = gameListEntry.Id,
-            Game = Map(gameListEntry.Game),
+            Game = gameListEntry.Game != null ? Map(gameListEntry.Game) : null,
             Desc = gameListEntry.Desc,
             Platforms = gameListEntry.Platforms.Select(Map).ToArray(),
             GameDistributions = gameListEntry.GameDistributions.Select(Map).ToArray(),

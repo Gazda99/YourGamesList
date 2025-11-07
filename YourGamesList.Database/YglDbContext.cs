@@ -1,10 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using YourGamesList.Database.Entities;
 using YourGamesList.Database.Options;
 
 namespace YourGamesList.Database;
 
+[ExcludeFromCodeCoverage]
 public class YglDbContext : DbContext
 {
     private readonly IOptions<YourGamesListDatabaseOptions> _options;
@@ -61,7 +63,7 @@ public class YglDbContext : DbContext
         modelBuilder.Entity<GamesList>(entity =>
         {
             entity.HasKey(x => x.Id);
-            entity.HasMany(x => x.Games)
+            entity.HasMany(x => x.Entries)
                 .WithOne(x => x.GamesList)
                 .HasForeignKey(x => x.GamesListId)
                 .OnDelete(DeleteBehavior.Cascade);

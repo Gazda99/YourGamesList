@@ -42,10 +42,12 @@ public static partial class AppBuilder
             .AddScoped<IValidator<CreateListRequest>, CreateListRequestValidator>()
             .AddScoped<IValidator<SearchListsRequest>, SearchListsRequestValidator>()
             .AddScoped<IValidator<GetSelfListsRequest>, GetSelfListsRequestValidator>()
-            .AddScoped<IValidator<UpdateListsRequest>, UpdateListsRequestValidator>()
+            .AddScoped<IValidator<UpdateListRequest>, UpdateListRequestValidator>()
             .AddScoped<IValidator<DeleteListRequest>, DeleteListRequestValidator>()
             //list entries
             .AddScoped<IValidator<AddEntriesToListRequest>, AddEntriesToListRequestValidator>()
+            .AddScoped<IValidator<DeleteEntriesFromListRequest>, DeleteEntriesFromListRequestValidator>()
+            .AddScoped<IValidator<UpdateEntriesFromListRequest>, UpdateEntriesFromListRequestValidator>()
             ;
 
         return services;

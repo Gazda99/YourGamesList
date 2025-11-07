@@ -3,7 +3,7 @@ using YourGamesList.Api.Model;
 
 namespace YourGamesList.Api.Services.Ygl.Lists.Model;
 
-public class UpdateListsParameters
+public class UpdateListParameters
 {
     public required JwtUserInformation UserInformation { get; init; }
     public Guid ListId { get; init; }

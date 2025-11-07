@@ -13,7 +13,7 @@ public class GamesList
     public bool IsPublic { get; set; } = true;
     public bool CanBeDeleted { get; set; } = true;
 
-    public virtual ICollection<GameListEntry> Games { get; } = [];
+    public virtual ICollection<GameListEntry> Entries { get; } = [];
 
     public virtual User User { get; set; } = null!;
     public virtual Guid UserId { get; set; }

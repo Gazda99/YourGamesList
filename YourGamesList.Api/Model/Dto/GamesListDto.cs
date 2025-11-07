@@ -10,5 +10,5 @@ public class GamesListDto
     public required string Name { get; init; }
     public required bool IsPublic { get; init; }
     public required bool CanBeDeleted { get; init; }
-    public required List<GameListEntryDto> Games { get; init; }
+    public required List<GameListEntryDto> Entries { get; init; }
 }

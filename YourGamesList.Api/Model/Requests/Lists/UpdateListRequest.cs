@@ -5,14 +5,14 @@ using YourGamesList.Api.Attributes;
 
 namespace YourGamesList.Api.Model.Requests.Lists;
 
-public class UpdateListsRequest
+public class UpdateListRequest
 {
     [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
 
-    [FromBody] public required UpdateListsRequestBody Body { get; init; }
+    [FromBody] public required UpdateListRequestBody Body { get; init; }
 }
 
-public class UpdateListsRequestBody
+public class UpdateListRequestBody
 {
     public Guid ListId { get; init; }
     public string? Name { get; set; }
@@ -21,9 +21,9 @@ public class UpdateListsRequestBody
 }
 
 //TODO: unit tests
-internal sealed class UpdateListsRequestValidator : AbstractValidator<UpdateListsRequest>
+internal sealed class UpdateListRequestValidator : AbstractValidator<UpdateListRequest>
 {
-    public UpdateListsRequestValidator()
+    public UpdateListRequestValidator()
     {
         RuleFor(x => x.UserInformation).SetValidator(new JwtUserInformationValidator());
     }

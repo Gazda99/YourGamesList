@@ -21,14 +21,16 @@ public interface IListsService
     Task<CombinedResult<Guid, ListsError>> CreateList(JwtUserInformation userInfo, string listName, string description);
     Task<CombinedResult<List<GamesListDto>, ListsError>> SearchLists(SearchListsParameters parameters);
     Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelfLists(JwtUserInformation userInfo, bool includeGames);
-    Task<ErrorResult<ListsError>> UpdateLists(UpdateListsParameters parameters);
-    Task<ErrorResult<ListsError>> DeleteList(JwtUserInformation userInfo, Guid listId);
+    Task<CombinedResult<Guid, ListsError>> UpdateList(UpdateListParameters parameters);
+    Task<CombinedResult<Guid, ListsError>> DeleteList(JwtUserInformation userInfo, Guid listId);
 
     #endregion
 
     #region ListEntry
 
     Task<CombinedResult<List<Guid>, ListsError>> AddEntriesToList(AddEntriesToListParameter parameters);
+    Task<CombinedResult<List<Guid>, ListsError>> DeleteEntriesFromList(DeleteEntriesFromListParameter parameters);
+    Task<CombinedResult<List<Guid>, ListsError>> UpdateEntriesFromList(UpdateEntriesFromListParameter parameters);
 
     #endregion
 }
@@ -99,7 +101,11 @@ public class ListsService : IListsService
 
         if (parameters.IncludeGames)
         {
-            listsQuery = listsQuery.Include(x => x.Games);
+            listsQuery = listsQuery.Include(x => x.Entries).ThenInclude(x => x.Game);
+        }
+        else
+        {
+            listsQuery = listsQuery.Include(x => x.Entries);
         }
 
         listsQuery = listsQuery.Skip(parameters.Skip);
@@ -125,12 +131,15 @@ public class ListsService : IListsService
 
     public async Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelfLists(JwtUserInformation userInfo, bool includeGames)
     {
-        var listsQuery = _yglDbContext.Lists
-            .AsNoTracking();
+        var listsQuery = _yglDbContext.Lists.AsNoTracking();
 
         if (includeGames)
         {
-            listsQuery = listsQuery.Include(x => x.Games).ThenInclude(x => x.Game);
+            listsQuery = listsQuery.Include(x => x.Entries).ThenInclude(x => x.Game);
+        }
+        else
+        {
+            listsQuery = listsQuery.Include(x => x.Entries);
         }
 
         listsQuery = listsQuery.Where(x => x.UserId == userInfo.UserId);
@@ -149,13 +158,13 @@ public class ListsService : IListsService
         return CombinedResult<List<GamesListDto>, ListsError>.Success(listDtos);
     }
 
-    public async Task<ErrorResult<ListsError>> UpdateLists(UpdateListsParameters parameters)
+    public async Task<CombinedResult<Guid, ListsError>> UpdateList(UpdateListParameters parameters)
     {
         var list = await _yglDbContext.Lists.FirstOrDefaultAsync(x => x.UserId == parameters.UserInformation.UserId && x.Id == parameters.ListId);
         if (list == null)
         {
             _logger.LogInformation($"No lists found for id '{parameters.ListId}' and user '{parameters.UserInformation.UserId}'.");
-            return ErrorResult<ListsError>.Failure(ListsError.ListNotFound);
+            return CombinedResult<Guid, ListsError>.Failure(ListsError.ListNotFound);
         }
 
         if (!string.IsNullOrWhiteSpace(parameters.Name) && !list.Name.Equals(parameters.Name, StringComparison.CurrentCultureIgnoreCase))
@@ -165,7 +174,7 @@ public class ListsService : IListsService
             if (nameExists)
             {
                 _logger.LogInformation($"Cannot rename list to '{parameters.Name}' because it already exists for user '{list.UserId}'.");
-                return ErrorResult<ListsError>.Failure(ListsError.ListAlreadyExists);
+                return CombinedResult<Guid, ListsError>.Failure(ListsError.ListAlreadyExists);
             }
 
             list.Name = parameters.Name;
@@ -184,10 +193,10 @@ public class ListsService : IListsService
         await _yglDbContext.SaveChangesAsync();
 
         _logger.LogInformation("List updated successfully.");
-        return ErrorResult<ListsError>.Clear();
+        return CombinedResult<Guid, ListsError>.Success(list.Id);
     }
 
-    public async Task<ErrorResult<ListsError>> DeleteList(JwtUserInformation userInfo, Guid listId)
+    public async Task<CombinedResult<Guid, ListsError>> DeleteList(JwtUserInformation userInfo, Guid listId)
     {
         _logger.LogInformation($"Search for list '{listId}' which belongs to user '{userInfo.Username}'.");
         var list = await _yglDbContext.Lists.FirstOrDefaultAsync(x =>
@@ -198,21 +207,22 @@ public class ListsService : IListsService
         if (list == null)
         {
             _logger.LogInformation($"List with id '{listId}' not found.");
-            return ErrorResult<ListsError>.Failure(ListsError.ListNotFound);
+            return CombinedResult<Guid, ListsError>.Failure(ListsError.ListNotFound);
         }
         else
         {
             if (!list.CanBeDeleted)
             {
                 _logger.LogInformation($"List with id '{listId}' cannot be deleted due to hard lock.");
-                return ErrorResult<ListsError>.Failure(ListsError.ListHardLocked);
+                return CombinedResult<Guid, ListsError>.Failure(ListsError.ListHardLocked);
             }
             else
             {
+                var id = list.Id;
                 _logger.LogInformation($"Deleting list '{listId}'");
                 _yglDbContext.Lists.Remove(list);
                 await _yglDbContext.SaveChangesAsync();
-                return ErrorResult<ListsError>.Clear();
+                return CombinedResult<Guid, ListsError>.Success(id);
             }
         }
     }
@@ -224,7 +234,7 @@ public class ListsService : IListsService
     public async Task<CombinedResult<List<Guid>, ListsError>> AddEntriesToList(AddEntriesToListParameter parameters)
     {
         var list = await _yglDbContext.Lists
-            .Include(x => x.Games)
+            .Include(x => x.Entries)
             .FirstOrDefaultAsync(x => x.UserId == parameters.UserInformation.UserId && x.Id == parameters.ListId);
 
         if (list == null)
@@ -234,13 +244,14 @@ public class ListsService : IListsService
         }
 
         // Filter out entries that are already in the list
-        var entriesToAdd = parameters.EntriesToAdd.Where(entryToAdd => list.Games.All(x => x.GameId != entryToAdd.GameId)).ToList();
+        var entriesToAdd = parameters.EntriesToAdd.Where(entryToAdd => list.Entries.All(x => x.GameId != entryToAdd.GameId)).ToList();
 
         if (entriesToAdd.Count == 0)
         {
-            
+            _logger.LogInformation("No new entries to add to the list.");
+            return CombinedResult<List<Guid>, ListsError>.Success([]);
         }
-        
+
         var listEntries = new List<GameListEntry>();
         foreach (var entryToAdd in entriesToAdd)
         {
@@ -266,15 +277,90 @@ public class ListsService : IListsService
                 listEntry.GameDistributions = entryToAdd.GameDistributions.Select(x => _yglDatabaseAndDtoMapper.Map(x)).ToArray();
             }
 
-            // await _yglDbContext.GameListEntries.AddAsync(listEntry);
             listEntries.Add(listEntry);
         }
 
         await _yglDbContext.GameListEntries.AddRangeAsync(listEntries);
         await _yglDbContext.SaveChangesAsync();
 
-        var gameIds = entriesToAdd.Select(x => x.GameId).ToList();
-        return CombinedResult<List<Guid>, ListsError>.Success(gameIds);
+        var listEntriesIds = listEntries.Select(x => x.Id).ToList();
+        _logger.LogInformation($"Successfully added '{listEntriesIds.Count}'entries  [{string.Join(',', listEntriesIds)}] to list '{list.Id}'.");
+        return CombinedResult<List<Guid>, ListsError>.Success(listEntriesIds);
+    }
+
+    public async Task<CombinedResult<List<Guid>, ListsError>> DeleteEntriesFromList(DeleteEntriesFromListParameter parameters)
+    {
+        var list = await _yglDbContext.Lists
+            .Include(x => x.Entries)
+            .FirstOrDefaultAsync(x => x.UserId == parameters.UserInformation.UserId && x.Id == parameters.ListId);
+
+        if (list == null)
+        {
+            _logger.LogInformation($"No lists found for id '{parameters.ListId}' and user '{parameters.UserInformation.UserId}'.");
+            return CombinedResult<List<Guid>, ListsError>.Failure(ListsError.ListNotFound);
+        }
+
+        var entriesToDelete = await _yglDbContext.GameListEntries
+            .Where(e => parameters.EntriesToRemove.Contains(e.Id))
+            .ToListAsync();
+
+        if (entriesToDelete.Count == 0)
+        {
+            _logger.LogInformation("No entries found to delete from the list.");
+            return CombinedResult<List<Guid>, ListsError>.Success([]);
+        }
+
+        var listEntriesIds = entriesToDelete.Select(x => x.Id).ToList();
+
+        _yglDbContext.GameListEntries.RemoveRange(entriesToDelete);
+        await _yglDbContext.SaveChangesAsync();
+
+        _logger.LogInformation($"Deleted '{listEntriesIds.Count}' entries [{string.Join(',', listEntriesIds)}] from list '{list.Id}'.");
+
+        return CombinedResult<List<Guid>, ListsError>.Success(listEntriesIds);
+    }
+
+    public async Task<CombinedResult<List<Guid>, ListsError>> UpdateEntriesFromList(UpdateEntriesFromListParameter parameters)
+    {
+        var list = await _yglDbContext.Lists
+            .Include(x => x.Entries)
+            .FirstOrDefaultAsync(x => x.UserId == parameters.UserInformation.UserId && x.Id == parameters.ListId);
+
+        if (list == null)
+        {
+            _logger.LogInformation($"No lists found for id '{parameters.ListId}' and user '{parameters.UserInformation.UserId}'.");
+            return CombinedResult<List<Guid>, ListsError>.Failure(ListsError.ListNotFound);
+        }
+
+        var updatedEntryIds = new List<Guid>();
+        foreach (var entryToUpdateParameter in parameters.EntriesToUpdate)
+        {
+            var entry = list.Entries.FirstOrDefault(x => x.Id == entryToUpdateParameter.EntryId);
+            if (entry == null)
+            {
+                _logger.LogInformation($"Entry to update '{entryToUpdateParameter.EntryId}' not found in the list '{list.Id}'.");
+                continue;
+            }
+
+            entry.Desc = entryToUpdateParameter.Desc ?? entry.Desc;
+            entry.Platforms = entryToUpdateParameter.Platforms != null
+                ? entryToUpdateParameter.Platforms.Select(x => _yglDatabaseAndDtoMapper.Map(x)).ToArray()
+                : entry.Platforms;
+            entry.GameDistributions = entryToUpdateParameter.GameDistributions != null
+                ? entryToUpdateParameter.GameDistributions.Select(x => _yglDatabaseAndDtoMapper.Map(x)).ToArray()
+                : entry.GameDistributions;
+            entry.IsStarred = entryToUpdateParameter.IsStarred ?? entry.IsStarred;
+            entry.Rating = entryToUpdateParameter.Rating ?? entry.Rating;
+            entry.CompletionStatus = entryToUpdateParameter.CompletionStatus != null
+                ? _yglDatabaseAndDtoMapper.Map(entryToUpdateParameter.CompletionStatus.Value)
+                : entry.CompletionStatus;
+
+            updatedEntryIds.Add(entry.Id);
+        }
+
+        await _yglDbContext.SaveChangesAsync();
+        _logger.LogInformation($"Updated '{updatedEntryIds.Count}' entries [{string.Join(',', updatedEntryIds)}] from list '{list.Id}'.");
+        return CombinedResult<List<Guid>, ListsError>.Success(updatedEntryIds);
     }
 
     #endregion

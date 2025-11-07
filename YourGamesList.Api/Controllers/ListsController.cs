@@ -100,19 +100,19 @@ public class ListsController : YourGamesListBaseController
         }
     }
 
-    [HttpPost("update")]
+    [HttpPatch("update")]
     [Authorize]
-    [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(void), StatusCodes.Status409Conflict)]
-    [TypeFilter(typeof(RequestValidatorAttribute<UpdateListsRequest>), Arguments = ["updateListsRequest"])]
-    public async Task<IActionResult> UpdateList(UpdateListsRequest updateListsRequest)
+    [TypeFilter(typeof(RequestValidatorAttribute<UpdateListRequest>), Arguments = ["updateListRequest"])]
+    public async Task<IActionResult> UpdateList(UpdateListRequest updateListRequest)
     {
-        var parameters = _requestToParametersMapper.Map(updateListsRequest);
-        var res = await _listsService.UpdateLists(parameters);
+        var parameters = _requestToParametersMapper.Map(updateListRequest);
+        var res = await _listsService.UpdateList(parameters);
         if (res.IsSuccess)
         {
-            return Result(StatusCodes.Status200OK);
+            return Result(StatusCodes.Status200OK, res.Value);
         }
         else if (res.Error == ListsError.ListNotFound)
         {
@@ -130,7 +130,7 @@ public class ListsController : YourGamesListBaseController
 
     [HttpDelete("delete")]
     [Authorize]
-    [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(void), StatusCodes.Status423Locked)]
     [TypeFilter(typeof(RequestValidatorAttribute<DeleteListRequest>), Arguments = ["deleteListRequest"])]
@@ -140,7 +140,7 @@ public class ListsController : YourGamesListBaseController
 
         if (res.IsSuccess)
         {
-            return Result(StatusCodes.Status204NoContent);
+            return Result(StatusCodes.Status200OK, res.Value.ToString());
         }
 
         if (res.Error == ListsError.ListNotFound)
@@ -162,7 +162,7 @@ public class ListsController : YourGamesListBaseController
     #region ListEntry
 
     [HttpPost("entries/add")]
-    [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<Guid>), StatusCodes.Status200OK)]
     [TypeFilter(typeof(RequestValidatorAttribute<AddEntriesToListRequest>), Arguments = ["addEntriesToListRequest"])]
     public async Task<IActionResult> AddListEntries(AddEntriesToListRequest addEntriesToListRequest)
     {
@@ -172,6 +172,52 @@ public class ListsController : YourGamesListBaseController
         if (res.IsSuccess)
         {
             return Result(StatusCodes.Status200OK, res.Value);
+        }
+        else
+        {
+            return Result(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    [HttpPost("entries/delete")]
+    [ProducesResponseType(typeof(List<Guid>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+    [TypeFilter(typeof(RequestValidatorAttribute<DeleteEntriesFromListRequest>), Arguments = ["deleteEntriesFromListRequest"])]
+    public async Task<IActionResult> DeleteListEntries(DeleteEntriesFromListRequest deleteEntriesFromListRequest)
+    {
+        var parameters = _requestToParametersMapper.Map(deleteEntriesFromListRequest);
+
+        var res = await _listsService.DeleteEntriesFromList(parameters);
+        if (res.IsSuccess)
+        {
+            return Result(StatusCodes.Status200OK, res.Value);
+        }
+        else if (res.Error == ListsError.ListNotFound)
+        {
+            return Result(StatusCodes.Status404NotFound);
+        }
+        else
+        {
+            return Result(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpPatch("entries/update")]
+    [ProducesResponseType(typeof(List<Guid>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+    [TypeFilter(typeof(RequestValidatorAttribute<UpdateEntriesFromListRequest>), Arguments = ["updateEntriesFromListRequest"])]
+    public async Task<IActionResult> UpdateListEntries(UpdateEntriesFromListRequest updateEntriesFromListRequest)
+    {
+        var parameters = _requestToParametersMapper.Map(updateEntriesFromListRequest);
+
+        var res = await _listsService.UpdateEntriesFromList(parameters);
+        if (res.IsSuccess)
+        {
+            return Result(StatusCodes.Status200OK, res.Value);
+        }
+        else if (res.Error == ListsError.ListNotFound)
+        {
+            return Result(StatusCodes.Status404NotFound);
         }
         else
         {

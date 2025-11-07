@@ -5,7 +5,7 @@ namespace YourGamesList.Api.Model.Dto;
 public class GameListEntryDto
 {
     public required Guid Id { get; init; }
-    public required GameDto Game { get; init; }
+    public required GameDto? Game { get; init; }
     public required string Desc { get; init; }
     public required PlatformDto[] Platforms { get; init; }
     public required GameDistributionDto[] GameDistributions { get; init; }

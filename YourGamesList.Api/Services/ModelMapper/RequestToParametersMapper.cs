@@ -7,22 +7,24 @@ namespace YourGamesList.Api.Services.ModelMapper;
 
 public interface IRequestToParametersMapper
 {
-    UpdateListsParameters Map(UpdateListsRequest request);
+    UpdateListParameters Map(UpdateListRequest request);
     SearchListsParameters Map(SearchListsRequest request);
     AddEntriesToListParameter Map(AddEntriesToListRequest request);
+    DeleteEntriesFromListParameter Map(DeleteEntriesFromListRequest request);
+    UpdateEntriesFromListParameter Map(UpdateEntriesFromListRequest request);
 }
 
 //TODO: unit tests
 public class RequestToParametersMapper : IRequestToParametersMapper
 {
-    public UpdateListsParameters Map(UpdateListsRequest request)
+    public UpdateListParameters Map(UpdateListRequest request)
     {
         if (request.Body is null)
         {
             throw new ArgumentNullException(nameof(request.Body));
         }
 
-        return new UpdateListsParameters
+        return new UpdateListParameters
         {
             UserInformation = request.UserInformation,
             ListId = request.Body.ListId,
@@ -63,6 +65,45 @@ public class RequestToParametersMapper : IRequestToParametersMapper
             EntriesToAdd = request.Body.EntriesToAdd.Select(x => new EntryToAddParameter()
             {
                 GameId = x.GameId,
+                Desc = x.Desc,
+                Platforms = x.Platforms,
+                GameDistributions = x.GameDistributions,
+                IsStarred = x.IsStarred,
+                Rating = x.Rating,
+                CompletionStatus = x.CompletionStatus
+            }).ToArray()
+        };
+    }
+
+    public DeleteEntriesFromListParameter Map(DeleteEntriesFromListRequest request)
+    {
+        if (request.Body is null)
+        {
+            throw new ArgumentNullException(nameof(request.Body));
+        }
+
+        return new DeleteEntriesFromListParameter()
+        {
+            UserInformation = request.UserInformation,
+            ListId = request.Body.ListId,
+            EntriesToRemove = request.Body.EntriesToRemove
+        };
+    }
+
+    public UpdateEntriesFromListParameter Map(UpdateEntriesFromListRequest request)
+    {
+        if (request.Body is null)
+        {
+            throw new ArgumentNullException(nameof(request.Body));
+        }
+        
+        return new UpdateEntriesFromListParameter()
+        {
+            UserInformation = request.UserInformation,
+            ListId = request.Body.ListId,
+            EntriesToUpdate = request.Body.EntriesToUpdate.Select(x => new EntryToUpdateParameter()
+            {
+                EntryId = x.EntryId,
                 Desc = x.Desc,
                 Platforms = x.Platforms,
                 GameDistributions = x.GameDistributions,
