@@ -5,32 +5,30 @@ using YourGamesList.Api.Attributes;
 
 namespace YourGamesList.Api.Model.Requests.Lists;
 
-public class DeleteEntriesFromListRequest
+public class DeleteListEntriesRequest
 {
     [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
 
-    [FromBody] public DeleteEntriesFromListRequestBody? Body { get; init; }
+    [FromBody] public required DeleteListEntriesRequestBody Body { get; init; }
 }
 
-public class DeleteEntriesFromListRequestBody
+public class DeleteListEntriesRequestBody
 {
     public required Guid ListId { get; init; }
     public Guid[] EntriesToRemove { get; init; } = [];
 }
 
-internal sealed class DeleteEntriesFromListRequestValidator : AbstractValidator<DeleteEntriesFromListRequest>
+internal sealed class DeleteListEntriesRequestValidator : AbstractValidator<DeleteListEntriesRequest>
 {
-    public DeleteEntriesFromListRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
+    public DeleteListEntriesRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
     {
         RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
         RuleFor(x => x.Body)
             .NotEmpty()
             .WithMessage("Request body is empty.");
-        When(x => x.Body != null, () =>
-        {
-            RuleFor(x => x.Body!.ListId)
-                .NotEmpty()
-                .WithMessage("List id is required.");
-        });
+
+        RuleFor(x => x.Body!.ListId)
+            .NotEmpty()
+            .WithMessage("List id is required.");
     }
 }

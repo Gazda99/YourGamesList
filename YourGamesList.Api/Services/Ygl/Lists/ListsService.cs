@@ -28,9 +28,9 @@ public interface IListsService
 
     #region ListEntry
 
-    Task<CombinedResult<List<Guid>, ListsError>> AddEntriesToList(AddEntriesToListParameter parameters);
-    Task<CombinedResult<List<Guid>, ListsError>> DeleteEntriesFromList(DeleteEntriesFromListParameter parameters);
-    Task<CombinedResult<List<Guid>, ListsError>> UpdateEntriesFromList(UpdateEntriesFromListParameter parameters);
+    Task<CombinedResult<List<Guid>, ListsError>> AddListEntries(AddEntriesToListParameter parameters);
+    Task<CombinedResult<List<Guid>, ListsError>> DeleteListEntries(DeleteListEntriesParameter parameters);
+    Task<CombinedResult<List<Guid>, ListsError>> UpdateListEntries(UpdateListEntriesParameter parameters);
 
     #endregion
 }
@@ -231,7 +231,7 @@ public class ListsService : IListsService
 
     #region ListEntry
 
-    public async Task<CombinedResult<List<Guid>, ListsError>> AddEntriesToList(AddEntriesToListParameter parameters)
+    public async Task<CombinedResult<List<Guid>, ListsError>> AddListEntries(AddEntriesToListParameter parameters)
     {
         var list = await _yglDbContext.Lists
             .Include(x => x.Entries)
@@ -288,7 +288,7 @@ public class ListsService : IListsService
         return CombinedResult<List<Guid>, ListsError>.Success(listEntriesIds);
     }
 
-    public async Task<CombinedResult<List<Guid>, ListsError>> DeleteEntriesFromList(DeleteEntriesFromListParameter parameters)
+    public async Task<CombinedResult<List<Guid>, ListsError>> DeleteListEntries(DeleteListEntriesParameter parameters)
     {
         var list = await _yglDbContext.Lists
             .Include(x => x.Entries)
@@ -320,7 +320,7 @@ public class ListsService : IListsService
         return CombinedResult<List<Guid>, ListsError>.Success(listEntriesIds);
     }
 
-    public async Task<CombinedResult<List<Guid>, ListsError>> UpdateEntriesFromList(UpdateEntriesFromListParameter parameters)
+    public async Task<CombinedResult<List<Guid>, ListsError>> UpdateListEntries(UpdateListEntriesParameter parameters)
     {
         var list = await _yglDbContext.Lists
             .Include(x => x.Entries)

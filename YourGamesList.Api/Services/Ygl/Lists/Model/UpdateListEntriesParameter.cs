@@ -4,7 +4,7 @@ using YourGamesList.Api.Model.Dto;
 
 namespace YourGamesList.Api.Services.Ygl.Lists.Model;
 
-public class UpdateEntriesFromListParameter
+public class UpdateListEntriesParameter
 {
     public required JwtUserInformation UserInformation { get; init; }
     public Guid ListId { get; init; }

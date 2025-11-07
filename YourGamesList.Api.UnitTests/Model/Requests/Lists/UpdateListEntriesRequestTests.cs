@@ -8,7 +8,7 @@ using YourGamesList.Api.Model.Requests.Lists;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Lists;
 
-public class UpdateEntriesInListRequestTests
+public class UpdateListEntriesRequestTests
 {
     private IFixture _fixture;
     private InlineValidator<JwtUserInformation> _jwtUserInformationValidator;
@@ -25,11 +25,11 @@ public class UpdateEntriesInListRequestTests
     {
         //ARRANGE
         _jwtUserInformationValidator.RuleFor(x => x).Must(_ => true);
-        var request = _fixture.Build<UpdateEntriesInListRequest>()
+        var request = _fixture.Build<UpdateListEntriesRequest>()
             .WithAutoProperties()
             .Create();
 
-        var validator = new UpdateEntriesInListRequestValidator(_jwtUserInformationValidator);
+        var validator = new UpdateListEntriesRequestValidator(_jwtUserInformationValidator);
 
         //ACT
         var res = validator.TestValidate(request);
@@ -43,11 +43,11 @@ public class UpdateEntriesInListRequestTests
     {
         //ARRANGE
         _jwtUserInformationValidator.RuleFor(x => x.UserId).Must(_ => false);
-        var request = _fixture.Build<UpdateEntriesInListRequest>()
+        var request = _fixture.Build<UpdateListEntriesRequest>()
             .WithAutoProperties()
             .Create();
 
-        var validator = new UpdateEntriesInListRequestValidator(_jwtUserInformationValidator);
+        var validator = new UpdateListEntriesRequestValidator(_jwtUserInformationValidator);
 
         //ACT
         var res = validator.TestValidate(request);
@@ -62,9 +62,9 @@ public class UpdateEntriesInListRequestTests
     {
         //ARRANGE
         _jwtUserInformationValidator.RuleFor(x => x).Must(_ => true);
-        var request = _fixture.Build<UpdateEntriesInListRequest>()
+        var request = _fixture.Build<UpdateListEntriesRequest>()
             .With(x => x.Body,
-                _fixture.Build<UpdateEntriesInListRequestBody>()
+                _fixture.Build<UpdateListEntriesRequestBody>()
                     .With(x => x.ListId, Guid.Empty)
                     .WithAutoProperties()
                     .Create()
@@ -72,7 +72,7 @@ public class UpdateEntriesInListRequestTests
             .WithAutoProperties()
             .Create();
 
-        var validator = new UpdateEntriesInListRequestValidator(_jwtUserInformationValidator);
+        var validator = new UpdateListEntriesRequestValidator(_jwtUserInformationValidator);
 
         //ACT
         var res = validator.TestValidate(request);
@@ -88,9 +88,9 @@ public class UpdateEntriesInListRequestTests
     {
         //ARRANGE
         _jwtUserInformationValidator.RuleFor(x => x).Must(_ => true);
-        var request = _fixture.Build<UpdateEntriesInListRequest>()
+        var request = _fixture.Build<UpdateListEntriesRequest>()
             .With(x => x.Body,
-                _fixture.Build<UpdateEntriesInListRequestBody>()
+                _fixture.Build<UpdateListEntriesRequestBody>()
                     .With(x => x.EntriesToUpdate,
                         [
                             //Add one valid and one invalid
@@ -110,7 +110,7 @@ public class UpdateEntriesInListRequestTests
             .WithAutoProperties()
             .Create();
 
-        var validator = new UpdateEntriesInListRequestValidator(_jwtUserInformationValidator);
+        var validator = new UpdateListEntriesRequestValidator(_jwtUserInformationValidator);
 
         //ACT
         var res = validator.TestValidate(request);

@@ -10,7 +10,6 @@ using YourGamesList.Api.Services.Auth.Model;
 
 namespace YourGamesList.Api.Controllers;
 
-//TODO: update unit tests
 [ApiController]
 [Route("auth")]
 public class AuthController : YourGamesListBaseController

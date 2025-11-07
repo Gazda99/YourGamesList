@@ -52,8 +52,8 @@ public static partial class AppBuilder
             .AddScoped<IValidator<DeleteListRequest>, DeleteListRequestValidator>()
             //list entries
             .AddScoped<IValidator<AddEntriesToListRequest>, AddEntriesToListRequestValidator>()
-            .AddScoped<IValidator<DeleteEntriesFromListRequest>, DeleteEntriesFromListRequestValidator>()
-            .AddScoped<IValidator<UpdateEntriesInListRequest>, UpdateEntriesInListRequestValidator>()
+            .AddScoped<IValidator<DeleteListEntriesRequest>, DeleteListEntriesRequestValidator>()
+            .AddScoped<IValidator<UpdateListEntriesRequest>, UpdateListEntriesRequestValidator>()
             ;
 
         return services;
