@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Linq;
 using AutoFixture;
 using FluentValidation;
 using FluentValidation.TestHelper;
@@ -7,10 +7,11 @@ using YourGamesList.Api.Model.Requests.Lists;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Lists;
 
-public class DeleteListRequestTests
+public class CreateListRequestTests
 {
     private IFixture _fixture;
     private InlineValidator<JwtUserInformation> _jwtUserInformationValidator;
+
 
     [SetUp]
     public void Setup()
@@ -24,11 +25,11 @@ public class DeleteListRequestTests
     {
         //ARRANGE
         _jwtUserInformationValidator.RuleFor(x => x).Must(_ => true);
-        var request = _fixture.Build<DeleteListRequest>()
+        var request = _fixture.Build<CreateListRequest>()
             .WithAutoProperties()
             .Create();
 
-        var validator = new DeleteListRequestValidator(_jwtUserInformationValidator);
+        var validator = new CreateListRequestValidator(_jwtUserInformationValidator);
 
         //ACT
         var res = validator.TestValidate(request);
@@ -42,11 +43,11 @@ public class DeleteListRequestTests
     {
         //ARRANGE
         _jwtUserInformationValidator.RuleFor(x => x.UserId).Must(_ => false);
-        var request = _fixture.Build<DeleteListRequest>()
+        var request = _fixture.Build<CreateListRequest>()
             .WithAutoProperties()
             .Create();
 
-        var validator = new DeleteListRequestValidator(_jwtUserInformationValidator);
+        var validator = new CreateListRequestValidator(_jwtUserInformationValidator);
 
         //ACT
         var res = validator.TestValidate(request);
@@ -57,22 +58,27 @@ public class DeleteListRequestTests
     }
 
     [Test]
-    public void Validate_InvalidListId_ReturnsFalse()
+    public void Validate_InvalidListName_ReturnsFalse()
     {
         //ARRANGE
         _jwtUserInformationValidator.RuleFor(x => x).Must(_ => true);
-        var request = _fixture.Build<DeleteListRequest>()
-            .With(x => x.ListId, Guid.Empty)
+        var request = _fixture.Build<CreateListRequest>()
+            .With(x => x.Body,
+                _fixture.Build<CreateListRequestBody>()
+                    .With(x => x.ListName, string.Empty)
+                    .WithAutoProperties()
+                    .Create())
             .WithAutoProperties()
             .Create();
 
-        var validator = new DeleteListRequestValidator(_jwtUserInformationValidator);
+        var validator = new CreateListRequestValidator(_jwtUserInformationValidator);
 
         //ACT
         var res = validator.TestValidate(request);
 
         //ASSERT
         Assert.That(res.IsValid, Is.False);
-        res.ShouldHaveValidationErrorFor(x => x.ListId);
+        res.ShouldHaveValidationErrorFor(x => x.Body.ListName);
+        Assert.That(res.Errors.Select(x => x.ErrorMessage), Contains.Item("List name is required."));
     }
 }

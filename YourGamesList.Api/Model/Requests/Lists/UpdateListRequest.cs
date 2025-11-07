@@ -14,17 +14,24 @@ public class UpdateListRequest
 
 public class UpdateListRequestBody
 {
-    public Guid ListId { get; init; }
+    public required Guid ListId { get; init; }
     public string? Name { get; set; }
     public string? Desc { get; set; }
     public bool? IsPublic { get; set; }
 }
 
-//TODO: unit tests
 internal sealed class UpdateListRequestValidator : AbstractValidator<UpdateListRequest>
 {
-    public UpdateListRequestValidator()
+    public UpdateListRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
     {
-        RuleFor(x => x.UserInformation).SetValidator(new JwtUserInformationValidator());
+        RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
+
+        RuleFor(x => x.Body)
+            .NotEmpty()
+            .WithMessage("Request body is empty.");
+
+        RuleFor(x => x.Body.ListId)
+            .NotEmpty()
+            .WithMessage("List Id is required.");
     }
 }

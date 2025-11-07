@@ -205,10 +205,10 @@ public class ListsController : YourGamesListBaseController
     [HttpPatch("entries/update")]
     [ProducesResponseType(typeof(List<Guid>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
-    [TypeFilter(typeof(RequestValidatorAttribute<UpdateEntriesFromListRequest>), Arguments = ["updateEntriesFromListRequest"])]
-    public async Task<IActionResult> UpdateListEntries(UpdateEntriesFromListRequest updateEntriesFromListRequest)
+    [TypeFilter(typeof(RequestValidatorAttribute<UpdateEntriesInListRequest>), Arguments = ["updateEntriesFromListRequest"])]
+    public async Task<IActionResult> UpdateListEntries(UpdateEntriesInListRequest updateEntriesInListRequest)
     {
-        var parameters = _requestToParametersMapper.Map(updateEntriesFromListRequest);
+        var parameters = _requestToParametersMapper.Map(updateEntriesInListRequest);
 
         var res = await _listsService.UpdateEntriesFromList(parameters);
         if (res.IsSuccess)

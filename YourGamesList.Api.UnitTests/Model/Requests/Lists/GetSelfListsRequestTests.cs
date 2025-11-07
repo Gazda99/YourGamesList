@@ -26,14 +26,14 @@ public class GetSelfListsRequestTests
     {
         //ARRANGE
         _jwtUserInformationValidator.RuleFor(x => x).Must(_ => true);
-        var options = _fixture.Build<GetSelfListsRequest>()
+        var request = _fixture.Build<GetSelfListsRequest>()
             .WithAutoProperties()
             .Create();
 
         var validator = new GetSelfListsRequestValidator(_jwtUserInformationValidator);
 
         //ACT
-        var res = validator.TestValidate(options);
+        var res = validator.TestValidate(request);
 
         //ASSERT
         Assert.That(res.IsValid, Is.True);
@@ -44,14 +44,14 @@ public class GetSelfListsRequestTests
     {
         //ARRANGE
         _jwtUserInformationValidator.RuleFor(x => x.UserId).Must(_ => false);
-        var options = _fixture.Build<GetSelfListsRequest>()
+        var request = _fixture.Build<GetSelfListsRequest>()
             .WithAutoProperties()
             .Create();
 
         var validator = new GetSelfListsRequestValidator(_jwtUserInformationValidator);
 
         //ACT
-        var res = validator.TestValidate(options);
+        var res = validator.TestValidate(request);
 
         //ASSERT
         Assert.That(res.IsValid, Is.False);

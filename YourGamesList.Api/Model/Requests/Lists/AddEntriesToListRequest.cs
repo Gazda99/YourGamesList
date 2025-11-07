@@ -30,11 +30,22 @@ public class EntryToAddRequestPart
     public CompletionStatusDto? CompletionStatus { get; set; }
 }
 
-//TODO: unit tests
 internal sealed class AddEntriesToListRequestValidator : AbstractValidator<AddEntriesToListRequest>
 {
-    public AddEntriesToListRequestValidator()
+    public AddEntriesToListRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
     {
-        RuleFor(x => x.UserInformation).SetValidator(new JwtUserInformationValidator());
+        RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
+
+        RuleFor(x => x.Body.ListId)
+            .NotEmpty()
+            .WithMessage("List Id is required.");
+
+        RuleForEach(x => x.Body.EntriesToAdd)
+            .ChildRules(entry =>
+            {
+                entry.RuleFor(x => x.GameId)
+                    .NotEmpty()
+                    .WithMessage("Game Id is required.");
+            });
     }
 }

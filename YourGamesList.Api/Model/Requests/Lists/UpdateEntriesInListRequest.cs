@@ -6,13 +6,13 @@ using YourGamesList.Api.Model.Dto;
 
 namespace YourGamesList.Api.Model.Requests.Lists;
 
-public class UpdateEntriesFromListRequest
+public class UpdateEntriesInListRequest
 {
     [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
-    [FromBody] public required UpdateEntriesToListRequestBody Body { get; init; }
+    [FromBody] public required UpdateEntriesInListRequestBody Body { get; init; }
 }
 
-public class UpdateEntriesToListRequestBody
+public class UpdateEntriesInListRequestBody
 {
     public required Guid ListId { get; init; }
     public EntryToUpdateRequestPart[] EntriesToUpdate { get; init; } = [];
@@ -30,11 +30,22 @@ public class EntryToUpdateRequestPart
     public CompletionStatusDto? CompletionStatus { get; set; }
 }
 
-//TODO: unit tests
-internal sealed class UpdateEntriesFromListRequestValidator : AbstractValidator<UpdateEntriesFromListRequest>
+internal sealed class UpdateEntriesInListRequestValidator : AbstractValidator<UpdateEntriesInListRequest>
 {
-    public UpdateEntriesFromListRequestValidator()
+    public UpdateEntriesInListRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
     {
-        RuleFor(x => x.UserInformation).SetValidator(new JwtUserInformationValidator());
+        RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
+
+        RuleFor(x => x.Body.ListId)
+            .NotEmpty()
+            .WithMessage("List Id is required.");
+
+        RuleForEach(x => x.Body.EntriesToUpdate)
+            .ChildRules(entry =>
+            {
+                entry.RuleFor(x => x.EntryId)
+                    .NotEmpty()
+                    .WithMessage("Entry Id is required.");
+            });
     }
 }

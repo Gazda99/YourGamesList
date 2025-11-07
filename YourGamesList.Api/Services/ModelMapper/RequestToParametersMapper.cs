@@ -11,7 +11,7 @@ public interface IRequestToParametersMapper
     SearchListsParameters Map(SearchListsRequest request);
     AddEntriesToListParameter Map(AddEntriesToListRequest request);
     DeleteEntriesFromListParameter Map(DeleteEntriesFromListRequest request);
-    UpdateEntriesFromListParameter Map(UpdateEntriesFromListRequest request);
+    UpdateEntriesFromListParameter Map(UpdateEntriesInListRequest request);
 }
 
 //TODO: unit tests
@@ -90,7 +90,7 @@ public class RequestToParametersMapper : IRequestToParametersMapper
         };
     }
 
-    public UpdateEntriesFromListParameter Map(UpdateEntriesFromListRequest request)
+    public UpdateEntriesFromListParameter Map(UpdateEntriesInListRequest request)
     {
         if (request.Body is null)
         {

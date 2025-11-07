@@ -25,14 +25,14 @@ public class DeleteEntriesFromListRequestTests
     {
         //ARRANGE
         _jwtUserInformationValidator.RuleFor(x => x).Must(_ => true);
-        var options = _fixture.Build<DeleteEntriesFromListRequest>()
+        var request = _fixture.Build<DeleteEntriesFromListRequest>()
             .WithAutoProperties()
             .Create();
 
         var validator = new DeleteEntriesFromListRequestValidator(_jwtUserInformationValidator);
 
         //ACT
-        var res = validator.TestValidate(options);
+        var res = validator.TestValidate(request);
 
         //ASSERT
         Assert.That(res.IsValid, Is.True);
@@ -43,14 +43,14 @@ public class DeleteEntriesFromListRequestTests
     {
         //ARRANGE
         _jwtUserInformationValidator.RuleFor(x => x.UserId).Must(_ => false);
-        var options = _fixture.Build<DeleteEntriesFromListRequest>()
+        var request = _fixture.Build<DeleteEntriesFromListRequest>()
             .WithAutoProperties()
             .Create();
 
         var validator = new DeleteEntriesFromListRequestValidator(_jwtUserInformationValidator);
 
         //ACT
-        var res = validator.TestValidate(options);
+        var res = validator.TestValidate(request);
 
         //ASSERT
         Assert.That(res.IsValid, Is.False);
@@ -62,7 +62,7 @@ public class DeleteEntriesFromListRequestTests
     {
         //ARRANGE
         _jwtUserInformationValidator.RuleFor(x => x).Must(_ => true);
-        var options = _fixture.Build<DeleteEntriesFromListRequest>()
+        var request = _fixture.Build<DeleteEntriesFromListRequest>()
             .With(x => x.Body,
                 _fixture.Build<DeleteEntriesFromListRequestBody>()
                     .With(x => x.ListId, Guid.Empty)
@@ -75,7 +75,7 @@ public class DeleteEntriesFromListRequestTests
         var validator = new DeleteEntriesFromListRequestValidator(_jwtUserInformationValidator);
 
         //ACT
-        var res = validator.TestValidate(options);
+        var res = validator.TestValidate(request);
 
         //ASSERT
         Assert.That(res.IsValid, Is.False);

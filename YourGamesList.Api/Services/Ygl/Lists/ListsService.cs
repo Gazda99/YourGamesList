@@ -18,7 +18,7 @@ public interface IListsService
 {
     #region List
 
-    Task<CombinedResult<Guid, ListsError>> CreateList(JwtUserInformation userInfo, string listName, string description);
+    Task<CombinedResult<Guid, ListsError>> CreateList(JwtUserInformation userInfo, string listName, string? description);
     Task<CombinedResult<List<GamesListDto>, ListsError>> SearchLists(SearchListsParameters parameters);
     Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelfLists(JwtUserInformation userInfo, bool includeGames);
     Task<CombinedResult<Guid, ListsError>> UpdateList(UpdateListParameters parameters);
@@ -51,7 +51,7 @@ public class ListsService : IListsService
         _yglDbContext = yglDbContext.CreateDbContext();
     }
 
-    public async Task<CombinedResult<Guid, ListsError>> CreateList(JwtUserInformation userInfo, string listName, string description)
+    public async Task<CombinedResult<Guid, ListsError>> CreateList(JwtUserInformation userInfo, string listName, string? description)
     {
         var listsQuery = await _yglDbContext.Lists.FirstOrDefaultAsync(x => x.UserId == userInfo.UserId && x.Name.ToLower() == listName.ToLower());
         if (listsQuery != null)
@@ -64,7 +64,7 @@ public class ListsService : IListsService
         {
             Name = listName,
             UserId = userInfo.UserId,
-            Desc = description,
+            Desc = string.IsNullOrEmpty(description) ? string.Empty : description,
             IsPublic = true,
             CanBeDeleted = true
         };

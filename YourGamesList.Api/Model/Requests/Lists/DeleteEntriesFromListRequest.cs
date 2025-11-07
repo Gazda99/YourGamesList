@@ -25,12 +25,12 @@ internal sealed class DeleteEntriesFromListRequestValidator : AbstractValidator<
         RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
         RuleFor(x => x.Body)
             .NotEmpty()
-            .WithMessage("Request body is empty");
+            .WithMessage("Request body is empty.");
         When(x => x.Body != null, () =>
         {
             RuleFor(x => x.Body!.ListId)
                 .NotEmpty()
-                .WithMessage("List id is required");
+                .WithMessage("List id is required.");
         });
     }
 }

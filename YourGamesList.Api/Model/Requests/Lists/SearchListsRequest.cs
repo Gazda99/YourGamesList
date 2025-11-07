@@ -19,18 +19,18 @@ public class SearchListsRequestBody
     public int Skip { get; init; } = 0;
 }
 
-//TODO: unit tests
 internal sealed class SearchListsRequestValidator : AbstractValidator<SearchListsRequest>
 {
-    public SearchListsRequestValidator()
+    public SearchListsRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
     {
-        RuleFor(x => x.UserInformation).SetValidator(new JwtUserInformationValidator());
+        RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
 
         RuleFor(x => new { x.Body.UserName, x.Body.ListName })
-            .Must(x => string.IsNullOrWhiteSpace(x.UserName) && string.IsNullOrWhiteSpace(x.ListName))
+            .Must(x => !string.IsNullOrWhiteSpace(x.UserName) && !string.IsNullOrWhiteSpace(x.ListName))
             .WithMessage("You must provide user name or list name.");
 
-        When(x => string.IsNullOrEmpty(x.Body.UserName), () =>
+        //If List Name is provided, validate its length
+        When(x => !string.IsNullOrEmpty(x.Body.ListName), () =>
         {
             RuleFor(x => x.Body.ListName)
                 .Must(x => x?.Length >= 3)
