@@ -5,18 +5,9 @@ using Microsoft.Extensions.Options;
 using YourGamesList.Api.Services.Twitch.Model.Requests;
 using YourGamesList.Api.Services.Twitch.Options;
 using YourGamesList.Common;
-using YourGamesList.Common.Logging;
 using YourGamesList.Common.Refit;
 
 namespace YourGamesList.Api.Services.Twitch;
-
-public interface ITwitchAuthService
-{
-    /// <summary>
-    /// Calls Twitch Auth Service in order to obtain Access Token
-    /// </summary>
-    Task<ValueResult<string>> GetAccessToken();
-}
 
 public class TwitchAuthService : ITwitchAuthService
 {
@@ -35,6 +26,11 @@ public class TwitchAuthService : ITwitchAuthService
         _twitchAuthOptions = twitchAuthOptions;
     }
 
+    public string GetClientId()
+    {
+        return _twitchAuthOptions.Value.ClientId;
+    }
+
     public async Task<ValueResult<string>> GetAccessToken()
     {
         var request = new TwitchAuthRequest()
@@ -43,11 +39,11 @@ public class TwitchAuthService : ITwitchAuthService
             ClientSecret = _twitchAuthOptions.Value.ClientSecret
         };
 
-        var callResult = await _twitchAuthApi.TryRefit(() => _twitchAuthApi.GetAccessToken(request.ToFormUrlEncodedContent()));
+        var callResult = await _twitchAuthApi.TryRefit(
+            () => _twitchAuthApi.GetAccessToken(request.ToFormUrlEncodedContent()), _logger, "Twitch Auth Api");
 
-        if (!callResult.IsSuccess)
+        if (callResult.IsFailure)
         {
-            _logger.LogError(LogMessageTemplates.NetworkFailure(callResult.Error, "Twitch Auth Api"));
             return ValueResult<string>.Failure();
         }
 

@@ -19,7 +19,6 @@ public class Program
             app.UseSwaggerUI();
         }
 
-
         app.UseHttpsRedirection();
 
         app.UseAuthentication();

@@ -8,15 +8,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.10" />
+        <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\YourGamesList.Common\YourGamesList.Common.csproj"/>
+        <ProjectReference Include="..\YourGamesList.Common\YourGamesList.Common.csproj" />
+        <ProjectReference Include="..\YourGamesList.Database\YourGamesList.Database.csproj" />
     </ItemGroup>
     
     <ItemGroup>
-        <InternalsVisibleTo Include="$(AssemblyName).UnitTests"/>
+        <InternalsVisibleTo Include="$(AssemblyName).UnitTests" />
     </ItemGroup>
 
 </Project>

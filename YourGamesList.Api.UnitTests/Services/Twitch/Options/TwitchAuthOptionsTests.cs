@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using AutoFixture;
+using FluentValidation.TestHelper;
 using YourGamesList.Api.Services.Twitch.Options;
 
 namespace YourGamesList.Api.UnitTests.Services.Twitch.Options;
@@ -25,12 +26,11 @@ public class TwitchAuthOptionsTests
         var validator = new TwitchAuthOptionsValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.True);
     }
-
 
     [Test]
     public void Validate_InvalidClientId_ReturnsFalse()
@@ -44,12 +44,12 @@ public class TwitchAuthOptionsTests
         var validator = new TwitchAuthOptionsValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(TwitchAuthOptions.ClientId)));
+        res.ShouldHaveValidationErrorFor(x => x.ClientId);
     }
 
     [Test]
@@ -64,11 +64,11 @@ public class TwitchAuthOptionsTests
         var validator = new TwitchAuthOptionsValidator();
 
         //ACT
-        var res = validator.Validate(options);
+        var res = validator.TestValidate(options);
 
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(TwitchAuthOptions.ClientSecret)));
+        res.ShouldHaveValidationErrorFor(x => x.ClientSecret);
     }
 }

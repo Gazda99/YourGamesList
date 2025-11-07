@@ -12,17 +12,18 @@ dotnet-tools.json
 
 
 
+scripts/
 
-
-
+TODOs
 launchSettings.json
 appsettings.json
 appsettings.dev.json
 serilogsettings.dev.json
 serilogsettings.debug.json
 HttpTester.http
-
+testSettings.json
 http-client.env.json
+integration_tests_log.txt
 
 your-games-list-web-app-angular/
 your-games-list-web-app-vue/
