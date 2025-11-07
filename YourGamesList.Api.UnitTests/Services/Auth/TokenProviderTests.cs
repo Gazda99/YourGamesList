@@ -1,7 +1,6 @@
 ﻿using System;
 using AutoFixture;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
 using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Options;
@@ -12,14 +11,14 @@ public class TokenProviderTests
 {
     private IFixture _fixture;
     private IOptions<TokenAuthOptions> _options;
-    private FakeTimeProvider _timeProvider;
+    private TimeProvider _timeProvider;
 
     [SetUp]
     public void Setup()
     {
         _fixture = new Fixture();
         _options = Substitute.For<IOptions<TokenAuthOptions>>();
-        _timeProvider = new FakeTimeProvider();
+        _timeProvider = Substitute.For<TimeProvider>();
     }
 
     [Test]
@@ -32,7 +31,7 @@ public class TokenProviderTests
         var userName = _fixture.Create<string>();
         var userId = Guid.NewGuid();
         var now = DateTime.Now;
-        _timeProvider.SetUtcNow(now);
+        _timeProvider.GetUtcNow().Returns(now);
         var tokenProvider = new TokenProvider(_options, _timeProvider);
 
         //ACT
