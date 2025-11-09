@@ -51,7 +51,7 @@ public class ListsService : IListsService
         _yglDbContext = yglDbContext.CreateDbContext();
     }
 
-    public async Task<CombinedResult<Guid, ListsError>> CreateList(JwtUserInformation userInfo, string listName, string? description)
+    public async Task<CombinedResult<Guid, ListsError>> CreateList(JwtUserInformation userInfo, string listName, string? description = null)
     {
         var listsQuery = await _yglDbContext.Lists.FirstOrDefaultAsync(x => x.UserId == userInfo.UserId && x.Name.ToLower() == listName.ToLower());
         if (listsQuery != null)
@@ -169,8 +169,7 @@ public class ListsService : IListsService
 
         if (!string.IsNullOrWhiteSpace(parameters.Name) && !list.Name.Equals(parameters.Name, StringComparison.CurrentCultureIgnoreCase))
         {
-            var nameExists =
-                await _yglDbContext.Lists.AnyAsync(x => x.UserId == list.UserId && x.Id != list.Id && x.Name.ToLower() == parameters.Name.ToLower());
+            var nameExists = await _yglDbContext.Lists.AnyAsync(x => x.UserId == list.UserId && x.Id != list.Id && x.Name.ToLower() == parameters.Name.ToLower());
             if (nameExists)
             {
                 _logger.LogInformation($"Cannot rename list to '{parameters.Name}' because it already exists for user '{list.UserId}'.");
@@ -284,7 +283,7 @@ public class ListsService : IListsService
         await _yglDbContext.SaveChangesAsync();
 
         var listEntriesIds = listEntries.Select(x => x.Id).ToList();
-        _logger.LogInformation($"Successfully added '{listEntriesIds.Count}'entries  [{string.Join(',', listEntriesIds)}] to list '{list.Id}'.");
+        _logger.LogInformation($"Successfully added '{listEntriesIds.Count}' entries [{string.Join(',', listEntriesIds)}] to list '{list.Id}'.");
         return CombinedResult<List<Guid>, ListsError>.Success(listEntriesIds);
     }
 
@@ -306,7 +305,7 @@ public class ListsService : IListsService
 
         if (entriesToDelete.Count == 0)
         {
-            _logger.LogInformation("No entries found to delete from the list.");
+            _logger.LogInformation($"No entries found to delete from the list {parameters.ListId}'.");
             return CombinedResult<List<Guid>, ListsError>.Success([]);
         }
 
