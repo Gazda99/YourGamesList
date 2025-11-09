@@ -16,7 +16,6 @@ public interface IUserManagerService
     Task<ErrorResult<UserAuthError>> Delete(string username, string password);
 }
 
-//TODO: unit tests
 public class UserManagerService : IUserManagerService
 {
     private readonly ILogger<UserManagerService> _logger;
@@ -49,13 +48,13 @@ public class UserManagerService : IUserManagerService
 
         if (string.IsNullOrWhiteSpace(username))
         {
-            _logger.LogWarning("Username is null or empty.");
+            _logger.LogInformation("Username is null or empty.");
             return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.InvalidUsername);
         }
 
         if (string.IsNullOrWhiteSpace(password))
         {
-            _logger.LogWarning("Password is null or empty.");
+            _logger.LogInformation("Password is null or empty.");
             return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.WrongPassword);
         }
 
@@ -69,7 +68,7 @@ public class UserManagerService : IUserManagerService
         var isPasswordValid = _passwordValidator.ValidatePassword(password);
         if (isPasswordValid.IsFailure)
         {
-            _logger.LogWarning($"Password for the username '{username}' is invalid. Reason: '{isPasswordValid.Error.ToString()}'");
+            _logger.LogInformation($"Password for the username '{username}' is invalid. Reason: '{isPasswordValid.Error.ToString()}'");
             return CombinedResult<Guid, UserAuthError>.Failure(isPasswordValid.Error);
         }
 
@@ -109,20 +108,20 @@ public class UserManagerService : IUserManagerService
 
         if (string.IsNullOrWhiteSpace(username))
         {
-            _logger.LogWarning("Username is null or empty.");
+            _logger.LogInformation("Username is null or empty.");
             return CombinedResult<string, UserAuthError>.Failure(UserAuthError.InvalidUsername);
         }
 
         if (string.IsNullOrWhiteSpace(password))
         {
-            _logger.LogWarning("Password is null or empty.");
+            _logger.LogInformation("Password is null or empty.");
             return CombinedResult<string, UserAuthError>.Failure(UserAuthError.WrongPassword);
         }
 
         var findUser = await FindUserByUserName(username);
         if (findUser.IsFailure)
         {
-            _logger.LogWarning($"User with the username '{username}' was not found.");
+            _logger.LogInformation($"User with the username '{username}' was not found.");
             return CombinedResult<string, UserAuthError>.Failure(UserAuthError.NoUserFound);
         }
 
@@ -130,7 +129,7 @@ public class UserManagerService : IUserManagerService
 
         if (!string.Equals(user.PasswordHash, _passwordHasher.HashPassword(password, user.Salt).HashString))
         {
-            _logger.LogWarning($"Provided password for '{username}' was invalid.");
+            _logger.LogInformation($"Provided password for '{username}' was invalid.");
             return CombinedResult<string, UserAuthError>.Failure(UserAuthError.WrongPassword);
         }
 
@@ -146,20 +145,20 @@ public class UserManagerService : IUserManagerService
 
         if (string.IsNullOrWhiteSpace(username))
         {
-            _logger.LogWarning("Username is null or empty.");
+            _logger.LogInformation("Username is null or empty.");
             return ErrorResult<UserAuthError>.Failure(UserAuthError.InvalidUsername);
         }
 
         if (string.IsNullOrWhiteSpace(password))
         {
-            _logger.LogWarning("Password is null or empty.");
+            _logger.LogInformation("Password is null or empty.");
             return ErrorResult<UserAuthError>.Failure(UserAuthError.WrongPassword);
         }
 
         var findUser = await FindUserByUserName(username);
         if (findUser.IsFailure)
         {
-            _logger.LogWarning($"User with the username '{username}' was not found.");
+            _logger.LogInformation($"User with the username '{username}' was not found.");
             return ErrorResult<UserAuthError>.Failure(UserAuthError.NoUserFound);
         }
 
@@ -167,7 +166,7 @@ public class UserManagerService : IUserManagerService
         // Check if the provided password is correct
         if (!string.Equals(user.PasswordHash, _passwordHasher.HashPassword(password, user.Salt).HashString))
         {
-            _logger.LogWarning($"Provided password for '{username}' was invalid.");
+            _logger.LogInformation($"Provided password for '{username}' was invalid.");
             return ErrorResult<UserAuthError>.Failure(UserAuthError.WrongPassword);
         }
 

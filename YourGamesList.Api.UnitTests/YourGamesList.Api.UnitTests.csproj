@@ -17,6 +17,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\YourGamesList.Api\YourGamesList.Api.csproj" />
+      <ProjectReference Include="..\YourGamesList.Database.TestUtils\YourGamesList.Database.TestUtils.csproj" />
       <ProjectReference Include="..\YourGamesList.TestsUtils\YourGamesList.TestsUtils.csproj" />
     </ItemGroup>
 

@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\YourGamesList.Database\YourGamesList.Database.csproj" />
+      <ProjectReference Include="..\YourGamesList.TestsUtils\YourGamesList.TestsUtils.csproj" />
+    </ItemGroup>
+
+</Project>

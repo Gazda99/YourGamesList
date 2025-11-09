@@ -3,18 +3,17 @@ using System.Linq;
 using YourGamesList.Api.Model.Requests.Lists;
 using YourGamesList.Api.Services.Ygl.Lists.Model;
 
-namespace YourGamesList.Api.Services.ModelMapper;
+namespace YourGamesList.Api.Services.ModelMappers;
 
 public interface IRequestToParametersMapper
 {
     UpdateListParameters Map(UpdateListRequest request);
     SearchListsParameters Map(SearchListsRequest request);
     AddEntriesToListParameter Map(AddEntriesToListRequest request);
-    DeleteEntriesFromListParameter Map(DeleteEntriesFromListRequest request);
-    UpdateEntriesFromListParameter Map(UpdateEntriesInListRequest request);
+    DeleteListEntriesParameter Map(DeleteListEntriesRequest request);
+    UpdateListEntriesParameter Map(UpdateListEntriesRequest request);
 }
 
-//TODO: unit tests
 public class RequestToParametersMapper : IRequestToParametersMapper
 {
     public UpdateListParameters Map(UpdateListRequest request)
@@ -75,14 +74,14 @@ public class RequestToParametersMapper : IRequestToParametersMapper
         };
     }
 
-    public DeleteEntriesFromListParameter Map(DeleteEntriesFromListRequest request)
+    public DeleteListEntriesParameter Map(DeleteListEntriesRequest request)
     {
         if (request.Body is null)
         {
             throw new ArgumentNullException(nameof(request.Body));
         }
 
-        return new DeleteEntriesFromListParameter()
+        return new DeleteListEntriesParameter()
         {
             UserInformation = request.UserInformation,
             ListId = request.Body.ListId,
@@ -90,14 +89,14 @@ public class RequestToParametersMapper : IRequestToParametersMapper
         };
     }
 
-    public UpdateEntriesFromListParameter Map(UpdateEntriesInListRequest request)
+    public UpdateListEntriesParameter Map(UpdateListEntriesRequest request)
     {
         if (request.Body is null)
         {
             throw new ArgumentNullException(nameof(request.Body));
         }
         
-        return new UpdateEntriesFromListParameter()
+        return new UpdateListEntriesParameter()
         {
             UserInformation = request.UserInformation,
             ListId = request.Body.ListId,

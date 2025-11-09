@@ -15,7 +15,7 @@ using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Options;
 using YourGamesList.Api.Services.Igdb;
 using YourGamesList.Api.Services.Igdb.Options;
-using YourGamesList.Api.Services.ModelMapper;
+using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Scraper;
 using YourGamesList.Api.Services.Scraper.Options;
 using YourGamesList.Api.Services.Twitch;

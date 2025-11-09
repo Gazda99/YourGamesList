@@ -7,7 +7,7 @@ using YourGamesList.Api.Model.Requests.Lists;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Lists;
 
-public class DeleteEntriesFromListRequestTests
+public class DeleteListEntriesRequestTests
 {
     private IFixture _fixture;
     private InlineValidator<JwtUserInformation> _jwtUserInformationValidator;
@@ -25,11 +25,11 @@ public class DeleteEntriesFromListRequestTests
     {
         //ARRANGE
         _jwtUserInformationValidator.RuleFor(x => x).Must(_ => true);
-        var request = _fixture.Build<DeleteEntriesFromListRequest>()
+        var request = _fixture.Build<DeleteListEntriesRequest>()
             .WithAutoProperties()
             .Create();
 
-        var validator = new DeleteEntriesFromListRequestValidator(_jwtUserInformationValidator);
+        var validator = new DeleteListEntriesRequestValidator(_jwtUserInformationValidator);
 
         //ACT
         var res = validator.TestValidate(request);
@@ -43,11 +43,11 @@ public class DeleteEntriesFromListRequestTests
     {
         //ARRANGE
         _jwtUserInformationValidator.RuleFor(x => x.UserId).Must(_ => false);
-        var request = _fixture.Build<DeleteEntriesFromListRequest>()
+        var request = _fixture.Build<DeleteListEntriesRequest>()
             .WithAutoProperties()
             .Create();
 
-        var validator = new DeleteEntriesFromListRequestValidator(_jwtUserInformationValidator);
+        var validator = new DeleteListEntriesRequestValidator(_jwtUserInformationValidator);
 
         //ACT
         var res = validator.TestValidate(request);
@@ -62,9 +62,9 @@ public class DeleteEntriesFromListRequestTests
     {
         //ARRANGE
         _jwtUserInformationValidator.RuleFor(x => x).Must(_ => true);
-        var request = _fixture.Build<DeleteEntriesFromListRequest>()
+        var request = _fixture.Build<DeleteListEntriesRequest>()
             .With(x => x.Body,
-                _fixture.Build<DeleteEntriesFromListRequestBody>()
+                _fixture.Build<DeleteListEntriesRequestBody>()
                     .With(x => x.ListId, Guid.Empty)
                     .WithAutoProperties()
                     .Create()
@@ -72,7 +72,7 @@ public class DeleteEntriesFromListRequestTests
             .WithAutoProperties()
             .Create();
 
-        var validator = new DeleteEntriesFromListRequestValidator(_jwtUserInformationValidator);
+        var validator = new DeleteListEntriesRequestValidator(_jwtUserInformationValidator);
 
         //ACT
         var res = validator.TestValidate(request);

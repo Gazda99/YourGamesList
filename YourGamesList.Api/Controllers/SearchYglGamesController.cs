@@ -12,7 +12,6 @@ using YourGamesList.Api.Services.Ygl.Games.Model;
 
 namespace YourGamesList.Api.Controllers;
 
-//TODO: unit tests
 [ApiController]
 [Route("ygl/search")]
 public class SearchYglGamesController : YourGamesListBaseController

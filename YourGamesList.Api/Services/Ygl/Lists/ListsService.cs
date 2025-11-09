@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Model;
 using YourGamesList.Api.Model.Dto;
-using YourGamesList.Api.Services.ModelMapper;
+using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Ygl.Lists.Model;
 using YourGamesList.Common;
 using YourGamesList.Database;
@@ -28,14 +28,13 @@ public interface IListsService
 
     #region ListEntry
 
-    Task<CombinedResult<List<Guid>, ListsError>> AddEntriesToList(AddEntriesToListParameter parameters);
-    Task<CombinedResult<List<Guid>, ListsError>> DeleteEntriesFromList(DeleteEntriesFromListParameter parameters);
-    Task<CombinedResult<List<Guid>, ListsError>> UpdateEntriesFromList(UpdateEntriesFromListParameter parameters);
+    Task<CombinedResult<List<Guid>, ListsError>> AddListEntries(AddEntriesToListParameter parameters);
+    Task<CombinedResult<List<Guid>, ListsError>> DeleteListEntries(DeleteListEntriesParameter parameters);
+    Task<CombinedResult<List<Guid>, ListsError>> UpdateListEntries(UpdateListEntriesParameter parameters);
 
     #endregion
 }
 
-//TODO: unit tests
 public class ListsService : IListsService
 {
     private readonly ILogger<ListsService> _logger;
@@ -51,7 +50,7 @@ public class ListsService : IListsService
         _yglDbContext = yglDbContext.CreateDbContext();
     }
 
-    public async Task<CombinedResult<Guid, ListsError>> CreateList(JwtUserInformation userInfo, string listName, string? description)
+    public async Task<CombinedResult<Guid, ListsError>> CreateList(JwtUserInformation userInfo, string listName, string? description = null)
     {
         var listsQuery = await _yglDbContext.Lists.FirstOrDefaultAsync(x => x.UserId == userInfo.UserId && x.Name.ToLower() == listName.ToLower());
         if (listsQuery != null)
@@ -169,8 +168,7 @@ public class ListsService : IListsService
 
         if (!string.IsNullOrWhiteSpace(parameters.Name) && !list.Name.Equals(parameters.Name, StringComparison.CurrentCultureIgnoreCase))
         {
-            var nameExists =
-                await _yglDbContext.Lists.AnyAsync(x => x.UserId == list.UserId && x.Id != list.Id && x.Name.ToLower() == parameters.Name.ToLower());
+            var nameExists = await _yglDbContext.Lists.AnyAsync(x => x.UserId == list.UserId && x.Id != list.Id && x.Name.ToLower() == parameters.Name.ToLower());
             if (nameExists)
             {
                 _logger.LogInformation($"Cannot rename list to '{parameters.Name}' because it already exists for user '{list.UserId}'.");
@@ -231,7 +229,7 @@ public class ListsService : IListsService
 
     #region ListEntry
 
-    public async Task<CombinedResult<List<Guid>, ListsError>> AddEntriesToList(AddEntriesToListParameter parameters)
+    public async Task<CombinedResult<List<Guid>, ListsError>> AddListEntries(AddEntriesToListParameter parameters)
     {
         var list = await _yglDbContext.Lists
             .Include(x => x.Entries)
@@ -284,11 +282,11 @@ public class ListsService : IListsService
         await _yglDbContext.SaveChangesAsync();
 
         var listEntriesIds = listEntries.Select(x => x.Id).ToList();
-        _logger.LogInformation($"Successfully added '{listEntriesIds.Count}'entries  [{string.Join(',', listEntriesIds)}] to list '{list.Id}'.");
+        _logger.LogInformation($"Successfully added '{listEntriesIds.Count}' entries [{string.Join(',', listEntriesIds)}] to list '{list.Id}'.");
         return CombinedResult<List<Guid>, ListsError>.Success(listEntriesIds);
     }
 
-    public async Task<CombinedResult<List<Guid>, ListsError>> DeleteEntriesFromList(DeleteEntriesFromListParameter parameters)
+    public async Task<CombinedResult<List<Guid>, ListsError>> DeleteListEntries(DeleteListEntriesParameter parameters)
     {
         var list = await _yglDbContext.Lists
             .Include(x => x.Entries)
@@ -306,7 +304,7 @@ public class ListsService : IListsService
 
         if (entriesToDelete.Count == 0)
         {
-            _logger.LogInformation("No entries found to delete from the list.");
+            _logger.LogInformation($"No entries found to delete from the list {parameters.ListId}'.");
             return CombinedResult<List<Guid>, ListsError>.Success([]);
         }
 
@@ -320,7 +318,7 @@ public class ListsService : IListsService
         return CombinedResult<List<Guid>, ListsError>.Success(listEntriesIds);
     }
 
-    public async Task<CombinedResult<List<Guid>, ListsError>> UpdateEntriesFromList(UpdateEntriesFromListParameter parameters)
+    public async Task<CombinedResult<List<Guid>, ListsError>> UpdateListEntries(UpdateListEntriesParameter parameters)
     {
         var list = await _yglDbContext.Lists
             .Include(x => x.Entries)

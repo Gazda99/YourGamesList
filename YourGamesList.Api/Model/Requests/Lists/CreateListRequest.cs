@@ -8,7 +8,7 @@ public class CreateListRequest
 {
     [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
 
-    [FromBody] public CreateListRequestBody? Body { get; init; }
+    [FromBody] public required CreateListRequestBody Body { get; init; }
 }
 
 public class CreateListRequestBody
@@ -27,11 +27,8 @@ internal sealed class CreateListRequestValidator : AbstractValidator<CreateListR
             .NotEmpty()
             .WithMessage("Request body is empty.");
 
-        When(x => x.Body != null, () =>
-        {
-            RuleFor(x => x.Body!.ListName)
-                .NotEmpty()
-                .WithMessage("List name is required.");
-        });
+        RuleFor(x => x.Body!.ListName)
+            .NotEmpty()
+            .WithMessage("List name is required.");
     }
 }

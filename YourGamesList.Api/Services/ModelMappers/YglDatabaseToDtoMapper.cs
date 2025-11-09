@@ -3,7 +3,7 @@ using System.Linq;
 using YourGamesList.Api.Model.Dto;
 using YourGamesList.Database.Entities;
 
-namespace YourGamesList.Api.Services.ModelMapper;
+namespace YourGamesList.Api.Services.ModelMappers;
 
 public interface IYglDatabaseAndDtoMapper
 {
@@ -20,7 +20,6 @@ public interface IYglDatabaseAndDtoMapper
     Platform Map(PlatformDto platform);
 }
 
-//TODO: unit tests
 public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
 {
     public GamesListDto Map(GamesList gamesList)

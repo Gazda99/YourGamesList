@@ -6,13 +6,13 @@ using YourGamesList.Api.Model.Dto;
 
 namespace YourGamesList.Api.Model.Requests.Lists;
 
-public class UpdateEntriesInListRequest
+public class UpdateListEntriesRequest
 {
     [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
-    [FromBody] public required UpdateEntriesInListRequestBody Body { get; init; }
+    [FromBody] public required UpdateListEntriesRequestBody Body { get; init; }
 }
 
-public class UpdateEntriesInListRequestBody
+public class UpdateListEntriesRequestBody
 {
     public required Guid ListId { get; init; }
     public EntryToUpdateRequestPart[] EntriesToUpdate { get; init; } = [];
@@ -30,9 +30,9 @@ public class EntryToUpdateRequestPart
     public CompletionStatusDto? CompletionStatus { get; set; }
 }
 
-internal sealed class UpdateEntriesInListRequestValidator : AbstractValidator<UpdateEntriesInListRequest>
+internal sealed class UpdateListEntriesRequestValidator : AbstractValidator<UpdateListEntriesRequest>
 {
-    public UpdateEntriesInListRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
+    public UpdateListEntriesRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
     {
         RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
 
