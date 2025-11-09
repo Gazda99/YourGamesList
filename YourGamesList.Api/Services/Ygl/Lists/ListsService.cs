@@ -35,7 +35,6 @@ public interface IListsService
     #endregion
 }
 
-//TODO: unit tests
 public class ListsService : IListsService
 {
     private readonly ILogger<ListsService> _logger;
