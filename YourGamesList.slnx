@@ -1,12 +1,15 @@
 ﻿<Solution>
     <Folder Name="/tests/">
-        <Project Path="YourGamesList.Api.UnitTests\YourGamesList.Api.UnitTests.csproj" Type="C#"/>
-        <Project Path="YourGamesList.Common.UnitTests\YourGamesList.Common.UnitTests.csproj" Type="C#"/>
-        <Project Path="YourGamesList.Database.TestUtils\YourGamesList.Database.TestUtils.csproj" Type="C#"/>
-        <Project Path="YourGamesList.IntegrationTests\YourGamesList.IntegrationTests.csproj" Type="C#"/>
-        <Project Path="YourGamesList.TestsUtils\YourGamesList.TestsUtils.csproj" Type="C#"/>
+        <Project Path="YourGamesList.Api.UnitTests\YourGamesList.Api.UnitTests.csproj" />
+        <Project Path="YourGamesList.Common.UnitTests\YourGamesList.Common.UnitTests.csproj" />
+        <Project Path="YourGamesList.Database.TestUtils\YourGamesList.Database.TestUtils.csproj" />
+        <Project Path="YourGamesList.IntegrationTests\YourGamesList.IntegrationTests.csproj" />
+        <Project Path="YourGamesList.TestsUtils\YourGamesList.TestsUtils.csproj" />
     </Folder>
-    <Project Path="YourGamesList.Api\YourGamesList.Api.csproj" Type="C#"/>
-    <Project Path="YourGamesList.Common\YourGamesList.Common.csproj" Type="C#"/>
-    <Project Path="YourGamesList.Database\YourGamesList.Database.csproj" Type="C#"/>
+    <Project Path="YourGamesList.Api\YourGamesList.Api.csproj" />
+    <Project Path="YourGamesList.Common\YourGamesList.Common.csproj" />
+    <Project Path="YourGamesList.Database\YourGamesList.Database.csproj" />
+    <Project Path="YourGamesList.Web.Store/YourGamesList.Web.Store.csproj" />
+    <Project Path="YourGamesList.Web/YourGamesList.Web.Client/YourGamesList.Web.Client.csproj" />
+    <Project Path="YourGamesList.Web/YourGamesList.Web/YourGamesList.Web.csproj" />
 </Solution>
