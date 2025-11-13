@@ -1,0 +1,78 @@
+﻿@page "/login"
+@using Microsoft.Extensions.Logging
+@using YourGamesList.Web.Page.Services.UserLoginState
+@using YourGamesList.Web.Page.Services.Ygl
+@using YourGamesList.Web.Page.Services.Ygl.Model
+
+<UsernameInput @ref="@_usernameInput"></UsernameInput>
+<PasswordInput @ref="@_passwordInput"></PasswordInput>
+
+<MudButton OnClick="@LoginClick" Disabled="@_loginButtonDisabled">@_loginButtonText</MudButton>
+
+@code {
+    [Inject] private ILogger<Login> Logger { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private IYglAuthClient AuthClient { get; set; } = default!;
+    [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
+
+    private PasswordInput _passwordInput = default!;
+    private UsernameInput _usernameInput = default!;
+
+    private bool _loginButtonDisabled = false;
+    private string _loginButtonText = "Log In";
+
+    private async Task LoginClick()
+    {
+        _loginButtonDisabled = true;
+        _loginButtonText = "Logging In...";
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_passwordInput.Password))
+            {
+                _passwordInput.PasswordTextFieldError = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(_usernameInput.Username))
+            {
+                _usernameInput.UsernameTextFieldError = true;
+            }
+
+            if (_passwordInput.PasswordTextFieldError || _usernameInput.UsernameTextFieldError)
+            {
+                return;
+            }
+
+            var res = await AuthClient.Login(_usernameInput.Username, _passwordInput.Password);
+            if (res.IsFailure)
+            {
+                switch (res.Error)
+                {
+                    case YglAuthAuthClientError.LoginUserNotFound:
+                    case YglAuthAuthClientError.LoginUnauthorized:
+                        Snackbar.Add("Your authentication information is incorrect. Please try again.", Severity.Warning);
+                        break;
+                    default:
+                        Snackbar.Add("Failed to log in. Please try again.", Severity.Warning);
+                        break;
+                }
+
+                return;
+            }
+
+            var token = res.Value;
+            await UserLoginStateManager.SaveUserToken(token);
+
+            Snackbar.Add("Successfully logged in.", Severity.Success);
+
+            Navigation.NavigateTo("/user");
+        }
+        finally
+        {
+            _loginButtonDisabled = false;
+            _loginButtonText = "Log In";
+        }
+    }
+
+}

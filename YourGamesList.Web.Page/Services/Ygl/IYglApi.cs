@@ -9,7 +9,15 @@ namespace YourGamesList.Web.Page.Services.Ygl;
 
 public interface IYglAuthApi : IHandlesHttpRefitException
 {
-    [Post("/auth/login")]
+    [Post("/auth/register")]
     [Headers($"Accept: {ContentTypes.ApplicationJson}", $"Content-Type: {ContentTypes.ApplicationJson}")]
-    Task<IApiResponse<LoginResponse>> Login([Body(BodySerializationMethod.Serialized)] LoginRequest request);
+    Task<IApiResponse<LoginResponse>> Register([Body(BodySerializationMethod.Serialized)] UserRegisterRequest request);
+
+    [Post("/auth/login")]
+    [Headers($"Content-Type: {ContentTypes.ApplicationJson}")]
+    Task<IApiResponse<LoginResponse>> Login([Body(BodySerializationMethod.Serialized)] UserLoginRequest request);
+
+    [Post("/auth/delete")]
+    [Headers($"Content-Type: {ContentTypes.ApplicationJson}")]
+    Task<IApiResponse<LoginResponse>> Delete([Body(BodySerializationMethod.Serialized)] UserDeleteRequest request);
 }

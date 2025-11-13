@@ -28,6 +28,7 @@ public class AuthController : YourGamesListBaseController
 
     [HttpPost("register")]
     [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(void), StatusCodes.Status409Conflict)]
     [TypeFilter(typeof(RequestValidatorAttribute<UserRegisterRequest>), Arguments = ["userRegisterRequest"])]
     public async Task<IActionResult> Register(UserRegisterRequest userRegisterRequest)
