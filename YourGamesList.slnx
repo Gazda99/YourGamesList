@@ -10,6 +10,5 @@
     <Project Path="YourGamesList.Common\YourGamesList.Common.csproj" />
     <Project Path="YourGamesList.Database\YourGamesList.Database.csproj" />
     <Project Path="YourGamesList.Web.Store/YourGamesList.Web.Store.csproj" />
-    <Project Path="YourGamesList.Web/YourGamesList.Web.Client/YourGamesList.Web.Client.csproj" />
-    <Project Path="YourGamesList.Web/YourGamesList.Web/YourGamesList.Web.csproj" />
+    <Project Path="YourGamesList.WebPage/YourGamesList.WebPage.csproj" />
 </Solution>
