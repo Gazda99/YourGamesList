@@ -1,0 +1,20 @@
+﻿@using YourGamesList.Web.Page.Services.Ygl.Model.Responses
+
+<MudPaper Class="d-flex flex-auto flex-wrap" Elevation="0">
+    @foreach (var game in Games)
+    {
+        <MudPaper Class="d-flex flex-row  mud-paper-game-display-spacing mud-paper-game-display-hover" Width="90%" Elevation="3">
+            <div class="d-flex flex-column">
+                <MudText Class="mud-text-bold mud-text-spacing">@game.Name</MudText>
+                <MudText Class="mud-text-spacing">@game.Summary</MudText>
+            </div>
+            <MudIconButton Class="mud-button-add-game-to-list" Icon="material-symbols-outlined/bookmark_add"
+                           Color="Color.Secondary"></MudIconButton>
+        </MudPaper>
+    }
+</MudPaper>
+
+
+@code {
+    [Parameter] public IEnumerable<Game> Games { get; set; } = default!;
+}

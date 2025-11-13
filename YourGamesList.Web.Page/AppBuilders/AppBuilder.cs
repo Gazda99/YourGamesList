@@ -44,7 +44,8 @@ public static partial class AppBuilder
         // );
 
         builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
-        builder.Services.AddOptionsWithFluentValidation<UserLoginStateManagerOptions, UserLoginStateManagerOptionsValidator>(UserLoginStateManagerOptions.SectionName);
+        builder.Services.AddOptionsWithFluentValidation<UserLoginStateManagerOptions, UserLoginStateManagerOptionsValidator>(UserLoginStateManagerOptions
+            .SectionName);
         builder.Services.AddScoped<IUserLoginStateManager, UserLoginStateManager>();
 
         builder.Services.AddYourGamesListApi();
@@ -64,15 +65,16 @@ public static partial class AppBuilder
 
     private static IServiceCollection AddYourGamesListApi(this IServiceCollection services)
     {
-        services.AddOptionsWithFluentValidation<YglAuthApiHttpClientOptions, YglAuthApiHttpClientOptionsValidator>(YglAuthApiHttpClientOptions.SectionName);
-        services.AddRefitClient<IYglAuthApi>().ConfigureHttpClient((provider, client) =>
+        services.AddOptionsWithFluentValidation<YglApiHttpClientOptions, YglApiHttpClientOptionsValidator>(YglApiHttpClientOptions.SectionName);
+        services.AddRefitClient<IYglApi>().ConfigureHttpClient((provider, client) =>
             {
-                var options = provider.GetRequiredService<IOptions<YglAuthApiHttpClientOptions>>();
+                var options = provider.GetRequiredService<IOptions<YglApiHttpClientOptions>>();
                 client.BaseAddress = new Uri(options.Value.BaseAddress);
             })
             .ConfigureLogging();
 
         services.AddScoped<IYglAuthClient, YglAuthAuthClient>();
+        services.AddScoped<IYglGamesClient, YglGamesClient>();
         return services;
     }
 

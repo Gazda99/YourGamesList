@@ -2,7 +2,7 @@
   "UserLoginStateManager": {
     "TokenTtlInMinutes": 10
   },
-  "YglAuthApiHttpClient": {
+  "YglApiHttpClient": {
     "BaseAddress": "<REPLACE_ME>"
   }
 }

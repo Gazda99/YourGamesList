@@ -3,16 +3,16 @@ using YourGamesList.Common.Options.Validators;
 
 namespace YourGamesList.Web.Page.Services.Ygl.Options;
 
-public class YglAuthApiHttpClientOptions
+public class YglApiHttpClientOptions
 {
-    public const string SectionName = "YglAuthApiHttpClient";
+    public const string SectionName = "YglApiHttpClient";
 
     public required string BaseAddress { get; init; }
 }
 
-public sealed class YglAuthApiHttpClientOptionsValidator : AbstractValidator<YglAuthApiHttpClientOptions>
+public sealed class YglApiHttpClientOptionsValidator : AbstractValidator<YglApiHttpClientOptions>
 {
-    public YglAuthApiHttpClientOptionsValidator()
+    public YglApiHttpClientOptionsValidator()
     {
         RuleFor(x => x.BaseAddress).IsValidAbsoluteUrl();
     }

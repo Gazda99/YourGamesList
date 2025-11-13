@@ -5,13 +5,13 @@
 
 <PageTitle>User</PageTitle>
 
-@if (_isUserLoggedIn)
+@if (!_isUserLoggedIn)
 {
-    <MudText>You are already logged in!</MudText>
+    <LoginFirst></LoginFirst>
 }
 else
 {
-    <LoginFirst></LoginFirst>
+    <MudText>You are already logged in!</MudText>
 }
 
 @code {

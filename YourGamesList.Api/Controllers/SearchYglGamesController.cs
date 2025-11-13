@@ -13,7 +13,7 @@ using YourGamesList.Api.Services.Ygl.Games.Model;
 namespace YourGamesList.Api.Controllers;
 
 [ApiController]
-[Route("ygl/search")]
+[Route("ygl/games")]
 public class SearchYglGamesController : YourGamesListBaseController
 {
     private readonly ILogger<SearchYglGamesController> _logger;
@@ -25,7 +25,7 @@ public class SearchYglGamesController : YourGamesListBaseController
         _yglGamesService = yglGamesService;
     }
 
-    [HttpGet("searchGames")]
+    [HttpGet("search")]
     [Authorize]
     [ProducesResponseType(typeof(List<GameDto>), StatusCodes.Status200OK)]
     [TypeFilter(typeof(RequestValidatorAttribute<SearchYglGamesRequest>), Arguments = ["searchYglGamesRequest"])]

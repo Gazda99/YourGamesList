@@ -4,7 +4,7 @@ using YourGamesList.Web.Page.Services.Ygl.Options;
 
 namespace YourGamesList.Web.Page.UnitTests.Services.Ygl.Options;
 
-public class YglAuthApiHttpClientOptionsTests
+public class YglApiHttpClientOptionsTests
 {
     private IFixture _fixture;
 
@@ -18,12 +18,12 @@ public class YglAuthApiHttpClientOptionsTests
     public void Validate_ValidOptions_ReturnsTrue()
     {
         //ARRANGE
-        var options = _fixture.Build<YglAuthApiHttpClientOptions>()
+        var options = _fixture.Build<YglApiHttpClientOptions>()
             .With(x => x.BaseAddress, "https://api.igdb.com")
             .WithAutoProperties()
             .Create();
 
-        var validator = new YglAuthApiHttpClientOptionsValidator();
+        var validator = new YglApiHttpClientOptionsValidator();
 
         //ACT
         var res = validator.TestValidate(options);
@@ -40,12 +40,12 @@ public class YglAuthApiHttpClientOptionsTests
     public void Validate_InvalidBaseAddress_ReturnsFalse(string invalidBaseAddress)
     {
         //ARRANGE
-        var options = _fixture.Build<YglAuthApiHttpClientOptions>()
+        var options = _fixture.Build<YglApiHttpClientOptions>()
             .With(x => x.BaseAddress, invalidBaseAddress)
             .WithAutoProperties()
             .Create();
 
-        var validator = new YglAuthApiHttpClientOptionsValidator();
+        var validator = new YglApiHttpClientOptionsValidator();
 
         //ACT
         var res = validator.TestValidate(options);

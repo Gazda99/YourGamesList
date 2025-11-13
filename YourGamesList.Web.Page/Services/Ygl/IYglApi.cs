@@ -7,8 +7,10 @@ using YourGamesList.Web.Page.Services.Ygl.Model.Responses;
 
 namespace YourGamesList.Web.Page.Services.Ygl;
 
-public interface IYglAuthApi : IHandlesHttpRefitException
+public interface IYglApi : IHandlesHttpRefitException
 {
+    #region Auth
+
     [Post("/auth/register")]
     [Headers($"Accept: {ContentTypes.ApplicationJson}", $"Content-Type: {ContentTypes.ApplicationJson}")]
     Task<IApiResponse> Register([Body(BodySerializationMethod.Serialized)] UserRegisterRequest request);
@@ -20,4 +22,18 @@ public interface IYglAuthApi : IHandlesHttpRefitException
     [Post("/auth/delete")]
     [Headers($"Content-Type: {ContentTypes.ApplicationJson}")]
     Task<IApiResponse> Delete([Body(BodySerializationMethod.Serialized)] UserDeleteRequest request);
+
+    #endregion
+
+    #region SearchGames
+
+    [Get("/ygl/games/search")]
+    [Headers($"Accept: {ContentTypes.ApplicationJson}", $"Content-Type: {ContentTypes.ApplicationJson}")]
+    Task<IApiResponse<SearchGamesResponse>> SearchGames(
+        [Authorize("Bearer")] string userToken,
+        [Body(BodySerializationMethod.Serialized)]
+        SearchGamesRequest request
+    );
+
+    #endregion
 }
