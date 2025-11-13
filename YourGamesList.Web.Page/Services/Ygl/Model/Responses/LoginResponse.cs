@@ -1,4 +1,4 @@
-﻿namespace YourGamesList.WebPage.Services.Ygl.Model.Responses;
+﻿namespace YourGamesList.Web.Page.Services.Ygl.Model.Responses;
 
 public class LoginResponse
 {

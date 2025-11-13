@@ -10,11 +10,11 @@ using Refit;
 using Serilog;
 using YourGamesList.Common.Http;
 using YourGamesList.Common.Options.Validators;
-using YourGamesList.WebPage.Services.LocalStorage;
-using YourGamesList.WebPage.Services.Ygl;
-using YourGamesList.WebPage.Services.Ygl.Options;
+using YourGamesList.Web.Page.Services.LocalStorage;
+using YourGamesList.Web.Page.Services.Ygl;
+using YourGamesList.Web.Page.Services.Ygl.Options;
 
-namespace YourGamesList.WebPage.AppBuilders;
+namespace YourGamesList.Web.Page.AppBuilders;
 
 [ExcludeFromCodeCoverage]
 public static partial class AppBuilder

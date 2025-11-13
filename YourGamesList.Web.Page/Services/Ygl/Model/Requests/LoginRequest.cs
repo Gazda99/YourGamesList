@@ -1,4 +1,4 @@
-﻿namespace YourGamesList.WebPage.Services.Ygl.Model.Requests;
+﻿namespace YourGamesList.Web.Page.Services.Ygl.Model.Requests;
 
 public class LoginRequest
 {

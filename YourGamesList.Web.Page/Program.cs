@@ -1,10 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
-using YourGamesList.WebPage.AppBuilders;
-using YourGamesList.WebPage.Components;
+using YourGamesList.Web.Page.AppBuilders;
+using YourGamesList.Web.Page.Components;
 
-namespace YourGamesList.WebPage;
+namespace YourGamesList.Web.Page;
 
 [ExcludeFromCodeCoverage]
 public class Program

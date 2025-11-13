@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 
-namespace YourGamesList.WebPage.AppBuilders;
+namespace YourGamesList.Web.Page.AppBuilders;
 
 public static partial class AppBuilder
 {

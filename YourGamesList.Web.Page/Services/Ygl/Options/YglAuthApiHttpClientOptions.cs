@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using YourGamesList.Common.Options.Validators;
 
-namespace YourGamesList.WebPage.Services.Ygl.Options;
+namespace YourGamesList.Web.Page.Services.Ygl.Options;
 
 public class YglAuthApiHttpClientOptions
 {

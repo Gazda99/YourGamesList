@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Common;
 using YourGamesList.Common.Refit;
-using YourGamesList.WebPage.Services.Ygl.Model.Requests;
+using YourGamesList.Web.Page.Services.Ygl.Model.Requests;
 
-namespace YourGamesList.WebPage.Services.Ygl;
+namespace YourGamesList.Web.Page.Services.Ygl;
 
 public interface IYglAuthClient
 {

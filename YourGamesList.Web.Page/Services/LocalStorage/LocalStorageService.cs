@@ -4,9 +4,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
-using YourGamesList.WebPage.Services.LocalStorage.Model;
+using YourGamesList.Web.Page.Services.LocalStorage.Model;
 
-namespace YourGamesList.WebPage.Services.LocalStorage;
+namespace YourGamesList.Web.Page.Services.LocalStorage;
 
 public interface ILocalStorageService
 {
