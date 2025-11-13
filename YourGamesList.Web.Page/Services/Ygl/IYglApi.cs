@@ -11,7 +11,7 @@ public interface IYglAuthApi : IHandlesHttpRefitException
 {
     [Post("/auth/register")]
     [Headers($"Accept: {ContentTypes.ApplicationJson}", $"Content-Type: {ContentTypes.ApplicationJson}")]
-    Task<IApiResponse<LoginResponse>> Register([Body(BodySerializationMethod.Serialized)] UserRegisterRequest request);
+    Task<IApiResponse> Register([Body(BodySerializationMethod.Serialized)] UserRegisterRequest request);
 
     [Post("/auth/login")]
     [Headers($"Content-Type: {ContentTypes.ApplicationJson}")]
@@ -19,5 +19,5 @@ public interface IYglAuthApi : IHandlesHttpRefitException
 
     [Post("/auth/delete")]
     [Headers($"Content-Type: {ContentTypes.ApplicationJson}")]
-    Task<IApiResponse<LoginResponse>> Delete([Body(BodySerializationMethod.Serialized)] UserDeleteRequest request);
+    Task<IApiResponse> Delete([Body(BodySerializationMethod.Serialized)] UserDeleteRequest request);
 }
