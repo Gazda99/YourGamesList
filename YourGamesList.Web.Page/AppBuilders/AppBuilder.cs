@@ -5,12 +5,15 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MudBlazor;
 using MudBlazor.Services;
 using Refit;
 using Serilog;
 using YourGamesList.Common.Http;
 using YourGamesList.Common.Options.Validators;
 using YourGamesList.Web.Page.Services.LocalStorage;
+using YourGamesList.Web.Page.Services.UserLoginState;
+using YourGamesList.Web.Page.Services.UserLoginState.Options;
 using YourGamesList.Web.Page.Services.Ygl;
 using YourGamesList.Web.Page.Services.Ygl.Options;
 
@@ -29,7 +32,7 @@ public static partial class AppBuilder
         builder.Host.AddLogger(builder.Configuration);
 
         // Add MudBlazor services
-        builder.Services.AddMudServices();
+        builder.Services.AddMudBlazorServices();
 
         // Add services to the container.
         builder.Services.AddRazorComponents()
@@ -41,6 +44,9 @@ public static partial class AppBuilder
         // );
 
         builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
+        builder.Services.AddOptionsWithFluentValidation<UserLoginStateManagerOptions, UserLoginStateManagerOptionsValidator>(UserLoginStateManagerOptions.SectionName);
+        builder.Services.AddScoped<IUserLoginStateManager, UserLoginStateManager>();
+
         builder.Services.AddYourGamesListApi();
 
         var app = builder.Build();
@@ -67,6 +73,23 @@ public static partial class AppBuilder
             .ConfigureLogging();
 
         services.AddScoped<IYglAuthClient, YglAuthAuthClient>();
+        return services;
+    }
+
+    private static IServiceCollection AddMudBlazorServices(this IServiceCollection services)
+    {
+        services.AddMudServices(config =>
+        {
+            config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopRight;
+            config.SnackbarConfiguration.PreventDuplicates = true;
+            config.SnackbarConfiguration.NewestOnTop = false;
+            config.SnackbarConfiguration.ShowCloseIcon = true;
+            config.SnackbarConfiguration.VisibleStateDuration = 5000;
+            config.SnackbarConfiguration.HideTransitionDuration = 500;
+            config.SnackbarConfiguration.ShowTransitionDuration = 500;
+            config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
+        });
+
         return services;
     }
 }

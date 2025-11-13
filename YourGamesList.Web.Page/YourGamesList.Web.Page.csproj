@@ -18,4 +18,8 @@
         <ProjectReference Include="..\YourGamesList.Common\YourGamesList.Common.csproj"/>
         <ProjectReference Include="..\YourGamesList.Web.Store\YourGamesList.Web.Store.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="$(AssemblyName).UnitTests" />
+    </ItemGroup>
 </Project>

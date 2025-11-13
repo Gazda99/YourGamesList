@@ -1,0 +1,101 @@
+﻿@page "/login"
+@using Microsoft.Extensions.Logging
+@using YourGamesList.Web.Page.Services.UserLoginState
+@using YourGamesList.Web.Page.Services.Ygl
+
+<MudTextField @bind-Value="_username" TextChanged="@UserNameTextChanged"
+              Label="Username" Variant="Variant.Outlined" InputType="@InputType.Text"
+              Error="@_usernameTextFieldError"/>
+
+<MudTextField @bind-Value="_password" TextChanged="@PasswordTextChanged"
+              Label="Password" Variant="Variant.Outlined" InputType="@_passwordInput"
+              Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="@SwitchPasswordVisibilityClick" AdornmentAriaLabel="Show Password"
+              Error="@_passwordTextFieldError"/>
+
+<MudButton OnClick="@LoginClick" Disabled="@_loginDisabled">@_loginButtonText</MudButton>
+
+
+
+@code {
+    [Inject] private ILogger<Login> Logger { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private IYglAuthClient AuthClient { get; set; } = default!;
+    [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
+
+    private InputType _passwordInput = InputType.Password;
+    private string _passwordInputIcon = Icons.Material.Outlined.VisibilityOff;
+
+    private bool _loginDisabled = false;
+    private string _loginButtonText = "Log In";
+
+    private string _username = "";
+    private bool _usernameTextFieldError = false;
+    private string _password = "";
+    private bool _passwordTextFieldError = false;
+
+    private async Task LoginClick()
+    {
+        _loginDisabled = true;
+        _loginButtonText = "Logging In...";
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_password))
+            {
+                _passwordTextFieldError = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(_username))
+            {
+                _usernameTextFieldError = true;
+            }
+
+            if (_passwordTextFieldError || _usernameTextFieldError)
+            {
+                return;
+            }
+
+            var res = await AuthClient.Login(_username, _password);
+            if (res.IsFailure)
+            {
+                Snackbar.Add("Login failed", Severity.Warning);
+                return;
+            }
+
+            var token = res.Value;
+
+            await UserLoginStateManager.SaveUserToken(token);
+            Snackbar.Add("Successfully logged in", Severity.Success);
+        }
+        finally
+        {
+            _loginDisabled = false;
+            _loginButtonText = "Log In";
+        }
+    }
+
+    private void UserNameTextChanged(string text)
+    {
+        _usernameTextFieldError = false;
+    }
+
+    private void PasswordTextChanged(string text)
+    {
+        _passwordTextFieldError = false;
+    }
+
+    private void SwitchPasswordVisibilityClick()
+    {
+        if (_passwordInput == InputType.Password)
+        {
+            _passwordInput = InputType.Text;
+            _passwordInputIcon = Icons.Material.Outlined.Visibility;
+        }
+        else
+        {
+            _passwordInput = InputType.Password;
+            _passwordInputIcon = Icons.Material.Outlined.VisibilityOff;
+        }
+    }
+
+}

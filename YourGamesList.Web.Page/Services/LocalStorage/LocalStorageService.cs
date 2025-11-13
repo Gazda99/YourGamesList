@@ -4,17 +4,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
+using YourGamesList.Common;
 using YourGamesList.Web.Page.Services.LocalStorage.Model;
 
 namespace YourGamesList.Web.Page.Services.LocalStorage;
 
 public interface ILocalStorageService
 {
-    Task<T?> GetItem<T>(string key, CancellationToken cancellationToken = default);
+    Task<CombinedResult<T, LocalStorageError>> GetItem<T>(string key, CancellationToken cancellationToken = default);
     Task SetItem<T>(string key, T data, TimeSpan? ttl, CancellationToken cancellationToken = default);
     Task RemoveItem(string key, CancellationToken cancellationToken = default);
 }
 
+//TODO: unit tests
 public class LocalStorageService : ILocalStorageService
 {
     private readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions()
@@ -37,7 +39,7 @@ public class LocalStorageService : ILocalStorageService
         _timeProvider = timeProvider;
     }
 
-    public async Task<T?> GetItem<T>(string key, CancellationToken cancellationToken = default)
+    public async Task<CombinedResult<T, LocalStorageError>> GetItem<T>(string key, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -45,7 +47,7 @@ public class LocalStorageService : ILocalStorageService
             if (item == null)
             {
                 _logger.LogInformation("No local storage item found for '{LocalStorageKey}'", key);
-                return default;
+                return CombinedResult<T, LocalStorageError>.Failure(LocalStorageError.NotFound);
             }
             else
             {
@@ -55,23 +57,23 @@ public class LocalStorageService : ILocalStorageService
                 if (deserializedItem == null)
                 {
                     _logger.LogInformation("No local storage item found for '{LocalStorageKey}'", key);
-                    return default;
+                    return CombinedResult<T, LocalStorageError>.Failure(LocalStorageError.NotFound);
                 }
 
                 var now = _timeProvider.GetUtcNow();
                 if (now > deserializedItem.LastModified.UtcDateTime + deserializedItem.Ttl)
                 {
                     _logger.LogInformation("Local storage item '{LocalStorageKey}' has expired", key);
-                    return default;
+                    return CombinedResult<T, LocalStorageError>.Failure(LocalStorageError.Expired);
                 }
 
-                return deserializedItem.Item;
+                return CombinedResult<T, LocalStorageError>.Success(deserializedItem.Item);
             }
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to get local storage item '{LocalStorageKey}'", key);
-            return default;
+            return CombinedResult<T, LocalStorageError>.Failure(LocalStorageError.Other);
         }
     }
 

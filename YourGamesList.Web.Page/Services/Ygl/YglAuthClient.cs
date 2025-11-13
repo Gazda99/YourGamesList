@@ -12,6 +12,7 @@ public interface IYglAuthClient
     Task<CombinedResult<string, string>> Login(string username, string password);
 }
 
+//TODO: unit tests
 public class YglAuthAuthClient : IYglAuthClient
 {
     private readonly ILogger<YglAuthAuthClient> _logger;
