@@ -49,7 +49,7 @@ public class YglDbContext : DbContext
         modelBuilder.Entity<Game>(entity =>
         {
             entity.HasKey(x => x.Id);
-            entity.HasIndex(x => x.IgdbGameId);
+            // entity.HasIndex(x => x.IgdbGameId);
         });
 
         modelBuilder.Entity<GameListEntry>(entity =>

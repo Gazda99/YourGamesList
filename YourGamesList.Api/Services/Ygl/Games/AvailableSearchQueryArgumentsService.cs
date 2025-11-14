@@ -28,31 +28,28 @@ public class AvailableSearchQueryArgumentsService : IAvailableSearchQueryArgumen
     public async Task<AvailableSearchQueryArguments> GetAvailableSearchParams()
     {
         _logger.LogInformation("Getting available search query arguments for YGL games.");
-        var uniqueGameTypesTask = _yglDbContext.Games
-            .Where(g => !string.IsNullOrWhiteSpace(g.GameType))
+        var games = await _yglDbContext.Games
+            .AsNoTracking()
+            .Select(x => new
+            {
+                x.GameType,
+                x.Genres,
+                x.Themes
+            })
+            .ToListAsync();
+
+        var uniqueGameTypes = games
             .Select(g => g.GameType)
-            .Distinct()
-            .ToListAsync();
-        var allGenresTask = _yglDbContext.Games
-            .Where(g => g.Genres.Any())
-            .Select(g => g.Genres)
-            .ToListAsync();
-        var allThemesTask = _yglDbContext.Games
-            .Where(g => g.Themes.Any())
-            .Select(g => g.Themes)
-            .ToListAsync();
-
-        await Task.WhenAll(uniqueGameTypesTask, allGenresTask, allThemesTask);
-
-        var uniqueGameTypes = uniqueGameTypesTask.Result;
-
-        var uniqueGenres = allGenresTask.Result
-            .SelectMany(g => g)
             .Distinct()
             .ToList();
 
-        var uniqueThemes = allThemesTask.Result
-            .SelectMany(t => t)
+        var uniqueGenres = games
+            .SelectMany(g => g.Genres)
+            .Distinct()
+            .ToList();
+
+        var uniqueThemes = games
+            .SelectMany(g => g.Themes)
             .Distinct()
             .ToList();
 
