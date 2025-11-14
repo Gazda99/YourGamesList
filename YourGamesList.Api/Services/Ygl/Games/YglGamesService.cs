@@ -34,13 +34,13 @@ public class YglGamesService : IYglGamesService
         //TODO: finish logic
         var gameName = parameters.GameName.ToLower();
         var games = await _yglDbContext.Games.Where(x => x.Name.ToLower().Contains(gameName))
+            .OrderByDescending(x => x.RatingCount)
             .Skip(parameters.Skip)
             .Take(parameters.Take)
             .ToListAsync();
 
         var gameDtos = games
             .Select(game => _yglDatabaseAndDtoMapper.Map(game))
-            .OrderBy(x => x.Name.StartsWith(gameName, System.StringComparison.InvariantCultureIgnoreCase))
             .ToList();
 
         return gameDtos;

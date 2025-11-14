@@ -78,12 +78,14 @@ public class YglDatabaseAndDtoMapperTests
         //ASSERT
         Assert.That(dto.Id, Is.EqualTo(entity.Id));
         Assert.That(dto.IgdbGameId, Is.EqualTo(entity.IgdbGameId));
+        Assert.That(dto.ImageId, Is.EquivalentTo(entity.ImageId));
         Assert.That(dto.GameType, Is.EquivalentTo(entity.GameType));
         Assert.That(dto.Genres, Is.EquivalentTo(entity.Genres));
         Assert.That(dto.Name, Is.EquivalentTo(entity.Name));
         Assert.That(dto.StoryLine, Is.EquivalentTo(entity.StoryLine));
         Assert.That(dto.Summary, Is.EquivalentTo(entity.Summary));
         Assert.That(dto.Themes, Is.EquivalentTo(entity.Themes));
+        Assert.That(dto.RatingCount, Is.EqualTo(entity.RatingCount));
     }
 
     [Test]

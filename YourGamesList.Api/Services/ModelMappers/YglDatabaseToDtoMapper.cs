@@ -58,12 +58,14 @@ public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
         {
             Id = game.Id,
             IgdbGameId = game.IgdbGameId,
+            ImageId = game.ImageId,
             GameType = game.GameType,
             Genres = game.Genres.ToList(),
             Name = game.Name,
             StoryLine = game.StoryLine,
             Summary = game.Summary,
-            Themes = game.Themes.ToList()
+            Themes = game.Themes.ToList(),
+            RatingCount = game.RatingCount
         };
     }
 

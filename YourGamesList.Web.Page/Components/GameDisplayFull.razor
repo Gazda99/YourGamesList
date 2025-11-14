@@ -1,15 +1,55 @@
 ﻿@using YourGamesList.Web.Page.Services.Ygl.Model.Responses
 
-<MudPaper Class="d-flex flex-auto flex-wrap" Elevation="0">
+
+<style>
+
+    .mud-paper-game-display-hover {
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+
+    .mud-paper-game-display-hover:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .mud-paper-game-display-spacing {
+        margin: 1rem 0 0 1rem;
+    }
+
+    .mud-image-game-cover-spacing {
+        margin: 0.5rem 0.5rem 0.5rem 0.5rem;
+    }
+
+    .mud-button-add-game-to-list {
+        bottom: 0.5rem;
+        right: 0.5rem;
+        padding: 15px 32px;
+        display: inline-block;
+        z-index: 10;
+    }
+
+    .mud-text-bold {
+        font-weight: bold;
+    }
+
+    .mud-text-spacing {
+        margin-bottom: 0.3rem;
+    }
+</style>
+
+<MudPaper Class="d-flex flex-auto flex-wrap " Elevation="0">
     @foreach (var game in Games)
     {
-        <MudPaper Class="d-flex flex-row  mud-paper-game-display-spacing mud-paper-game-display-hover" Width="90%" Elevation="3">
-            <div class="d-flex flex-column">
+        <MudPaper Class="relative d-flex flex-row mud-paper-game-display-spacing mud-paper-game-display-hover" Width="45%" Elevation="3">
+            <div>
+                <MudImage Class="mud-image-game-cover-spacing" Width="264" Height="352" Src="@ImageUrl(game)" Object-Fit="ObjectFit.Fill"></MudImage>
+            </div>
+
+            <div>
                 <MudText Class="mud-text-bold mud-text-spacing">@game.Name</MudText>
                 <MudText Class="mud-text-spacing">@game.Summary</MudText>
             </div>
-            <MudIconButton Class="mud-button-add-game-to-list" Icon="material-symbols-outlined/bookmark_add"
-                           Color="Color.Secondary"></MudIconButton>
+            <MudIconButton Class="absolute mud-button-add-game-to-list" Icon="material-symbols-outlined/bookmark_add" Color="Color.Secondary"></MudIconButton>
         </MudPaper>
     }
 </MudPaper>
@@ -17,4 +57,9 @@
 
 @code {
     [Parameter] public IEnumerable<Game> Games { get; set; } = default!;
+    
+    private static string ImageUrl(Game game)
+    {
+        return $"https://images.igdb.com/igdb/image/upload/t_cover_big/{game.ImageId}.jpg";
+    }
 }

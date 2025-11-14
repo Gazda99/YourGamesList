@@ -103,12 +103,14 @@ public class BackgroundScraper : IBackgroundScraper
             var game = new Game()
             {
                 IgdbGameId = igdbGame.Id,
+                ImageId = igdbGame.Cover.ImageId,
                 GameType = igdbGame.GameType.Type,
                 Genres = igdbGame.Genres.Select(g => g.Name).ToList(),
                 Name = igdbGame.Name,
                 StoryLine = igdbGame.StoryLine,
                 Summary = igdbGame.Summary,
-                Themes = igdbGame.Themes.Select(t => t.Name).ToList()
+                Themes = igdbGame.Themes.Select(t => t.Name).ToList(),
+                RatingCount = igdbGame.RatingCount
             };
 
             gamesToAdd[gameArrayIdx] = game;
