@@ -12,7 +12,7 @@ namespace YourGamesList.Web.Page.Services.Ygl;
 
 public interface IYglGamesClient
 {
-    Task<CombinedResult<List<Game>, YglGamesClientError>> SearchGames(string userToken, string gameName);
+    Task<CombinedResult<List<YglGame>, YglGamesClientError>> SearchGames(string userToken, string gameName);
 }
 
 public class YglGamesClient : IYglGamesClient
@@ -26,7 +26,7 @@ public class YglGamesClient : IYglGamesClient
         _yglApi = yglApi;
     }
 
-    public async Task<CombinedResult<List<Game>, YglGamesClientError>> SearchGames(string userToken, string gameName)
+    public async Task<CombinedResult<List<YglGame>, YglGamesClientError>> SearchGames(string userToken, string gameName)
     {
         //TODO: pagination
         var request = new SearchGamesRequest()
@@ -41,17 +41,17 @@ public class YglGamesClient : IYglGamesClient
 
         if (callResult.IsFailure)
         {
-            return CombinedResult<List<Game>, YglGamesClientError>.Failure(YglGamesClientError.General);
+            return CombinedResult<List<YglGame>, YglGamesClientError>.Failure(YglGamesClientError.General);
         }
 
         var res = callResult.Value;
         if (res.StatusCode == HttpStatusCode.OK)
         {
-            return CombinedResult<List<Game>, YglGamesClientError>.Success(res.Content!);
+            return CombinedResult<List<YglGame>, YglGamesClientError>.Success(res.Content!);
         }
         else
         {
-            return CombinedResult<List<Game>, YglGamesClientError>.Failure(YglGamesClientError.General);
+            return CombinedResult<List<YglGame>, YglGamesClientError>.Failure(YglGamesClientError.General);
         }
     }
 }

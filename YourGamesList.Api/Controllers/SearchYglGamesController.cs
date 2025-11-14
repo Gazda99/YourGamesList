@@ -3,10 +3,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Attributes;
 using YourGamesList.Api.Model.Dto;
 using YourGamesList.Api.Model.Requests.SearchYglGames;
+using YourGamesList.Api.OutputCachePolicies;
 using YourGamesList.Api.Services.Ygl.Games;
 using YourGamesList.Api.Services.Ygl.Games.Model;
 
@@ -18,11 +20,27 @@ public class SearchYglGamesController : YourGamesListBaseController
 {
     private readonly ILogger<SearchYglGamesController> _logger;
     private readonly IYglGamesService _yglGamesService;
+    private readonly IAvailableSearchQueryArgumentsService _availableSearchQueryArgumentsService;
 
-    public SearchYglGamesController(ILogger<SearchYglGamesController> logger, IYglGamesService yglGamesService)
+    public SearchYglGamesController(
+        ILogger<SearchYglGamesController> logger,
+        IYglGamesService yglGamesService,
+        IAvailableSearchQueryArgumentsService availableSearchQueryArgumentsService
+    )
     {
         _logger = logger;
         _yglGamesService = yglGamesService;
+        _availableSearchQueryArgumentsService = availableSearchQueryArgumentsService;
+    }
+
+    [HttpGet("paramsForSearching")]
+    [Authorize]
+    [OutputCache(PolicyName = nameof(AlwaysOnOkOutputPolicy))]
+    [ProducesResponseType(typeof(AvailableSearchQueryArguments), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAvailableSearchParams()
+    {
+        var res = await _availableSearchQueryArgumentsService.GetAvailableSearchParams();
+        return Result(StatusCodes.Status200OK, res);
     }
 
     [HttpGet("search")]

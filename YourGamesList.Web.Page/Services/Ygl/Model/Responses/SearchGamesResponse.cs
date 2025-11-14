@@ -3,16 +3,17 @@ using System.Collections.Generic;
 
 namespace YourGamesList.Web.Page.Services.Ygl.Model.Responses;
 
-public class SearchGamesResponse : List<Game>
+public class SearchGamesResponse : List<YglGame>
 {
 }
 
-public class Game
+public class YglGame
 {
     public required Guid Id { get; init; }
-    public required long IgdbGameId { get; init; }
+    public required long FirstReleaseDate { get; init; }
     public required string GameType { get; init; }
     public required List<string> Genres { get; init; }
+    public required long IgdbGameId { get; init; }
     public required string ImageId { get; init; }
     public required string Name { get; init; }
     public required string StoryLine { get; init; }
