@@ -197,7 +197,7 @@ public class ListsController : YourGamesListBaseController
         }
     }
 
-    [HttpPost("entries/delete")]
+    [HttpDelete("entries/delete")]
     [Authorize]
     [ProducesResponseType(typeof(List<Guid>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]

@@ -57,13 +57,16 @@ public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
         return new GameDto()
         {
             Id = game.Id,
-            IgdbGameId = game.IgdbGameId,
+            FirstReleaseDate = game.FirstReleaseDate,
             GameType = game.GameType,
             Genres = game.Genres.ToList(),
+            IgdbGameId = game.IgdbGameId,
+            ImageId = game.ImageId,
             Name = game.Name,
             StoryLine = game.StoryLine,
             Summary = game.Summary,
-            Themes = game.Themes.ToList()
+            Themes = game.Themes.ToList(),
+            RatingCount = game.RatingCount
         };
     }
 
