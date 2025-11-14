@@ -12,6 +12,7 @@ public interface IAvailableSearchQueryArgumentsService
     Task<AvailableSearchQueryArguments> GetAvailableSearchParams();
 }
 
+//TODO: unit tests
 public class AvailableSearchQueryArgumentsService : IAvailableSearchQueryArgumentsService
 {
     private readonly ILogger<AvailableSearchQueryArgumentsService> _logger;
@@ -23,6 +24,7 @@ public class AvailableSearchQueryArgumentsService : IAvailableSearchQueryArgumen
         _yglDbContext = yglDbContext.CreateDbContext();
     }
 
+    //This is heavy operation, should be cached on higher level if needed frequently
     public async Task<AvailableSearchQueryArguments> GetAvailableSearchParams()
     {
         _logger.LogInformation("Getting available search query arguments for YGL games.");
