@@ -41,14 +41,14 @@ public class ListsService : IListsService
     private readonly IYglDatabaseAndDtoMapper _yglDatabaseAndDtoMapper;
     private readonly YglDbContext _yglDbContext;
 
-    #region List
-
     public ListsService(ILogger<ListsService> logger, IDbContextFactory<YglDbContext> yglDbContext, IYglDatabaseAndDtoMapper yglDatabaseAndDtoMapper)
     {
         _logger = logger;
         _yglDatabaseAndDtoMapper = yglDatabaseAndDtoMapper;
         _yglDbContext = yglDbContext.CreateDbContext();
     }
+
+    #region List
 
     public async Task<CombinedResult<Guid, ListsError>> CreateList(JwtUserInformation userInfo, string listName, string? description = null)
     {
@@ -168,7 +168,8 @@ public class ListsService : IListsService
 
         if (!string.IsNullOrWhiteSpace(parameters.Name) && !list.Name.Equals(parameters.Name, StringComparison.CurrentCultureIgnoreCase))
         {
-            var nameExists = await _yglDbContext.Lists.AnyAsync(x => x.UserId == list.UserId && x.Id != list.Id && x.Name.ToLower() == parameters.Name.ToLower());
+            var nameExists =
+                await _yglDbContext.Lists.AnyAsync(x => x.UserId == list.UserId && x.Id != list.Id && x.Name.ToLower() == parameters.Name.ToLower());
             if (nameExists)
             {
                 _logger.LogInformation($"Cannot rename list to '{parameters.Name}' because it already exists for user '{list.UserId}'.");

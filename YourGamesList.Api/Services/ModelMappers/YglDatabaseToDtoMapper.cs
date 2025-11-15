@@ -10,6 +10,7 @@ public interface IYglDatabaseAndDtoMapper
     GamesListDto Map(GamesList gamesList);
     GameListEntryDto Map(GameListEntry gameListEntry);
     GameDto Map(Game game);
+    UserDto Map(User user);
     CompletionStatusDto Map(CompletionStatus completionStatus);
     GameDistributionDto Map(GameDistribution gameDistribution);
     PlatformDto Map(Platform platform);
@@ -70,7 +71,18 @@ public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
         };
     }
 
-
+    public UserDto Map(User user)
+    {
+        return new UserDto()
+        {
+            Id = user.Id,
+            Username = user.Username,
+            DateOfBirth = user.DateOfBirth,
+            Description = user.Description,
+            Country = user.Country
+        };
+    }
+    
     public CompletionStatusDto Map(CompletionStatus completionStatus)
     {
         return MapEnums<CompletionStatus, CompletionStatusDto>(completionStatus);

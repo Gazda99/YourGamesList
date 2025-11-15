@@ -6,6 +6,7 @@ using YourGamesList.Api.Model.Requests.Auth;
 using YourGamesList.Api.Model.Requests.Lists;
 using YourGamesList.Api.Model.Requests.SearchIgdbGames;
 using YourGamesList.Api.Model.Requests.SearchYglGames;
+using YourGamesList.Api.Model.Requests.Users;
 
 namespace YourGamesList.Api.AppBuilders;
 
@@ -30,6 +31,13 @@ public static partial class AppBuilder
             .AddScoped<IValidator<UserLoginRequest>, UserLoginRequestValidator>()
             .AddScoped<IValidator<UserDeleteRequest>, UserDeleteRequestValidator>()
             ;
+        
+        //User controller validators
+        services
+            .AddScoped<IValidator<UserGetSelfRequest>, UserGetSelfRequestValidator>()
+            .AddScoped<IValidator<UserUpdateRequest>, UserUpdateRequestValidator>()
+            ;
+
 
         //Search IGDB Games controller validators
         services

@@ -24,6 +24,7 @@ using YourGamesList.Api.Services.Scraper;
 using YourGamesList.Api.Services.Scraper.Options;
 using YourGamesList.Api.Services.Twitch;
 using YourGamesList.Api.Services.Twitch.Options;
+using YourGamesList.Api.Services.Users;
 using YourGamesList.Api.Services.Ygl.Games;
 using YourGamesList.Api.Services.Ygl.Lists;
 using YourGamesList.Common.Caching;
@@ -106,12 +107,13 @@ public static partial class AppBuilder
 
     private static IServiceCollection AddCorrelationIdServices(this IServiceCollection services)
     {
-        services.AddOptionsWithFluentValidation<CorrelationIdMiddlewareOptions, CorrelationIdMiddlewareOptionsValidator>(CorrelationIdMiddlewareOptions.SectionName);
-        
+        services.AddOptionsWithFluentValidation<CorrelationIdMiddlewareOptions, CorrelationIdMiddlewareOptionsValidator>(CorrelationIdMiddlewareOptions
+            .SectionName);
+
         services.AddSingleton<ICorrelationIdProvider, CorrelationIdProvider>();
         return services;
     }
-    
+
     private static IServiceCollection AddAuth(this IServiceCollection services)
     {
         services.AddOptionsWithFluentValidation<TokenAuthOptions, TokenAuthOptionsValidator>(TokenAuthOptions.SectionName);
@@ -169,6 +171,7 @@ public static partial class AppBuilder
 
     private static IServiceCollection AddYglServices(this IServiceCollection services)
     {
+        services.AddScoped<IUsersService, UsersService>();
         services.AddScoped<IListsService, ListsService>();
         services.AddScoped<IYglGamesService, YglGamesService>();
         services.AddScoped<IAvailableSearchQueryArgumentsService, AvailableSearchQueryArgumentsService>();

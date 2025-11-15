@@ -1,5 +1,6 @@
 ﻿using AutoFixture;
 using YourGamesList.Api.Model.Requests.Lists;
+using YourGamesList.Api.Model.Requests.Users;
 using YourGamesList.Api.Services.ModelMappers;
 
 namespace YourGamesList.Api.UnitTests.Services.ModelMappers;
@@ -124,4 +125,22 @@ public class RequestToParametersMapperTests
             i++;
         }
     }
+    
+    [Test]
+    public void Map_From_UserUpdateRequest_To_UserUpdateParameters()
+    {
+        //ARRANGE
+        var request = _fixture.Create<UserUpdateRequest>();
+        var mapper = new RequestToParametersMapper();
+
+        //ACT
+        var parameter = mapper.Map(request);
+
+        //ASSERT
+        Assert.That(parameter.UserInformation, Is.EqualTo(request.UserInformation));
+        Assert.That(parameter.Country, Is.EqualTo(request.Body.Country));
+        Assert.That(parameter.Description, Is.EqualTo(request.Body.Description));
+        Assert.That(parameter.DateOfBirth, Is.EqualTo(request.Body.DateOfBirth));
+    }  
+
 }

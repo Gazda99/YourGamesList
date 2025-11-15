@@ -1,4 +1,5 @@
-﻿using AutoFixture;
+﻿using System.Collections.Generic;
+using AutoFixture;
 using YourGamesList.Api.Model.Dto;
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Database.Entities;
@@ -87,6 +88,26 @@ public class YglDatabaseAndDtoMapperTests
         Assert.That(dto.Summary, Is.EquivalentTo(entity.Summary));
         Assert.That(dto.Themes, Is.EquivalentTo(entity.Themes));
         Assert.That(dto.RatingCount, Is.EqualTo(entity.RatingCount));
+    }
+    
+    [Test]
+    public void Map_User_To_UserDto()
+    {
+        //ARRANGE
+        var entity = _fixture.Build<User>()
+            .WithAutoProperties()
+            .Create();
+        var mapper = new YglDatabaseAndDtoMapper();
+
+        //ACT
+        var dto = mapper.Map(entity);
+
+        //ASSERT
+        Assert.That(dto.Id, Is.EqualTo(entity.Id));
+        Assert.That(dto.Username, Is.EquivalentTo(entity.Username));
+        Assert.That(dto.Country, Is.EquivalentTo(entity.Country));
+        Assert.That(dto.Description, Is.EquivalentTo(entity.Description));
+        Assert.That(dto.DateOfBirth, Is.EqualTo(entity.DateOfBirth));
     }
 
     [Test]
