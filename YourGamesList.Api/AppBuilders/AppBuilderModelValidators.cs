@@ -1,12 +1,12 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
-using YourGamesList.Api.ControllerModelValidators;
 using YourGamesList.Api.Model;
 using YourGamesList.Api.Model.Requests.Auth;
 using YourGamesList.Api.Model.Requests.Lists;
 using YourGamesList.Api.Model.Requests.SearchIgdbGames;
 using YourGamesList.Api.Model.Requests.SearchYglGames;
 using YourGamesList.Api.Model.Requests.Users;
+using YourGamesList.Api.Services.ControllerModelValidators;
 
 namespace YourGamesList.Api.AppBuilders;
 

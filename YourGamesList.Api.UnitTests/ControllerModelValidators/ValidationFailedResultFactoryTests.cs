@@ -2,8 +2,8 @@
 using AutoFixture;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
-using YourGamesList.Api.ControllerModelValidators;
 using YourGamesList.Api.Model.Responses;
+using YourGamesList.Api.Services.ControllerModelValidators;
 
 namespace YourGamesList.Api.UnitTests.ControllerModelValidators;
 

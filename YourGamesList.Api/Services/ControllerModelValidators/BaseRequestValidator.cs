@@ -4,7 +4,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace YourGamesList.Api.ControllerModelValidators;
+namespace YourGamesList.Api.Services.ControllerModelValidators;
 
 public interface IBaseRequestValidator
 {

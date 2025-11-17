@@ -1,10 +1,9 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
 using YourGamesList.Api.Model.Responses;
 
-namespace YourGamesList.Api.ControllerModelValidators;
+namespace YourGamesList.Api.Services.ControllerModelValidators;
 
 public interface IValidationFailedResultFactory
 {
