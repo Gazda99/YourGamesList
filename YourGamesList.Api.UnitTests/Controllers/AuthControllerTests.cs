@@ -5,14 +5,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using YourGamesList.Api.Controllers;
 using YourGamesList.Api.Controllers.Users;
 using YourGamesList.Api.Model.Requests.Auth;
-using YourGamesList.Api.Model.Responses.Auth;
 using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Model;
 using YourGamesList.Common;
 using YourGamesList.Contracts.Requests.Users;
+using YourGamesList.Contracts.Responses.Users;
 using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.Controllers;

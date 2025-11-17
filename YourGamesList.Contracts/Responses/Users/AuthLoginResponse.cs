@@ -1,4 +1,4 @@
-﻿namespace YourGamesList.Api.Model.Responses.Auth;
+﻿namespace YourGamesList.Contracts.Responses.Users;
 
 public class AuthLoginResponse
 {

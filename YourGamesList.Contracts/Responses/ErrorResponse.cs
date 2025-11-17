@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace YourGamesList.Api.Model.Responses;
+namespace YourGamesList.Contracts.Responses;
 
 public class ErrorResponse
 {

@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
-using YourGamesList.Api.Model.Responses;
+using YourGamesList.Contracts.Responses;
 
 namespace YourGamesList.Api.Services.ControllerModelValidators;
 

@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Attributes;
 using YourGamesList.Api.Model.Requests.Auth;
-using YourGamesList.Api.Model.Responses.Auth;
 using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Model;
+using YourGamesList.Contracts.Responses.Users;
 
 namespace YourGamesList.Api.Controllers.Users;
 

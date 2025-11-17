@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
-using YourGamesList.Api.Model.Responses;
 using YourGamesList.Api.Services.ControllerModelValidators;
+using YourGamesList.Contracts.Responses;
 
 namespace YourGamesList.Api.Attributes;
 
