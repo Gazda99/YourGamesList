@@ -3,7 +3,6 @@
         <Project Path="YourGamesList.Api.UnitTests\YourGamesList.Api.UnitTests.csproj" />
         <Project Path="YourGamesList.Common.UnitTests\YourGamesList.Common.UnitTests.csproj" />
         <Project Path="YourGamesList.Database.TestUtils\YourGamesList.Database.TestUtils.csproj" />
-        <Project Path="YourGamesList.IntegrationTests\YourGamesList.IntegrationTests.csproj" />
         <Project Path="YourGamesList.TestsUtils\YourGamesList.TestsUtils.csproj" />
         <Project Path="YourGamesList.Web.Page.UnitTests/YourGamesList.Web.Page.UnitTests.csproj" />
     </Folder>
