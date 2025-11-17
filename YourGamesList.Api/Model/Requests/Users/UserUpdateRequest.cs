@@ -1,7 +1,7 @@
-﻿using System;
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using YourGamesList.Api.Attributes;
+using YourGamesList.Contracts.Requests.Users;
 
 namespace YourGamesList.Api.Model.Requests.Users;
 
@@ -9,13 +9,6 @@ public class UserUpdateRequest
 {
     [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
     [FromBody] public required UserUpdateRequestBody Body { get; init; }
-}
-
-public class UserUpdateRequestBody
-{
-    public string? Description { get; set; }
-    public DateTimeOffset? DateOfBirth { get; set; }
-    public string? Country { get; set; }
 }
 
 internal sealed class UserUpdateRequestValidator : AbstractValidator<UserUpdateRequest>

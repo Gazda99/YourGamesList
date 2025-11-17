@@ -1,0 +1,52 @@
+﻿@page "/searchGamesV2"
+@using Microsoft.Extensions.Logging
+@using YourGamesList.Contracts.Dto
+@using YourGamesList.Web.Page.Services.UserLoginState
+@using YourGamesList.Web.Page.Services.Ygl
+@using YourGamesList.Web.Page.Services.Ygl.Model
+
+
+@if (_isLoading || !_searchResults.Any())
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="mx-auto"/>
+}
+else if (!_isLoading && !_searchResults.Any())
+{
+}
+else
+{
+    <MudGrid Justify="Justify.FlexStart" Spacing="3">
+        @foreach (var game in _searchResults)
+        {
+            <MudItem xs="12" sm="12" md="12" lg="6" xl="6" xxl="4">
+                <GameTile Game="@game"></GameTile>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+
+@code {
+    [Inject] private ILogger<SearchGamesV2> Logger { get; set; } = default!;
+    [Inject] private IYglGamesClient GamesClient { get; set; } = default!;
+    [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
+
+    private bool _isLoading = false;
+    private List<GameDto> _searchResults = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await LoadGameData();
+    }
+
+    private async Task LoadGameData()
+    {
+        _isLoading = true;
+        var token = await UserLoginStateManager.GetUserToken();
+        var res = await GamesClient.SearchGames(token!, "witcher");
+        _searchResults = res.Value!;
+        _isLoading = false;
+    }
+
+}

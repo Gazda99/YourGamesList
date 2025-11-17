@@ -15,6 +15,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\YourGamesList.Common\YourGamesList.Common.csproj" />
+        <ProjectReference Include="..\YourGamesList.Contracts\YourGamesList.Contracts.csproj" />
         <ProjectReference Include="..\YourGamesList.Database\YourGamesList.Database.csproj" />
     </ItemGroup>
     

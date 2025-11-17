@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using AutoFixture;
-using YourGamesList.Api.Model.Dto;
+
 using YourGamesList.Api.Services.ModelMappers;
+using YourGamesList.Contracts.Dto;
 using YourGamesList.Database.Entities;
 
 namespace YourGamesList.Api.UnitTests.Services.ModelMappers;

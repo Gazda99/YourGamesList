@@ -1,4 +1,4 @@
-﻿namespace YourGamesList.Api.Model.Dto;
+﻿namespace YourGamesList.Contracts.Dto;
 
 public enum GameDistributionDto
 {

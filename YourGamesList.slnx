@@ -9,6 +9,7 @@
     </Folder>
     <Project Path="YourGamesList.Api\YourGamesList.Api.csproj" />
     <Project Path="YourGamesList.Common\YourGamesList.Common.csproj" />
+    <Project Path="YourGamesList.Contracts/YourGamesList.Contracts.csproj" />
     <Project Path="YourGamesList.Database\YourGamesList.Database.csproj" />
     <Project Path="YourGamesList.Web.Page/YourGamesList.Web.Page.csproj" />
     <Project Path="YourGamesList.Web.Store/YourGamesList.Web.Store.csproj" />

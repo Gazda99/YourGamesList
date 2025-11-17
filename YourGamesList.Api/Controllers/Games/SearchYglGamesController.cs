@@ -6,16 +6,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Attributes;
-using YourGamesList.Api.Model.Dto;
 using YourGamesList.Api.Model.Requests.SearchYglGames;
 using YourGamesList.Api.OutputCachePolicies;
 using YourGamesList.Api.Services.Ygl.Games;
 using YourGamesList.Api.Services.Ygl.Games.Model;
+using YourGamesList.Contracts.Dto;
 
-namespace YourGamesList.Api.Controllers;
+namespace YourGamesList.Api.Controllers.Games;
 
 [ApiController]
-[Route("ygl/games")]
+[Route("games/ygl")]
 public class SearchYglGamesController : YourGamesListBaseController
 {
     private readonly ILogger<SearchYglGamesController> _logger;

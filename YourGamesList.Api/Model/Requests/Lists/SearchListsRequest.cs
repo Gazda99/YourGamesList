@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using YourGamesList.Api.Attributes;
+using YourGamesList.Contracts.Requests.Lists;
 
 namespace YourGamesList.Api.Model.Requests.Lists;
 
@@ -8,15 +9,6 @@ public class SearchListsRequest
 {
     [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
     [FromBody] public required SearchListsRequestBody Body { get; init; }
-}
-
-public class SearchListsRequestBody
-{
-    public string? ListName { get; set; }
-    public string? UserName { get; init; }
-    public bool IncludeGames { get; init; } = false;
-    public int Take { get; init; } = 10;
-    public int Skip { get; init; } = 0;
 }
 
 internal sealed class SearchListsRequestValidator : AbstractValidator<SearchListsRequest>

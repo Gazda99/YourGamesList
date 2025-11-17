@@ -3,8 +3,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Common;
 using YourGamesList.Common.Refit;
+using YourGamesList.Contracts.Requests.Users;
 using YourGamesList.Web.Page.Services.Ygl.Model;
-using YourGamesList.Web.Page.Services.Ygl.Model.Requests;
 
 namespace YourGamesList.Web.Page.Services.Ygl;
 
@@ -29,7 +29,7 @@ public class YglAuthAuthClient : IYglAuthClient
 
     public async Task<ErrorResult<YglAuthAuthClientError>> Register(string username, string password)
     {
-        var request = new UserRegisterRequest()
+        var request = new AuthUserRegisterRequestBody()
         {
             Username = username,
             Password = password
@@ -71,7 +71,7 @@ public class YglAuthAuthClient : IYglAuthClient
 
     public async Task<CombinedResult<string, YglAuthAuthClientError>> Login(string username, string password)
     {
-        var request = new UserLoginRequest()
+        var request = new AuthUserLoginRequestBody()
         {
             Username = username,
             Password = password
@@ -108,7 +108,7 @@ public class YglAuthAuthClient : IYglAuthClient
 
     public async Task<ErrorResult<YglAuthAuthClientError>> Delete(string username, string password)
     {
-        var request = new UserDeleteRequest()
+        var request = new AuthUserDeleteRequestBody()
         {
             Username = username,
             Password = password

@@ -4,16 +4,16 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Attributes;
-using YourGamesList.Api.Model.Dto;
 using YourGamesList.Api.Model.Requests.Users;
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Users;
 using YourGamesList.Api.Services.Users.Model;
+using YourGamesList.Contracts.Dto;
 
-namespace YourGamesList.Api.Controllers;
+namespace YourGamesList.Api.Controllers.Users;
 
 [ApiController]
-[Route("user")]
+[Route("users")]
 public class UsersController : YourGamesListBaseController
 {
     private readonly ILogger<UsersController> _logger;

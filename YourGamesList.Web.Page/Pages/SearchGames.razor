@@ -1,7 +1,9 @@
 ﻿@page "/searchGames"
 @using Microsoft.Extensions.Logging
+@using YourGamesList.Contracts.Dto
 @using YourGamesList.Web.Page.Services.UserLoginState
 @using YourGamesList.Web.Page.Services.Ygl
+@using YourGamesList.Web.Page.Services.Ygl.Model
 @using YourGamesList.Web.Page.Services.Ygl.Model.Responses
 
 
@@ -134,7 +136,7 @@ else
     // --- Component State ---
     private SearchParameters _searchParams { get; set; } = new SearchParameters();
     private bool _isLoading = false;
-    private List<YglGame> _searchResults = new();
+    private List<GameDto> _searchResults = new();
     private List<string> _themes = new();
     private List<string> _genres = new();
 
@@ -222,7 +224,7 @@ else
         return text.Length >= maxLength ? $"{text[0..(maxLength - 3)]}..." : text;
     }
 
-    private void AddToList(YglGame game)
+    private void AddToList(GameDto game)
     {
         // This is where you would call a service to add the game to a user's list
         Snackbar.Add($"'{game.Name}' added to your list!", Severity.Success);

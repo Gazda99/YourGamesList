@@ -6,12 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Controllers;
-using YourGamesList.Api.Model.Dto;
+using YourGamesList.Api.Controllers.Users;
 using YourGamesList.Api.Model.Requests.Users;
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Users;
 using YourGamesList.Api.Services.Users.Model;
 using YourGamesList.Common;
+using YourGamesList.Contracts.Dto;
 using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.Controllers;

@@ -1,7 +1,7 @@
-﻿using System;
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using YourGamesList.Api.Attributes;
+using YourGamesList.Contracts.Requests.Lists;
 
 namespace YourGamesList.Api.Model.Requests.Lists;
 
@@ -10,12 +10,6 @@ public class DeleteListEntriesRequest
     [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
 
     [FromBody] public required DeleteListEntriesRequestBody Body { get; init; }
-}
-
-public class DeleteListEntriesRequestBody
-{
-    public required Guid ListId { get; init; }
-    public Guid[] EntriesToRemove { get; init; } = [];
 }
 
 internal sealed class DeleteListEntriesRequestValidator : AbstractValidator<DeleteListEntriesRequest>

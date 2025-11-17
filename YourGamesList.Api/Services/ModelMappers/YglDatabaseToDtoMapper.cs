@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using YourGamesList.Api.Model.Dto;
+using YourGamesList.Contracts.Dto;
 using YourGamesList.Database.Entities;
 
 namespace YourGamesList.Api.Services.ModelMappers;

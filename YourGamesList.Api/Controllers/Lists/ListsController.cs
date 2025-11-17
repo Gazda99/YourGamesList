@@ -6,13 +6,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Attributes;
-using YourGamesList.Api.Model.Dto;
 using YourGamesList.Api.Model.Requests.Lists;
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Ygl.Lists;
 using YourGamesList.Api.Services.Ygl.Lists.Model;
+using YourGamesList.Contracts.Dto;
 
-namespace YourGamesList.Api.Controllers;
+namespace YourGamesList.Api.Controllers.Lists;
 
 [ApiController]
 [Route("ygl/lists")]

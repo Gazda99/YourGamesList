@@ -4,15 +4,16 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Common;
 using YourGamesList.Common.Refit;
+using YourGamesList.Contracts.Dto;
+using YourGamesList.Contracts.Requests.Games;
 using YourGamesList.Web.Page.Services.Ygl.Model;
-using YourGamesList.Web.Page.Services.Ygl.Model.Requests;
-using YourGamesList.Web.Page.Services.Ygl.Model.Responses;
 
 namespace YourGamesList.Web.Page.Services.Ygl;
 
 public interface IYglGamesClient
 {
-    Task<CombinedResult<List<YglGame>, YglGamesClientError>> SearchGames(string userToken, string gameName);
+    Task<CombinedResult<List<GameDto>, YglGamesClientError>> SearchGames(string userToken, string gameName);
+    Task<CombinedResult<object, YglGamesClientError>> GetAvailableSearchParams(string userToken);
 }
 
 public class YglGamesClient : IYglGamesClient
@@ -26,10 +27,10 @@ public class YglGamesClient : IYglGamesClient
         _yglApi = yglApi;
     }
 
-    public async Task<CombinedResult<List<YglGame>, YglGamesClientError>> SearchGames(string userToken, string gameName)
+    public async Task<CombinedResult<List<GameDto>, YglGamesClientError>> SearchGames(string userToken, string gameName)
     {
         //TODO: pagination
-        var request = new SearchGamesRequest()
+        var request = new SearchYglGamesRequestBody()
         {
             GameName = gameName,
             Skip = 0,
@@ -41,17 +42,22 @@ public class YglGamesClient : IYglGamesClient
 
         if (callResult.IsFailure)
         {
-            return CombinedResult<List<YglGame>, YglGamesClientError>.Failure(YglGamesClientError.General);
+            return CombinedResult<List<GameDto>, YglGamesClientError>.Failure(YglGamesClientError.General);
         }
 
         var res = callResult.Value;
         if (res.StatusCode == HttpStatusCode.OK)
         {
-            return CombinedResult<List<YglGame>, YglGamesClientError>.Success(res.Content!);
+            return CombinedResult<List<GameDto>, YglGamesClientError>.Success(res.Content!);
         }
         else
         {
-            return CombinedResult<List<YglGame>, YglGamesClientError>.Failure(YglGamesClientError.General);
+            return CombinedResult<List<GameDto>, YglGamesClientError>.Failure(YglGamesClientError.General);
         }
+    }
+
+    public Task<CombinedResult<object, YglGamesClientError>> GetAvailableSearchParams(string userToken)
+    {
+        throw new System.NotImplementedException();
     }
 }

@@ -8,10 +8,10 @@ using YourGamesList.Api.Model.Responses.Auth;
 using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Model;
 
-namespace YourGamesList.Api.Controllers;
+namespace YourGamesList.Api.Controllers.Users;
 
 [ApiController]
-[Route("auth")]
+[Route("users/auth")]
 public class AuthController : YourGamesListBaseController
 {
     private readonly ILogger<AuthController> _logger;
@@ -33,9 +33,9 @@ public class AuthController : YourGamesListBaseController
     [TypeFilter(typeof(RequestValidatorAttribute<UserRegisterRequest>), Arguments = ["userRegisterRequest"])]
     public async Task<IActionResult> Register(UserRegisterRequest userRegisterRequest)
     {
-        _logger.LogInformation($"Requested to register user '{userRegisterRequest.Username}'");
+        _logger.LogInformation($"Requested to register user '{userRegisterRequest.Body.Username}'");
 
-        var res = await _userManagerService.RegisterUser(userRegisterRequest.Username, userRegisterRequest.Password);
+        var res = await _userManagerService.RegisterUser(userRegisterRequest.Body.Username, userRegisterRequest.Body.Password);
 
         if (res.IsFailure)
         {
@@ -64,9 +64,9 @@ public class AuthController : YourGamesListBaseController
     [TypeFilter(typeof(RequestValidatorAttribute<UserLoginRequest>), Arguments = ["userLoginRequest"])]
     public async Task<IActionResult> Login(UserLoginRequest userLoginRequest)
     {
-        _logger.LogInformation($"Requested to login user '{userLoginRequest.Username}'");
+        _logger.LogInformation($"Requested to login user '{userLoginRequest.Body.Username}'");
 
-        var res = await _userManagerService.Login(userLoginRequest.Username, userLoginRequest.Password);
+        var res = await _userManagerService.Login(userLoginRequest.Body.Username, userLoginRequest.Body.Password);
 
         if (res.IsFailure)
         {
@@ -99,9 +99,9 @@ public class AuthController : YourGamesListBaseController
     [TypeFilter(typeof(RequestValidatorAttribute<UserDeleteRequest>), Arguments = ["userDeleteRequest"])]
     public async Task<IActionResult> Delete(UserDeleteRequest userDeleteRequest)
     {
-        _logger.LogInformation($"Requested to delete user '{userDeleteRequest.Username}'");
+        _logger.LogInformation($"Requested to delete user '{userDeleteRequest.Body.Username}'");
 
-        var res = await _userManagerService.Delete(userDeleteRequest.Username, userDeleteRequest.Password);
+        var res = await _userManagerService.Delete(userDeleteRequest.Body.Username, userDeleteRequest.Body.Password);
 
         if (res.IsFailure)
         {

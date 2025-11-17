@@ -9,10 +9,10 @@ using YourGamesList.Api.Services.Igdb;
 using YourGamesList.Api.Services.Igdb.Model;
 using YourGamesList.Common;
 
-namespace YourGamesList.Api.Controllers;
+namespace YourGamesList.Api.Controllers.Games;
 
 [ApiController]
-[Route("igdb/search")]
+[Route("games/igdb")]
 public class SearchIgdbGamesController : YourGamesListBaseController
 {
     private readonly ILogger<SearchIgdbGamesController> _logger;

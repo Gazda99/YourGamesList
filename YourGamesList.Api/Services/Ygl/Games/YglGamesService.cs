@@ -3,9 +3,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using YourGamesList.Api.Model.Dto;
+
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Ygl.Games.Model;
+using YourGamesList.Contracts.Dto;
 using YourGamesList.Database;
 
 namespace YourGamesList.Api.Services.Ygl.Games;

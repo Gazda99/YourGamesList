@@ -75,6 +75,7 @@ public static partial class AppBuilder
 
         services.AddScoped<IYglAuthClient, YglAuthAuthClient>();
         services.AddScoped<IYglGamesClient, YglGamesClient>();
+        services.AddScoped<IYglUsersClient, YglUsersClient>();
         return services;
     }
 

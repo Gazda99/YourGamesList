@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using YourGamesList.Api.Attributes;
+using YourGamesList.Contracts.Requests.Lists;
 
 namespace YourGamesList.Api.Model.Requests.Lists;
 
@@ -9,12 +10,6 @@ public class CreateListRequest
     [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
 
     [FromBody] public required CreateListRequestBody Body { get; init; }
-}
-
-public class CreateListRequestBody
-{
-    public required string ListName { get; init; } = string.Empty;
-    public string? Description { get; init; } = string.Empty;
 }
 
 internal sealed class CreateListRequestValidator : AbstractValidator<CreateListRequest>

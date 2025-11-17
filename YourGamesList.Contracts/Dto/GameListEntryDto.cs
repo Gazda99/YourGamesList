@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace YourGamesList.Api.Model.Dto;
+namespace YourGamesList.Contracts.Dto;
 
 public class GameListEntryDto
 {

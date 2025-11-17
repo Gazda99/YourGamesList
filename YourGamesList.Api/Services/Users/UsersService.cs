@@ -2,10 +2,11 @@
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using YourGamesList.Api.Model.Dto;
+
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Users.Model;
 using YourGamesList.Common;
+using YourGamesList.Contracts.Dto;
 using YourGamesList.Database;
 
 namespace YourGamesList.Api.Services.Users;

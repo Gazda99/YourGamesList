@@ -5,6 +5,7 @@ using FluentValidation;
 using FluentValidation.TestHelper;
 using YourGamesList.Api.Model;
 using YourGamesList.Api.Model.Requests.Lists;
+using YourGamesList.Contracts.Requests.Lists;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Lists;
 
