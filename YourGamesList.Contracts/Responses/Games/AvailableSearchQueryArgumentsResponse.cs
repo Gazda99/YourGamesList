@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace YourGamesList.Api.Services.Ygl.Games.Model;
+namespace YourGamesList.Contracts.Responses.Games;
 
-public class AvailableSearchQueryArguments
+public class AvailableSearchQueryArgumentsResponse
 {
     public required List<string> GameTypes { get; init; }
     public required List<string> Genres { get; init; }

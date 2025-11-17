@@ -11,6 +11,7 @@ using YourGamesList.Api.OutputCachePolicies;
 using YourGamesList.Api.Services.Ygl.Games;
 using YourGamesList.Api.Services.Ygl.Games.Model;
 using YourGamesList.Contracts.Dto;
+using YourGamesList.Contracts.Responses.Games;
 
 namespace YourGamesList.Api.Controllers.Games;
 
@@ -36,7 +37,7 @@ public class SearchYglGamesController : YourGamesListBaseController
     [HttpGet("paramsForSearching")]
     [Authorize]
     [OutputCache(PolicyName = nameof(AlwaysOnOkOutputPolicy))]
-    [ProducesResponseType(typeof(AvailableSearchQueryArguments), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AvailableSearchQueryArgumentsResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAvailableSearchParams()
     {
         var res = await _availableSearchQueryArgumentsService.GetAvailableSearchParams();

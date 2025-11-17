@@ -7,7 +7,8 @@ using YourGamesList.Common.Refit;
 using YourGamesList.Contracts.Dto;
 using YourGamesList.Contracts.Requests.Games;
 using YourGamesList.Contracts.Requests.Users;
-using YourGamesList.Web.Page.Services.Ygl.Model.Responses;
+using YourGamesList.Contracts.Responses.Games;
+using YourGamesList.Contracts.Responses.Users;
 
 namespace YourGamesList.Web.Page.Services.Ygl;
 
@@ -21,7 +22,7 @@ public interface IYglApi : IHandlesHttpRefitException
 
     [Post("/users/auth/login")]
     [Headers($"Content-Type: {ContentTypes.ApplicationJson}")]
-    Task<IApiResponse<LoginResponse>> Login([Body(BodySerializationMethod.Serialized)] AuthUserLoginRequestBody request);
+    Task<IApiResponse<AuthLoginResponse>> Login([Body(BodySerializationMethod.Serialized)] AuthUserLoginRequestBody request);
 
     [Post("/users/auth/delete")]
     [Headers($"Content-Type: {ContentTypes.ApplicationJson}")]

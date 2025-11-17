@@ -3,13 +3,14 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Services.Ygl.Games.Model;
+using YourGamesList.Contracts.Responses.Games;
 using YourGamesList.Database;
 
 namespace YourGamesList.Api.Services.Ygl.Games;
 
 public interface IAvailableSearchQueryArgumentsService
 {
-    Task<AvailableSearchQueryArguments> GetAvailableSearchParams();
+    Task<AvailableSearchQueryArgumentsResponse> GetAvailableSearchParams();
 }
 
 //TODO: unit tests
@@ -25,7 +26,7 @@ public class AvailableSearchQueryArgumentsService : IAvailableSearchQueryArgumen
     }
 
     //This is heavy operation, should be cached on higher level if needed frequently
-    public async Task<AvailableSearchQueryArguments> GetAvailableSearchParams()
+    public async Task<AvailableSearchQueryArgumentsResponse> GetAvailableSearchParams()
     {
         _logger.LogInformation("Getting available search query arguments for YGL games.");
         var games = await _yglDbContext.Games
@@ -54,7 +55,7 @@ public class AvailableSearchQueryArgumentsService : IAvailableSearchQueryArgumen
             .ToList();
 
         _logger.LogInformation("Successfully retrieved available search query arguments for YGL games.");
-        return new AvailableSearchQueryArguments()
+        return new AvailableSearchQueryArgumentsResponse()
         {
             GameTypes = uniqueGameTypes,
             Genres = uniqueGenres,
