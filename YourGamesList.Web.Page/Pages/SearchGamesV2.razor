@@ -4,6 +4,7 @@
 @using YourGamesList.Contracts.Responses.Games
 @using YourGamesList.Web.Page.Services.UserLoginState
 @using YourGamesList.Web.Page.Services.Ygl
+@using YourGamesList.Web.Page.StaticState
 
 @if (!_isPageInitialized)
 {
@@ -51,21 +52,30 @@ else
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     [Inject] private IYglGamesClient GamesClient { get; set; } = default!;
     [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
+    [Inject] private IStaticState<AvailableSearchQueryArgumentsResponse> _availableQueryArgumentsState { get; set; } = default!;
 
     private SearchGamesInputPanel? _searchGamesInputPanel;
 
     private bool _isPageInitialized = false;
     private bool _isLoading = false;
+
     private List<GameDto> _searchResults = [];
+
     private AvailableSearchQueryArgumentsResponse _availableQueryArguments = default!;
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
 
-        var token = await UserLoginStateManager.GetUserToken();
-        await FetchQueryArguments(token);
+        _isPageInitialized = false;
 
+        if (_availableQueryArgumentsState.GetState() == null)
+        {
+            var token = await UserLoginStateManager.GetUserToken();
+            await FetchQueryArguments(token);
+        }
+
+        _availableQueryArguments = _availableQueryArgumentsState.GetState()!;
         _isPageInitialized = true;
     }
 
@@ -109,7 +119,7 @@ else
     private async Task FetchQueryArguments(string? token)
     {
         var res = await GamesClient.GetAvailableSearchParams(token!);
-        _availableQueryArguments = res.Value!;
+        _availableQueryArgumentsState.SetState(res.Value!);
     }
 
 }
