@@ -1,62 +1,76 @@
-﻿@* <MudPaper Class="pa-4 mb-4"> *@
-@*     <MudGrid Spacing="2"> *@
-@*         <MudItem xs="12" sm="6" md="4"> *@
-@*             <MudTextField @bind-Value="@_searchParams.SearchText" *@
-@*                           Label="Search by name..." *@
-@*                           Variant="Variant.Outlined" *@
-@*                           Clearable="true"/> *@
-@*         </MudItem> *@
-@*         <MudItem xs="12" sm="6" md="2"> *@
-@*             <MudSelect T="string" @bind-Value="@_searchParams.SelectedTheme" *@
-@*                        Label="Theme" *@
-@*                        Variant="Variant.Outlined" *@
-@*                        Clearable="true"> *@
-@*                 @foreach (var theme in _themes) *@
-@*                 { *@
-@*                     <MudSelectItem Value="@theme">@theme</MudSelectItem> *@
-@*                 } *@
-@*             </MudSelect> *@
-@*         </MudItem> *@
-@*         <MudItem xs="12" sm="6" md="2"> *@
-@*             <MudSelect T="string" @bind-Value="@_searchParams.SelectedGenre" *@
-@*                        Label="Genre" *@
-@*                        Variant="Variant.Outlined" *@
-@*                        Clearable="true"> *@
-@*                 @foreach (var genre in _genres) *@
-@*                 { *@
-@*                     <MudSelectItem Value="@genre">@genre</MudSelectItem> *@
-@*                 } *@
-@*             </MudSelect> *@
-@*         </MudItem> *@
-@*         <MudItem xs="12" sm="6" md="2" Class="d-flex align-center"> *@
-@*             <MudCheckBox @bind-Value="@_searchParams.IncludeDlcs" *@
-@*                          Label="Include DLCs" *@
-@*                          Color="Color.Primary"/> *@
-@*         </MudItem> *@
-@*         <MudItem xs="12" sm="12" md="2" Class="d-flex align-end"> *@
-@*             <MudButton OnClick="@SearchGamesClick" *@
-@*                        Variant="Variant.Filled" *@
-@*                        Color="Color.Primary" *@
-@*                        StartIcon="@Icons.Material.Filled.Search" *@
-@*                        FullWidth="true" *@
-@*                        Style="height: 56px;"> *@
-@*                 Search *@
-@*             </MudButton> *@
-@*         </MudItem> *@
-@*     </MudGrid> *@
-@* </MudPaper> *@
-@* *@
-@* *@
-@* @code { *@
-@* *@
-@*     public SearchGamesParameters SearchParameters { get; set; } = new SearchGamesParameters(); *@
-@* *@
-@* *@
-@*     public class SearchGamesParameters *@
-@*     { *@
-@*         public string SearchText { get; set; } = ""; *@
-@*         public string? SelectedTheme { get; set; } *@
-@*         public string? SelectedGenre { get; set; } *@
-@*     } *@
-@* *@
-@* } *@
+﻿<MudPaper>
+    <MudGrid>
+        <MudItem xs="12" sm="12" md="12" lg="12" xl="12" xxl="12">
+            <MudTextField @bind-Value="@SearchParameters.SearchText"
+                          Label="Game Title" Variant="Variant.Outlined" InputType="InputType.Text"
+            ></MudTextField>
+        </MudItem>
+        <MudItem>
+            <MudSelect T="string" @bind-SelectedValues="@SearchParameters.SelectedGenres"
+                       MultiSelection="true"
+                       Label="Genre"
+                       Variant="Variant.Outlined"
+                       Clearable="true">
+                @foreach (var genre in Genres)
+                {
+                    <MudSelectItem Value="@genre">@genre</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem>
+            <MudSelect T="string" @bind-SelectedValues="@SearchParameters.SelectedThemes"
+                       MultiSelection="true"
+                       Label="Theme"
+                       Variant="Variant.Outlined"
+                       Clearable="true">
+                @foreach (var theme in Themes)
+                {
+                    <MudSelectItem Value="@theme">@theme</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem>
+            <MudSelect T="string" @bind-Value="@SearchParameters.SelectedGameType"
+                       MultiSelection="false"
+                       Label="Game Type"
+                       Variant="Variant.Outlined"
+                       Clearable="true">
+                @foreach (var gameType in GameTypes)
+                {
+                    <MudSelectItem Value="@gameType">@gameType</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudFlexBreak/>
+        <MudItem>
+            <MudButton
+                Variant="Variant.Outlined"
+                StartIcon="@Icons.Material.Filled.Search"
+                Disabled="@SearchButtonDisabled"
+            >@SearchButtonText</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+
+@code {
+
+    [Parameter] public required IEnumerable<string> Themes { get; set; }
+    [Parameter] public required IEnumerable<string> Genres { get; set; }
+    [Parameter] public required IEnumerable<string> GameTypes { get; set; }
+
+    public SearchGamesParameters SearchParameters { get; set; } = new SearchGamesParameters();
+
+    public string SearchButtonText { get; set; } = "Search!";
+    public bool SearchButtonDisabled { get; set; } = false;
+
+
+    public class SearchGamesParameters
+    {
+        public string SearchText { get; set; } = "";
+        public IEnumerable<string>? SelectedThemes { get; set; }
+        public IEnumerable<string>? SelectedGenres { get; set; }
+        public string? SelectedGameType { get; set; }
+    }
+
+}

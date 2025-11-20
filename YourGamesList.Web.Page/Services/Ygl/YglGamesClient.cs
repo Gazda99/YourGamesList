@@ -6,6 +6,7 @@ using YourGamesList.Common;
 using YourGamesList.Common.Refit;
 using YourGamesList.Contracts.Dto;
 using YourGamesList.Contracts.Requests.Games;
+using YourGamesList.Contracts.Responses.Games;
 using YourGamesList.Web.Page.Services.Ygl.Model;
 
 namespace YourGamesList.Web.Page.Services.Ygl;
@@ -13,7 +14,7 @@ namespace YourGamesList.Web.Page.Services.Ygl;
 public interface IYglGamesClient
 {
     Task<CombinedResult<List<GameDto>, YglGamesClientError>> SearchGames(string userToken, string gameName);
-    Task<CombinedResult<object, YglGamesClientError>> GetAvailableSearchParams(string userToken);
+    Task<CombinedResult<AvailableSearchQueryArgumentsResponse, YglGamesClientError>> GetAvailableSearchParams(string userToken);
 }
 
 public class YglGamesClient : IYglGamesClient
@@ -56,8 +57,22 @@ public class YglGamesClient : IYglGamesClient
         }
     }
 
-    public Task<CombinedResult<object, YglGamesClientError>> GetAvailableSearchParams(string userToken)
+    public async Task<CombinedResult<AvailableSearchQueryArgumentsResponse, YglGamesClientError>> GetAvailableSearchParams(string userToken)
     {
-        throw new System.NotImplementedException();
+        var callResult = await _yglApi.TryRefit(() => _yglApi.GetAvailableSearchParams(userToken), _logger);
+        if (callResult.IsFailure)
+        {
+            return CombinedResult<AvailableSearchQueryArgumentsResponse, YglGamesClientError>.Failure(YglGamesClientError.General);
+        }
+
+        var res = callResult.Value;
+        if (res.StatusCode == HttpStatusCode.OK)
+        {
+            return CombinedResult<AvailableSearchQueryArgumentsResponse, YglGamesClientError>.Success(res.Content!);
+        }
+        else
+        {
+            return CombinedResult<AvailableSearchQueryArgumentsResponse, YglGamesClientError>.Failure(YglGamesClientError.General);
+        }
     }
 }
