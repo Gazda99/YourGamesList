@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace YourGamesList.Web.Page.StaticState;
+namespace YourGamesList.Web.Page.Services.StaticState;
 
 public class LoggingStaticStateDecorator<TState> : IStaticState<TState>
 {

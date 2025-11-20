@@ -1,6 +1,6 @@
 ﻿using YourGamesList.Contracts.Responses.Games;
 
-namespace YourGamesList.Web.Page.StaticState.SearchGames;
+namespace YourGamesList.Web.Page.Services.StaticState.SearchGames;
 
 public class AvailableQueryArgumentsState : IStaticState<AvailableSearchQueryArgumentsResponse>
 {

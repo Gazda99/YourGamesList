@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace YourGamesList.Web.Page.StaticState;
+﻿namespace YourGamesList.Web.Page.Services.StaticState;
 
 public interface IStaticState<TState>
 {
