@@ -52,7 +52,7 @@ else
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     [Inject] private IYglGamesClient GamesClient { get; set; } = default!;
     [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
-    [Inject] private IStaticState<AvailableSearchQueryArgumentsResponse> _availableQueryArgumentsState { get; set; } = default!;
+    [Inject] private IStaticState<AvailableSearchQueryArgumentsResponse> AvailableQueryArgumentsState { get; set; } = default!;
 
     private SearchGamesInputPanel? _searchGamesInputPanel;
 
@@ -69,13 +69,13 @@ else
 
         _isPageInitialized = false;
 
-        if (_availableQueryArgumentsState.GetState() == null)
+        if (AvailableQueryArgumentsState.GetState() == null)
         {
             var token = await UserLoginStateManager.GetUserToken();
             await FetchQueryArguments(token);
         }
 
-        _availableQueryArguments = _availableQueryArgumentsState.GetState()!;
+        _availableQueryArguments = AvailableQueryArgumentsState.GetState()!;
         _isPageInitialized = true;
     }
 
@@ -119,7 +119,7 @@ else
     private async Task FetchQueryArguments(string? token)
     {
         var res = await GamesClient.GetAvailableSearchParams(token!);
-        _availableQueryArgumentsState.SetState(res.Value!);
+        AvailableQueryArgumentsState.SetState(res.Value!);
     }
 
 }
