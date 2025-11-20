@@ -1,12 +1,13 @@
-﻿<MudPaper>
+﻿@using YourGamesList.Contracts.Dto
+<MudPaper>
     <MudGrid>
         <MudItem xs="12" sm="12" md="12" lg="12" xl="12" xxl="12">
-            <MudTextField @bind-Value="@SearchParameters.SearchText"
+            <MudTextField @bind-Value="@_searchParameters.SearchGameName"
                           Label="Game Title" Variant="Variant.Outlined" InputType="InputType.Text"
             ></MudTextField>
         </MudItem>
         <MudItem>
-            <MudSelect T="string" @bind-SelectedValues="@SearchParameters.SelectedGenres"
+            <MudSelect T="string" @bind-SelectedValues="@_searchParameters.SelectedGenres"
                        MultiSelection="true"
                        Label="Genre"
                        Variant="Variant.Outlined"
@@ -18,7 +19,7 @@
             </MudSelect>
         </MudItem>
         <MudItem>
-            <MudSelect T="string" @bind-SelectedValues="@SearchParameters.SelectedThemes"
+            <MudSelect T="string" @bind-SelectedValues="@_searchParameters.SelectedThemes"
                        MultiSelection="true"
                        Label="Theme"
                        Variant="Variant.Outlined"
@@ -30,7 +31,7 @@
             </MudSelect>
         </MudItem>
         <MudItem>
-            <MudSelect T="string" @bind-Value="@SearchParameters.SelectedGameType"
+            <MudSelect T="string" @bind-Value="@_searchParameters.SelectedGameType"
                        MultiSelection="false"
                        Label="Game Type"
                        Variant="Variant.Outlined"
@@ -41,9 +42,15 @@
                 }
             </MudSelect>
         </MudItem>
+
+        <MudItem xs="12" sm="9" md="6" lg="6" xl="6" xxl="6">
+            <SearchGamesDatePicker @ref="@_searchGamesDataPicker"></SearchGamesDatePicker>
+        </MudItem>
+
         <MudFlexBreak/>
         <MudItem>
             <MudButton
+                OnClick="@SearchButtonClick"
                 Variant="Variant.Outlined"
                 StartIcon="@Icons.Material.Filled.Search"
                 Disabled="@SearchButtonDisabled"
@@ -58,8 +65,26 @@
     [Parameter] public required IEnumerable<string> Themes { get; set; }
     [Parameter] public required IEnumerable<string> Genres { get; set; }
     [Parameter] public required IEnumerable<string> GameTypes { get; set; }
+    [Parameter] public required Func<Task> SearchButtonClick { get; set; }
 
-    public SearchGamesParameters SearchParameters { get; set; } = new SearchGamesParameters();
+    private SearchGamesDatePicker? _searchGamesDataPicker;
+
+    private readonly SearchGamesParameters _searchParameters = new SearchGamesParameters();
+
+    public SearchGamesParameters SearchParameters
+    {
+        get
+        {
+            if (_searchGamesDataPicker != null)
+            {
+                _searchParameters.SelectedYear = _searchGamesDataPicker.SelectedYear;
+                _searchParameters.SelectedTypeOfDate = _searchGamesDataPicker.SelectedTypeOfDate;
+            }
+
+            return _searchParameters;
+        }
+    }
+
 
     public string SearchButtonText { get; set; } = "Search!";
     public bool SearchButtonDisabled { get; set; } = false;
@@ -67,10 +92,12 @@
 
     public class SearchGamesParameters
     {
-        public string SearchText { get; set; } = "";
+        public string SearchGameName { get; set; } = "";
         public IEnumerable<string>? SelectedThemes { get; set; }
         public IEnumerable<string>? SelectedGenres { get; set; }
         public string? SelectedGameType { get; set; }
+        public TypeOfDateDto SelectedTypeOfDate { get; set; }
+        public int SelectedYear { get; set; }
     }
 
 }

@@ -1,0 +1,32 @@
+﻿@using YourGamesList.Contracts.Dto
+<MudStack Row="false">
+    <MudSelect T="@TypeOfDateDto" @bind-Value="@SelectedTypeOfDate">
+        @foreach (var typeOfDate in Enum.GetValues<TypeOfDateDto>())
+        {
+            <MudSelectItem Value="@typeOfDate">@typeOfDate</MudSelectItem>
+        }
+    </MudSelect>
+
+    @if (SelectedTypeOfDate != TypeOfDateDto.None)
+    {
+        <MudItem xs="9">
+            <MudSelect T="int" @bind-Value="@SelectedYear">
+                @foreach (var year in _years)
+                {
+                    <MudSelectItem Value="@year">@year</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+    }
+
+
+</MudStack>
+
+@code {
+    private const int Earliest = 1970;
+    private readonly IEnumerable<int> _years = Enumerable.Range(Earliest, DateTime.UtcNow.Year - Earliest + 1);
+
+    public TypeOfDateDto SelectedTypeOfDate { get; set; } = TypeOfDateDto.None;
+    public int SelectedYear { get; set; } = DateTime.UtcNow.Year;
+
+}

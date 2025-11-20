@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -47,17 +48,34 @@ public class SearchYglGamesController : YourGamesListBaseController
     [HttpGet("search")]
     [Authorize]
     [ProducesResponseType(typeof(List<GameDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [TypeFilter(typeof(RequestValidatorAttribute<SearchYglGamesRequest>), Arguments = ["searchYglGamesRequest"])]
     public async Task<IActionResult> SearchGames(SearchYglGamesRequest searchYglGamesRequest)
     {
         var command = new SearchGamesParameters()
         {
             GameName = searchYglGamesRequest.Body.GameName,
+            Themes = searchYglGamesRequest.Body.Themes,
+            Genres = searchYglGamesRequest.Body.Genres,
+            GameType = searchYglGamesRequest.Body.GameType,
             Skip = searchYglGamesRequest.Body.Skip,
             Take = searchYglGamesRequest.Body.Take,
         };
 
+        if (searchYglGamesRequest.Body.ReleaseYearQuery != null)
+        {
+            command.Year = searchYglGamesRequest.Body.ReleaseYearQuery.Year;
+            command.TypeOfDate = searchYglGamesRequest.Body.ReleaseYearQuery.TypeOfDate;
+        }
+
         var games = await _yglGamesService.SearchGames(command);
-        return Result(StatusCodes.Status200OK, games);
+        if (!games.Any())
+        {
+            return Result(StatusCodes.Status404NotFound);
+        }
+        else
+        {
+            return Result(StatusCodes.Status200OK, games);
+        }
     }
 }

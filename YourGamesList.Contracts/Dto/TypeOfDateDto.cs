@@ -3,10 +3,10 @@
 namespace YourGamesList.Contracts.Dto;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum CompletionStatusDto
+public enum TypeOfDateDto
 {
-    Unspecified = 0,
-    JustTried = 10,
-    Played = 20,
-    FullyCompleted = 30,
+    None,
+    Exact,
+    Before,
+    After
 }

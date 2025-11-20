@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -13,7 +14,17 @@ namespace YourGamesList.Web.Page.Services.Ygl;
 
 public interface IYglGamesClient
 {
-    Task<CombinedResult<List<GameDto>, YglGamesClientError>> SearchGames(string userToken, string gameName);
+    Task<CombinedResult<List<GameDto>, YglGamesClientError>> SearchGames(
+        string userToken,
+        string gameName,
+        IEnumerable<string>? themes = null,
+        IEnumerable<string>? genres = null,
+        string? gameType = null,
+        (TypeOfDateDto typeOfData, int year)? releaseYearQuery = null,
+        int skip = 0,
+        int take = 10
+    );
+
     Task<CombinedResult<AvailableSearchQueryArgumentsResponse, YglGamesClientError>> GetAvailableSearchParams(string userToken);
 }
 
@@ -28,19 +39,40 @@ public class YglGamesClient : IYglGamesClient
         _yglApi = yglApi;
     }
 
-    public async Task<CombinedResult<List<GameDto>, YglGamesClientError>> SearchGames(string userToken, string gameName)
+    public async Task<CombinedResult<List<GameDto>, YglGamesClientError>> SearchGames(
+        string userToken,
+        string gameName,
+        IEnumerable<string>? themes = null,
+        IEnumerable<string>? genres = null,
+        string? gameType = null,
+        (TypeOfDateDto typeOfData, int year)? releaseYearQuery = null,
+        int skip = 0,
+        int take = 10
+    )
     {
         //TODO: pagination
         var request = new SearchYglGamesRequestBody()
         {
             GameName = gameName,
-            Skip = 0,
-            Take = 10
+            Themes = themes?.ToArray(),
+            Genres = genres?.ToArray(),
+            GameType = gameType,
+            Skip = skip,
+            Take = take
         };
 
-        _logger.LogInformation($"Searching for game '{gameName}'.");
-        var callResult = await _yglApi.TryRefit(() => _yglApi.SearchGames(userToken, request), _logger);
+        if (releaseYearQuery != null && releaseYearQuery.Value.typeOfData != TypeOfDateDto.None)
+        {
+            request.ReleaseYearQuery = new ReleaseYearQuery()
+            {
+                TypeOfDate = releaseYearQuery.Value.typeOfData,
+                Year = releaseYearQuery.Value.year,
+            };
+        }
 
+        _logger.LogInformation($"Searching for game '{gameName}'.");
+
+        var callResult = await _yglApi.TryRefit(() => _yglApi.SearchGames(userToken, request), _logger);
         if (callResult.IsFailure)
         {
             return CombinedResult<List<GameDto>, YglGamesClientError>.Failure(YglGamesClientError.General);
@@ -51,6 +83,11 @@ public class YglGamesClient : IYglGamesClient
         {
             return CombinedResult<List<GameDto>, YglGamesClientError>.Success(res.Content!);
         }
+        else if (res.StatusCode == HttpStatusCode.NotFound)
+        {
+            return CombinedResult<List<GameDto>, YglGamesClientError>.Success([]);
+        }
+
         else
         {
             return CombinedResult<List<GameDto>, YglGamesClientError>.Failure(YglGamesClientError.General);

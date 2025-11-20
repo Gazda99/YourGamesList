@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Ygl.Games.Model;
 using YourGamesList.Contracts.Dto;
@@ -32,9 +32,49 @@ public class YglGamesService : IYglGamesService
 
     public async Task<List<GameDto>> SearchGames(SearchGamesParameters parameters)
     {
-        //TODO: finish logic
         var gameName = parameters.GameName.ToLower();
-        var games = await _yglDbContext.Games.Where(x => x.Name.ToLower().Contains(gameName))
+        var gamesQuery = _yglDbContext.Games
+            .AsQueryable()
+            .AsNoTracking()
+            .Where(x => x.Name.ToLower().Contains(gameName.ToLower()));
+
+
+        if (parameters.Themes != null && parameters.Themes.Length != 0)
+        {
+            gamesQuery = gamesQuery.Where(x => parameters.Themes.All(theme => x.Themes.Select(xx => xx.ToLower()).Contains(theme.ToLower())));
+        }
+
+        if (parameters.Genres != null && parameters.Genres.Length != 0)
+        {
+            gamesQuery = gamesQuery.Where(x => parameters.Genres.All(genre => x.Genres.Select(xx => xx.ToLower()).Contains(genre.ToLower())));
+        }
+
+        if (!string.IsNullOrWhiteSpace(parameters.GameType))
+        {
+            gamesQuery = gamesQuery.Where(x => x.GameType.ToLower().Contains(parameters.GameType.ToLower()));
+        }
+
+        if (parameters.Year != null && parameters.TypeOfDate != null)
+        {
+            var startOfTargetYear = GetStartOfYearTimestamp(parameters.Year.Value);
+            var startOfNextYear = GetStartOfYearTimestamp(parameters.Year.Value + 1);
+
+            switch (parameters.TypeOfDate)
+            {
+                case TypeOfDateDto.Exact:
+
+                    gamesQuery = gamesQuery.Where(x => x.FirstReleaseDate >= startOfTargetYear && x.FirstReleaseDate <= startOfNextYear);
+                    break;
+                case TypeOfDateDto.Before:
+                    gamesQuery = gamesQuery.Where(x => x.FirstReleaseDate <= startOfNextYear);
+                    break;
+                case TypeOfDateDto.After:
+                    gamesQuery = gamesQuery.Where(x => x.FirstReleaseDate >= startOfTargetYear);
+                    break;
+            }
+        }
+
+        var games = await gamesQuery
             .OrderByDescending(x => x.RatingCount)
             .Skip(parameters.Skip)
             .Take(parameters.Take)
@@ -45,5 +85,11 @@ public class YglGamesService : IYglGamesService
             .ToList();
 
         return gameDtos;
+    }
+
+    private static long GetStartOfYearTimestamp(int year)
+    {
+        var startOfYear = new DateTimeOffset(year, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        return startOfYear.ToUnixTimeSeconds();
     }
 }

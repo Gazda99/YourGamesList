@@ -1,5 +1,8 @@
-﻿namespace YourGamesList.Contracts.Dto;
+﻿using System.Text.Json.Serialization;
 
+namespace YourGamesList.Contracts.Dto;
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum GameDistributionDto
 {
     Unspecified = 0,
