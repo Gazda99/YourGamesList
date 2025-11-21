@@ -33,7 +33,8 @@ public class JwtUserInformationModelBinderTests
         //ARRANGE
         var rawToken = _fixture.Create<string>();
         //simple token with "sub" claim set to "sub" and "userId" claim set to "userId"
-        var token = new JsonWebToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdWIiLCJ1c2VySWQiOiJhMWIyYzNkNC1lNWY2LTc4OTAtYWJjZC1lZjAxMjM0NTY3ODkifQ.9I_rQ_xO2mNfJzV74w4Y6b5rS3t4gZ0yM8d8S4_5x_0");
+        var token = new JsonWebToken(
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdWIiLCJ1c2VySWQiOiJhMWIyYzNkNC1lNWY2LTc4OTAtYWJjZC1lZjAxMjM0NTY3ODkifQ.9I_rQ_xO2mNfJzV74w4Y6b5rS3t4gZ0yM8d8S4_5x_0");
         _tokenParser.CanReadToken(rawToken).Returns(true);
         _tokenParser.ReadJsonWebToken(rawToken).Returns(token);
         var context = Substitute.For<ModelBindingContext>();
@@ -106,8 +107,8 @@ public class JwtUserInformationModelBinderTests
 
     private static readonly TestCaseData[] WrongAuthHeaderCases =
     [
-        new TestCaseData(HeaderNames.Authorization, "wrong-value"),
-        new TestCaseData("NoAuthHeaderExample", "whatever")
+        new TestCaseData(HeaderNames.Authorization, "wrong-value").SetName("Wrong value"),
+        new TestCaseData("NoAuthHeaderExample", "whatever").SetName("No auth header")
     ];
 
     [Test]
@@ -162,7 +163,10 @@ public class JwtUserInformationModelBinderTests
 
     private static readonly TestCaseData[] TokensWithMissingClaimsCases =
     [
-        new TestCaseData("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhMWIyYzNkNC1lNWY2LTc4OTAtYWJjZC1lZjAxMjM0NTY3ODkifQ.YmX5c-kQ-wz6Z-4x-B2jJ7b9pT8sZ0yM8d8S4_5x_0", "sub"),
-        new TestCaseData("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdWIifQ.7d01h_3u3f-2fA5p0qW_t3u9t6b5rS3t4gZ0yM8d8S4_5x_0", "userId")
+        new TestCaseData(
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhMWIyYzNkNC1lNWY2LTc4OTAtYWJjZC1lZjAxMjM0NTY3ODkifQ.YmX5c-kQ-wz6Z-4x-B2jJ7b9pT8sZ0yM8d8S4_5x_0",
+            "sub").SetName("Missing 'sub' claim"),
+        new TestCaseData("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdWIifQ.7d01h_3u3f-2fA5p0qW_t3u9t6b5rS3t4gZ0yM8d8S4_5x_0", "userId").SetName(
+            "Missing 'userId' claim")
     ];
 }

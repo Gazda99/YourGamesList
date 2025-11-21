@@ -1,0 +1,110 @@
+﻿@using YourGamesList.Contracts.Dto
+<MudPaper>
+    <MudGrid>
+        <MudItem xs="12" sm="12" md="12" lg="12" xl="12" xxl="12">
+            <MudTextField @bind-Value="@_searchParameters.SearchGameName"
+                          Label="Game Title" Variant="Variant.Outlined" InputType="InputType.Text"
+            ></MudTextField>
+        </MudItem>
+        <MudItem>
+            <MudSelect T="string" @bind-SelectedValues="@_searchParameters.SelectedGenres"
+                       MultiSelection="true"
+                       Label="Genre"
+                       Variant="Variant.Outlined"
+                       Clearable="true">
+                @foreach (var genre in Genres)
+                {
+                    <MudSelectItem Value="@genre">@genre</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem>
+            <MudSelect T="string" @bind-SelectedValues="@_searchParameters.SelectedThemes"
+                       MultiSelection="true"
+                       Label="Theme"
+                       Variant="Variant.Outlined"
+                       Clearable="true">
+                @foreach (var theme in Themes)
+                {
+                    <MudSelectItem Value="@theme">@theme</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem>
+            <MudSelect T="string" @bind-Value="@_searchParameters.SelectedGameType"
+                       MultiSelection="false"
+                       Label="Game Type"
+                       Variant="Variant.Outlined"
+                       Clearable="true">
+                @foreach (var gameType in GameTypes)
+                {
+                    <MudSelectItem Value="@gameType">@gameType</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+
+        <MudItem xs="12" sm="9" md="6" lg="6" xl="6" xxl="6">
+            <SearchGamesDatePicker @ref="@_searchGamesDataPicker"></SearchGamesDatePicker>
+        </MudItem>
+
+        <MudFlexBreak/>
+        <MudItem>
+            <MudButton
+                OnClick="@SearchButtonClick"
+                Variant="Variant.Outlined"
+                StartIcon="@Icons.Material.Filled.Search"
+                Disabled="@_searchButtonDisabled"
+            >@_searchButtonText</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+
+@code {
+
+    [Parameter] public required IEnumerable<string> Themes { get; set; }
+    [Parameter] public required IEnumerable<string> Genres { get; set; }
+    [Parameter] public required IEnumerable<string> GameTypes { get; set; }
+    [Parameter] public required EventCallback<SearchGamesParameters> OnSearchButtonClick { get; set; }
+
+    private SearchGamesDatePicker? _searchGamesDataPicker;
+
+    private readonly SearchGamesParameters _searchParameters = new SearchGamesParameters();
+
+    private string _searchButtonText = "Search!";
+    private bool _searchButtonDisabled = false;
+
+    private SearchGamesParameters SearchParameters
+    {
+        get
+        {
+            if (_searchGamesDataPicker != null)
+            {
+                _searchParameters.SelectedYear = _searchGamesDataPicker.SelectedYear;
+                _searchParameters.SelectedTypeOfDate = _searchGamesDataPicker.SelectedTypeOfDate;
+            }
+
+            return _searchParameters;
+        }
+    }
+
+    private async Task SearchButtonClick()
+    {
+        _searchButtonDisabled = true;
+        _searchButtonText = "Searching...";
+        await OnSearchButtonClick.InvokeAsync(SearchParameters);
+        _searchButtonDisabled = false;
+        _searchButtonText = "Search!";
+    }
+
+    public class SearchGamesParameters
+    {
+        public string SearchGameName { get; set; } = "";
+        public IEnumerable<string>? SelectedThemes { get; set; }
+        public IEnumerable<string>? SelectedGenres { get; set; }
+        public string? SelectedGameType { get; set; }
+        public TypeOfDateDto SelectedTypeOfDate { get; set; }
+        public int SelectedYear { get; set; }
+    }
+
+}

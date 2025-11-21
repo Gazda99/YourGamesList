@@ -136,6 +136,10 @@ public class UserManagerService : IUserManagerService
         var token = _tokenProvider.CreateToken(user.Username, user.Id);
         _logger.LogInformation($"User with username '{username}' logged in successfully.");
 
+        var now = _timeProvider.GetUtcNow();
+        user.LastLoginDate = now;
+        await _yglDbContext.SaveChangesAsync();
+
         return CombinedResult<string, UserAuthError>.Success(token);
     }
 

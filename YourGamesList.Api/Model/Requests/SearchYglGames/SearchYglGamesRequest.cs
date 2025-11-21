@@ -1,18 +1,12 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using YourGamesList.Contracts.Requests.Games;
 
 namespace YourGamesList.Api.Model.Requests.SearchYglGames;
 
 public class SearchYglGamesRequest
 {
     [FromBody] public required SearchYglGamesRequestBody Body { get; init; }
-}
-
-public class SearchYglGamesRequestBody
-{
-    public required string GameName { get; init; }
-    public int Take { get; init; } = 10;
-    public int Skip { get; init; } = 0;
 }
 
 internal sealed class SearchYglGamesRequestValidator : AbstractValidator<SearchYglGamesRequest>

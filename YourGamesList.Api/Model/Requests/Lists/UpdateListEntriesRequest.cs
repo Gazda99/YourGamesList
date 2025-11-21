@@ -1,8 +1,7 @@
-﻿using System;
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using YourGamesList.Api.Attributes;
-using YourGamesList.Api.Model.Dto;
+using YourGamesList.Contracts.Requests.Lists;
 
 namespace YourGamesList.Api.Model.Requests.Lists;
 
@@ -10,24 +9,6 @@ public class UpdateListEntriesRequest
 {
     [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
     [FromBody] public required UpdateListEntriesRequestBody Body { get; init; }
-}
-
-public class UpdateListEntriesRequestBody
-{
-    public required Guid ListId { get; init; }
-    public EntryToUpdateRequestPart[] EntriesToUpdate { get; init; } = [];
-}
-
-public class EntryToUpdateRequestPart
-{
-    public required Guid EntryId { get; init; }
-
-    public string? Desc { get; set; }
-    public PlatformDto[]? Platforms { get; set; }
-    public GameDistributionDto[]? GameDistributions { get; set; }
-    public bool? IsStarred { get; set; }
-    public byte? Rating { get; set; }
-    public CompletionStatusDto? CompletionStatus { get; set; }
 }
 
 internal sealed class UpdateListEntriesRequestValidator : AbstractValidator<UpdateListEntriesRequest>

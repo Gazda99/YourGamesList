@@ -12,6 +12,7 @@ public class Program
     public static void Main(string[] args)
     {
         var app = AppBuilder.GetApp(args);
+        app.UseMiddleware<CorrelationIdMiddleware>();
 
         if (app.Environment.IsDevelopment())
         {
@@ -23,6 +24,8 @@ public class Program
 
         app.UseAuthentication();
         app.UseAuthorization();
+
+        app.UseOutputCache();
 
         app.MapControllers();
 

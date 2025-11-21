@@ -1,7 +1,7 @@
-﻿using System.Linq;
-using AutoFixture;
+﻿using AutoFixture;
 using FluentValidation.TestHelper;
 using YourGamesList.Api.Model.Requests.Auth;
+using YourGamesList.Contracts.Requests.Users;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Auth;
 
@@ -37,7 +37,11 @@ public class UserDeleteRequestTests
     {
         //ARRANGE
         var options = _fixture.Build<UserDeleteRequest>()
-            .With(x => x.Username, string.Empty)
+            .With(x => x.Body, _fixture.Build<AuthUserDeleteRequestBody>()
+                .With(x => x.Username, string.Empty)
+                .WithAutoProperties()
+                .Create()
+            )
             .WithAutoProperties()
             .Create();
 
@@ -49,7 +53,7 @@ public class UserDeleteRequestTests
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        res.ShouldHaveValidationErrorFor(x => x.Username);
+        res.ShouldHaveValidationErrorFor(x => x.Body.Username);
     }
 
     [Test]
@@ -57,7 +61,11 @@ public class UserDeleteRequestTests
     {
         //ARRANGE
         var options = _fixture.Build<UserDeleteRequest>()
-            .With(x => x.Password, string.Empty)
+            .With(x => x.Body, _fixture.Build<AuthUserDeleteRequestBody>()
+                .With(x => x.Password, string.Empty)
+                .WithAutoProperties()
+                .Create()
+            )
             .WithAutoProperties()
             .Create();
 
@@ -69,6 +77,6 @@ public class UserDeleteRequestTests
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        res.ShouldHaveValidationErrorFor(x => x.Password);
+        res.ShouldHaveValidationErrorFor(x => x.Body.Password);
     }
 }

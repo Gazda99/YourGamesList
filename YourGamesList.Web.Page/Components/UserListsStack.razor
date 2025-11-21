@@ -1,0 +1,76 @@
+﻿@using YourGamesList.Contracts.Dto
+@using YourGamesList.Web.Page.Services.StaticState
+@using YourGamesList.Web.Page.Services.UserState
+@using YourGamesList.Web.Page.Services.Ygl
+
+<MudStack>
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true"></MudProgressCircular>
+    }
+    else
+    {
+        @foreach (var userList in _userLists)
+        {
+            <MudButton OnClick="() => SelectList(userList.Id)">@userList.Name</MudButton>
+        }
+    }
+
+</MudStack>
+
+@code {
+    [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private IStaticState<List<GamesListDto>> UserListsState { get; set; } = default!;
+    [Inject] private IYglListsClient ListsClient { get; set; } = default!;
+
+    [Parameter] public required EventCallback<Guid> OnListSelect { get; set; }
+
+    private bool _isLoading = false;
+    private List<GamesListDto> _userLists = [];
+
+    public Guid? SelectedListId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _isLoading = true;
+        try
+        {
+            _userLists = await FetchUserLists();
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task<List<GamesListDto>> FetchUserLists()
+    {
+        var currentLists = UserListsState.GetState();
+        if (currentLists != null)
+        {
+            return currentLists;
+        }
+        else
+        {
+            var token = await UserLoginStateManager.GetUserToken();
+            var userListsRes = await ListsClient.GetSelfLists(token!, includeGames: true);
+            if (userListsRes.IsFailure)
+            {
+                Snackbar.Add("Failed to fetch user lists.", Severity.Warning);
+            }
+
+            var userLists = userListsRes.Value ?? [];
+            UserListsState.SetState(userLists);
+            return userLists;
+        }
+    }
+
+    private async Task SelectList(Guid listId)
+    {
+        SelectedListId = listId;
+        await OnListSelect.InvokeAsync(listId);
+    }
+
+}

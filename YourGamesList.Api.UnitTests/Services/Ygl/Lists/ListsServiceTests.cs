@@ -7,10 +7,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Model;
-using YourGamesList.Api.Model.Dto;
+
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Ygl.Lists;
 using YourGamesList.Api.Services.Ygl.Lists.Model;
+using YourGamesList.Contracts.Dto;
 using YourGamesList.Database;
 using YourGamesList.Database.Entities;
 using YourGamesList.Database.TestUtils;

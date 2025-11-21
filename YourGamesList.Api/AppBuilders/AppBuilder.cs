@@ -11,8 +11,12 @@ using Microsoft.IdentityModel.Tokens;
 using Refit;
 using Serilog;
 using YourGamesList.Api.ModelBinders;
+using YourGamesList.Api.OutputCachePolicies;
+using YourGamesList.Api.Services;
 using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Options;
+using YourGamesList.Api.Services.CorrelationId;
+using YourGamesList.Api.Services.CorrelationId.Options;
 using YourGamesList.Api.Services.Igdb;
 using YourGamesList.Api.Services.Igdb.Options;
 using YourGamesList.Api.Services.ModelMappers;
@@ -20,6 +24,7 @@ using YourGamesList.Api.Services.Scraper;
 using YourGamesList.Api.Services.Scraper.Options;
 using YourGamesList.Api.Services.Twitch;
 using YourGamesList.Api.Services.Twitch.Options;
+using YourGamesList.Api.Services.Users;
 using YourGamesList.Api.Services.Ygl.Games;
 using YourGamesList.Api.Services.Ygl.Lists;
 using YourGamesList.Common.Caching;
@@ -49,12 +54,18 @@ public static partial class AppBuilder
             o.RequireHttpsMetadata = false;
             o.TokenValidationParameters = new TokenValidationParameters()
             {
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration[$"{TokenAuthOptions.SectionName}:{nameof(TokenAuthOptions.JwtSecret)}"] ?? throw new NullReferenceException("JwtSecret is not set in appsettings"))),
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                    builder.Configuration[$"{TokenAuthOptions.SectionName}:{nameof(TokenAuthOptions.JwtSecret)}"] ??
+                    throw new NullReferenceException("JwtSecret is not set in appsettings"))),
                 ValidIssuer = builder.Configuration[$"{TokenAuthOptions.SectionName}:{nameof(TokenAuthOptions.Issuer)}"],
                 ValidateAudience = false
             };
         });
 
+        builder.Services.AddOutputCache(configureOptions =>
+        {
+            configureOptions.AddPolicy(nameof(AlwaysOnOkOutputPolicy), policy => policy.AddPolicy<AlwaysOnOkOutputPolicy>(), true);
+        });
 
         //Swagger
         builder.Services.AddSwagger();
@@ -63,6 +74,7 @@ public static partial class AppBuilder
         builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
         builder.Services.AddMemoryCache();
         builder.Services.AddKeyedSingleton<ICacheProvider, InMemoryCacheProvider>(CacheProviders.InMemory);
+        builder.Services.AddCorrelationIdServices();
 
         //Other services
         builder.Services.AddRequestModelValidators();
@@ -91,6 +103,15 @@ public static partial class AppBuilder
         host.UseSerilog();
 
         return host;
+    }
+
+    private static IServiceCollection AddCorrelationIdServices(this IServiceCollection services)
+    {
+        services.AddOptionsWithFluentValidation<CorrelationIdMiddlewareOptions, CorrelationIdMiddlewareOptionsValidator>(CorrelationIdMiddlewareOptions
+            .SectionName);
+
+        services.AddSingleton<ICorrelationIdProvider, CorrelationIdProvider>();
+        return services;
     }
 
     private static IServiceCollection AddAuth(this IServiceCollection services)
@@ -150,8 +171,10 @@ public static partial class AppBuilder
 
     private static IServiceCollection AddYglServices(this IServiceCollection services)
     {
+        services.AddScoped<IUsersService, UsersService>();
         services.AddScoped<IListsService, ListsService>();
         services.AddScoped<IYglGamesService, YglGamesService>();
+        services.AddScoped<IAvailableSearchQueryArgumentsService, AvailableSearchQueryArgumentsService>();
 
         return services;
     }
