@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using YourGamesList.Web.Page.Services.LocalStorage;
+using YourGamesList.Web.Page.Services.LocalStorage.Model;
 using YourGamesList.Web.Page.Services.UserLoginState.Options;
 
 namespace YourGamesList.Web.Page.Services.UserLoginState;
@@ -56,6 +57,11 @@ public class UserLoginStateManager : IUserLoginStateManager
         }
         else
         {
+            if (tokenRes.Error == LocalStorageError.Expired)
+            {
+                await RemoveUserToken();
+            }
+
             return null;
         }
     }

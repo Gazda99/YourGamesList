@@ -1,5 +1,6 @@
 ﻿@using YourGamesList.Contracts.Dto
 <MudStack Row="false">
+    <MudText>Release year</MudText>
     <MudSelect T="@TypeOfDateDto" @bind-Value="@SelectedTypeOfDate">
         @foreach (var typeOfDate in Enum.GetValues<TypeOfDateDto>())
         {

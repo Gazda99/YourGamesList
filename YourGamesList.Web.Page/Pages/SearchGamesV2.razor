@@ -12,40 +12,48 @@
 }
 else
 {
-    <MudGrid Justify="Justify.FlexStart" Spacing="3">
+    @if (!_isUserLoggedIn)
+    {
+        <LoginFirst></LoginFirst>
+    }
+    else
+    {
+        <MudGrid Justify="Justify.FlexStart" Spacing="3">
 
-        <MudItem xs="12" sm="12" md="12" lg="12" xl="12" xxl="12">
-            <SearchGamesInputPanel
-                @ref="@_searchGamesInputPanel"
-                SearchButtonClick="@SearchButtonClick"
-                Themes="@_availableQueryArguments.Themes"
-                GameTypes="@_availableQueryArguments.GameTypes"
-                Genres="@_availableQueryArguments.Genres"
-            ></SearchGamesInputPanel>
-        </MudItem>
-
-        @if (_isLoading)
-        {
             <MudItem xs="12" sm="12" md="12" lg="12" xl="12" xxl="12">
-                <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="mx-auto"/>
+                <SearchGamesInputPanel
+                    @ref="@_searchGamesInputPanel"
+                    SearchButtonClick="@SearchButtonClick"
+                    Themes="@_availableQueryArguments.Themes"
+                    GameTypes="@_availableQueryArguments.GameTypes"
+                    Genres="@_availableQueryArguments.Genres"
+                ></SearchGamesInputPanel>
             </MudItem>
-        }
-        else if (!_isLoading && !_searchResults.Any())
-        {
-        }
-        else
-        {
-            @foreach (var game in _searchResults)
+
+            @if (_isLoading)
             {
-                <MudItem xs="12" sm="12" md="12" lg="6" xl="6" xxl="4">
-                    <GameTile Game="@game"></GameTile>
+                <MudItem xs="12" sm="12" md="12" lg="12" xl="12" xxl="12">
+                    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="mx-auto"/>
                 </MudItem>
             }
-        }
+            else if (!_isLoading && !_searchResults.Any())
+            {
+            }
+            else
+            {
+                @foreach (var game in _searchResults)
+                {
+                    <MudItem xs="12" sm="12" md="12" lg="6" xl="6" xxl="4">
+                        <GameTile Game="@game"></GameTile>
+                    </MudItem>
+                }
+            }
 
-    </MudGrid>
+        </MudGrid>
+    }
 }
-0
+
+
 
 @code {
     [Inject] private ILogger<SearchGamesV2> Logger { get; set; } = default!;
@@ -56,6 +64,7 @@ else
 
     private SearchGamesInputPanel? _searchGamesInputPanel;
 
+    private bool _isUserLoggedIn = false;
     private bool _isPageInitialized = false;
     private bool _isLoading = false;
 
@@ -66,17 +75,21 @@ else
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        _isUserLoggedIn = await UserLoginStateManager.IsUserLoggedIn();
 
-        _isPageInitialized = false;
-
-        if (AvailableQueryArgumentsState.GetState() == null)
+        if (_isUserLoggedIn)
         {
-            var token = await UserLoginStateManager.GetUserToken();
-            await FetchQueryArguments(token);
-        }
+            _isPageInitialized = false;
 
-        _availableQueryArguments = AvailableQueryArgumentsState.GetState()!;
-        _isPageInitialized = true;
+            if (AvailableQueryArgumentsState.GetState() == null)
+            {
+                var token = await UserLoginStateManager.GetUserToken();
+                await FetchQueryArguments(token);
+            }
+
+            _availableQueryArguments = AvailableQueryArgumentsState.GetState()!;
+            _isPageInitialized = true;
+        }
     }
 
     private async Task SearchButtonClick()
