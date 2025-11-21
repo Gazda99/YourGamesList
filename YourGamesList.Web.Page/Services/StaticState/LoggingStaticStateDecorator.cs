@@ -9,7 +9,8 @@ public class LoggingStaticStateDecorator<TState> : IStaticState<TState>
 
     public LoggingStaticStateDecorator(
         IStaticState<TState> inner,
-        ILogger<LoggingStaticStateDecorator<TState>> logger)
+        ILogger<LoggingStaticStateDecorator<TState>> logger
+    )
     {
         _inner = inner;
         _logger = logger;

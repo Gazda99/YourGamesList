@@ -61,4 +61,15 @@ public interface IYglApi : IHandlesHttpRefitException
         UserUpdateRequestBody request);
 
     #endregion
+
+    #region Lists
+
+    [Get("/lists/getSelf")]
+    [Headers($"Content-Type: {ContentTypes.ApplicationJson}")]
+    Task<IApiResponse<List<GamesListDto>>> GetSelfLists(
+        [Authorize("Bearer")] string userToken,
+        [Query] bool includeGames = false
+    );
+
+    #endregion
 }

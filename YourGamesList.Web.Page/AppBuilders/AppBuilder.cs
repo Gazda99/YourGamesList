@@ -77,6 +77,8 @@ public static partial class AppBuilder
         services.AddScoped<IYglAuthClient, YglAuthAuthClient>();
         services.AddScoped<IYglGamesClient, YglGamesClient>();
         services.AddScoped<IYglUsersClient, YglUsersClient>();
+        services.AddScoped<IYglListsClient, YglListsClient>();
+
         return services;
     }
 
@@ -114,7 +116,7 @@ public static partial class AppBuilder
                 InterfaceType = t.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStaticState<>))
             })
             .Where(x => x.InterfaceType != null)
-            .Where(x=>x.ConcreteType!= typeof(LoggingStaticStateDecorator<>));
+            .Where(x => x.ConcreteType != typeof(LoggingStaticStateDecorator<>));
 
         var logger = services.BuildServiceProvider().GetService<ILogger<Program>>();
 

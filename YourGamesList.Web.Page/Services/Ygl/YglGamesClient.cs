@@ -28,6 +28,7 @@ public interface IYglGamesClient
     Task<CombinedResult<AvailableSearchQueryArgumentsResponse, YglGamesClientError>> GetAvailableSearchParams(string userToken);
 }
 
+//TODO: unit tests
 public class YglGamesClient : IYglGamesClient
 {
     private readonly ILogger<YglGamesClient> _logger;
@@ -50,7 +51,6 @@ public class YglGamesClient : IYglGamesClient
         int take = 10
     )
     {
-        //TODO: pagination
         var request = new SearchYglGamesRequestBody()
         {
             GameName = gameName,

@@ -15,7 +15,7 @@ using YourGamesList.Contracts.Dto;
 namespace YourGamesList.Api.Controllers.Lists;
 
 [ApiController]
-[Route("ygl/lists")]
+[Route("lists")]
 public class ListsController : YourGamesListBaseController
 {
     private readonly ILogger<ListsController> _logger;
