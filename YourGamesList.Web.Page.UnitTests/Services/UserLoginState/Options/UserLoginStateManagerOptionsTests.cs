@@ -1,6 +1,6 @@
 ﻿using AutoFixture;
 using FluentValidation.TestHelper;
-using YourGamesList.Web.Page.Services.UserLoginState.Options;
+using YourGamesList.Web.Page.Services.UserState.Options;
 
 namespace YourGamesList.Web.Page.UnitTests.Services.UserLoginState.Options;
 

@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 
-namespace YourGamesList.Web.Page.Services.UserLoginState.Options;
+namespace YourGamesList.Web.Page.Services.UserState.Options;
 
 public class UserLoginStateManagerOptions
 {

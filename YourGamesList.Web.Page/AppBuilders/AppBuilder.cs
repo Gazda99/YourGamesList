@@ -15,8 +15,8 @@ using YourGamesList.Common.Http;
 using YourGamesList.Common.Options.Validators;
 using YourGamesList.Web.Page.Services.LocalStorage;
 using YourGamesList.Web.Page.Services.StaticState;
-using YourGamesList.Web.Page.Services.UserLoginState;
-using YourGamesList.Web.Page.Services.UserLoginState.Options;
+using YourGamesList.Web.Page.Services.UserState;
+using YourGamesList.Web.Page.Services.UserState.Options;
 using YourGamesList.Web.Page.Services.Ygl;
 using YourGamesList.Web.Page.Services.Ygl.Options;
 
