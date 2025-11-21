@@ -53,8 +53,8 @@
                 OnClick="@SearchButtonClick"
                 Variant="Variant.Outlined"
                 StartIcon="@Icons.Material.Filled.Search"
-                Disabled="@SearchButtonDisabled"
-            >@SearchButtonText</MudButton>
+                Disabled="@_searchButtonDisabled"
+            >@_searchButtonText</MudButton>
         </MudItem>
     </MudGrid>
 </MudPaper>
@@ -65,13 +65,16 @@
     [Parameter] public required IEnumerable<string> Themes { get; set; }
     [Parameter] public required IEnumerable<string> Genres { get; set; }
     [Parameter] public required IEnumerable<string> GameTypes { get; set; }
-    [Parameter] public required Func<Task> SearchButtonClick { get; set; }
+    [Parameter] public required EventCallback<SearchGamesParameters> OnSearchButtonClick { get; set; }
 
     private SearchGamesDatePicker? _searchGamesDataPicker;
 
     private readonly SearchGamesParameters _searchParameters = new SearchGamesParameters();
 
-    public SearchGamesParameters SearchParameters
+    private string _searchButtonText = "Search!";
+    private bool _searchButtonDisabled = false;
+
+    private SearchGamesParameters SearchParameters
     {
         get
         {
@@ -85,10 +88,14 @@
         }
     }
 
-
-    public string SearchButtonText { get; set; } = "Search!";
-    public bool SearchButtonDisabled { get; set; } = false;
-
+    private async Task SearchButtonClick()
+    {
+        _searchButtonDisabled = true;
+        _searchButtonText = "Searching...";
+        await OnSearchButtonClick.InvokeAsync(SearchParameters);
+        _searchButtonDisabled = false;
+        _searchButtonText = "Search!";
+    }
 
     public class SearchGamesParameters
     {

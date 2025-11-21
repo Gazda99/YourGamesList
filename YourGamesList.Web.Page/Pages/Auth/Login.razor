@@ -1,5 +1,7 @@
 ﻿@page "/login"
 @using Microsoft.Extensions.Logging
+@using YourGamesList.Contracts.Dto
+@using YourGamesList.Web.Page.Services.StaticState
 @using YourGamesList.Web.Page.Services.UserState
 @using YourGamesList.Web.Page.Services.Ygl
 @using YourGamesList.Web.Page.Services.Ygl.Model
@@ -16,7 +18,10 @@
     [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     [Inject] private IYglAuthClient AuthClient { get; set; } = default!;
+    [Inject] private IYglListsClient ListsClient { get; set; } = default!;
     [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
+    [Inject] private IStaticState<List<GamesListDto>> UserListsState { get; set; } = default!;
+
 
     private PasswordInput _passwordInput = default!;
     private UsernameInput _usernameInput = default!;
@@ -46,10 +51,10 @@
                 return;
             }
 
-            var res = await AuthClient.Login(_usernameInput.Username, _passwordInput.Password);
-            if (res.IsFailure)
+            var loginRes = await AuthClient.Login(_usernameInput.Username, _passwordInput.Password);
+            if (loginRes.IsFailure)
             {
-                switch (res.Error)
+                switch (loginRes.Error)
                 {
                     case YglAuthAuthClientError.LoginUserNotFound:
                     case YglAuthAuthClientError.LoginUnauthorized:
@@ -63,10 +68,19 @@
                 return;
             }
 
-            var token = res.Value;
+            var token = loginRes.Value;
             await UserLoginStateManager.SaveUserToken(token);
 
             Snackbar.Add("Successfully logged in.", Severity.Success);
+
+            var userListsRes = await ListsClient.GetSelfLists(token, includeGames: true);
+            if (userListsRes.IsFailure)
+            {
+                Snackbar.Add("Failed to fetch user lists.", Severity.Warning);
+            }
+
+            var userLists = userListsRes.Value ?? [];
+            UserListsState.SetState(userLists);
 
             Navigation.NavigateTo(Paths.User);
         }

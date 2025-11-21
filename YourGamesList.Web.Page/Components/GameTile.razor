@@ -1,4 +1,5 @@
 ﻿@using YourGamesList.Contracts.Dto
+@using YourGamesList.Web.Page.Services.StaticState
 @using YourGamesList.Web.Page.Services.Ygl.Model
 
 
@@ -43,6 +44,9 @@
 
 
 @code {
+    [Inject] private IDialogService DialogService { get; set; } = default!;
+
+
     private const string GameReleaseDateFormat = "yyyy MMMM dd";
 
     [Parameter] public required GameDto Game { get; set; }
@@ -57,7 +61,6 @@
         return Game.FirstReleaseDate != 0 ? DateTimeOffset.FromUnixTimeSeconds(Game.FirstReleaseDate).ToString(GameReleaseDateFormat) : string.Empty;
     }
 
-
     private static string TruncateText(string text, int maxLength)
     {
         if (maxLength <= 10)
@@ -70,6 +73,11 @@
 
     private async Task AddToList()
     {
+        var dialog = await DialogService.ShowAsync<UserListsDialog>("Choose list");
+        var result = await dialog.Result;
+        if (result is not { Canceled: true })
+        {
+        }
     }
 
 }
