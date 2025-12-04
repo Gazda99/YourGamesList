@@ -82,7 +82,6 @@ public class YglDatabaseAndDtoMapperTests
         Assert.That(dto.FirstReleaseDate, Is.EqualTo(entity.FirstReleaseDate));
         Assert.That(dto.GameType, Is.EquivalentTo(entity.GameType));
         Assert.That(dto.Genres, Is.EquivalentTo(entity.Genres));
-        Assert.That(dto.IgdbGameId, Is.EqualTo(entity.IgdbGameId));
         Assert.That(dto.ImageId, Is.EquivalentTo(entity.ImageId));
         Assert.That(dto.Name, Is.EquivalentTo(entity.Name));
         Assert.That(dto.StoryLine, Is.EquivalentTo(entity.StoryLine));

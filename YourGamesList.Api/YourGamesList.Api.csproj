@@ -1,26 +1,25 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>disable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <WarningsAsErrors>nullable</WarningsAsErrors>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.11" />
-        <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0"/>
+        <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0"/>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\YourGamesList.Common\YourGamesList.Common.csproj" />
-        <ProjectReference Include="..\YourGamesList.Contracts\YourGamesList.Contracts.csproj" />
-        <ProjectReference Include="..\YourGamesList.Database\YourGamesList.Database.csproj" />
-    </ItemGroup>
-    
-    <ItemGroup>
-        <InternalsVisibleTo Include="$(AssemblyName).UnitTests" />
+        <ProjectReference Include="..\YourGamesList.Common\YourGamesList.Common.csproj"/>
+        <ProjectReference Include="..\YourGamesList.Contracts\YourGamesList.Contracts.csproj"/>
+        <ProjectReference Include="..\YourGamesList.Database\YourGamesList.Database.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="$(AssemblyName).UnitTests"/>
+    </ItemGroup>
 </Project>

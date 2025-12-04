@@ -96,11 +96,11 @@ public class AddEntriesToListRequestTests
                         [
                             //Add one valid and one invalid
                             _fixture.Build<EntryToAddRequestPart>()
-                                .With(x => x.GameId, Guid.NewGuid())
+                                .With(x => x.GameId, _fixture.Create<long>())
                                 .WithAutoProperties()
                                 .Create(),
                             _fixture.Build<EntryToAddRequestPart>()
-                                .With(x => x.GameId, Guid.Empty)
+                                .With(x => x.GameId, -1)
                                 .WithAutoProperties()
                                 .Create()
                         ]

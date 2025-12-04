@@ -102,10 +102,10 @@ public class BackgroundScraper : IBackgroundScraper
         {
             var game = new Game()
             {
+                Id = igdbGame.Id,
                 FirstReleaseDate = igdbGame.FirstReleaseDate,
                 GameType = igdbGame.GameType.Type,
                 Genres = igdbGame.Genres.Select(g => g.Name).ToList(),
-                IgdbGameId = igdbGame.Id,
                 ImageId = igdbGame.Cover.ImageId,
                 Name = igdbGame.Name,
                 StoryLine = igdbGame.StoryLine,

@@ -61,7 +61,6 @@ public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
             FirstReleaseDate = game.FirstReleaseDate,
             GameType = game.GameType,
             Genres = game.Genres.ToList(),
-            IgdbGameId = game.IgdbGameId,
             ImageId = game.ImageId,
             Name = game.Name,
             StoryLine = game.StoryLine,

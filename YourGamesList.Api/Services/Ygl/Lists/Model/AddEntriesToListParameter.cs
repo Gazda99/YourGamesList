@@ -14,7 +14,7 @@ public class AddEntriesToListParameter
 
 public class EntryToAddParameter
 {
-    public required Guid GameId { get; init; }
+    public required long GameId { get; init; }
 
     public string? Desc { get; set; }
     public PlatformDto[]? Platforms { get; set; }

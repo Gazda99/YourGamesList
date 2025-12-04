@@ -26,6 +26,7 @@ internal sealed class AddEntriesToListRequestValidator : AbstractValidator<AddEn
             {
                 entry.RuleFor(x => x.GameId)
                     .NotEmpty()
+                    .GreaterThanOrEqualTo(0)
                     .WithMessage("Game Id is required.");
             });
     }

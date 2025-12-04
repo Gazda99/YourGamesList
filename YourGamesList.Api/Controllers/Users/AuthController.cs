@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -27,7 +28,7 @@ public class AuthController : YourGamesListBaseController
     }
 
     [HttpPost("register")]
-    [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(void), StatusCodes.Status409Conflict)]
     [TypeFilter(typeof(RequestValidatorAttribute<UserRegisterRequest>), Arguments = ["userRegisterRequest"])]
@@ -54,7 +55,7 @@ public class AuthController : YourGamesListBaseController
             }
         }
 
-        return Result(StatusCodes.Status200OK);
+        return Result(StatusCodes.Status200OK, res.Value.ToString());
     }
 
     [HttpPost("login")]
