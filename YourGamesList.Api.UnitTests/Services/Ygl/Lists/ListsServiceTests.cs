@@ -7,10 +7,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Model;
-using YourGamesList.Api.Model.Dto;
+
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Ygl.Lists;
 using YourGamesList.Api.Services.Ygl.Lists.Model;
+using YourGamesList.Contracts.Dto;
 using YourGamesList.Database;
 using YourGamesList.Database.Entities;
 using YourGamesList.Database.TestUtils;
@@ -596,7 +597,7 @@ public class ListsServiceTests
     public async Task AddListEntries_SuccessfulScenario()
     {
         //ARRANGE
-        var gameId = Guid.NewGuid();
+        var gameId = _fixture.Create<long>();
         var entryToAdd = _fixture.Build<EntryToAddParameter>()
             .With(x => x.GameId, gameId)
             .Create();
@@ -609,7 +610,6 @@ public class ListsServiceTests
             new Game()
             {
                 Id = gameId,
-                IgdbGameId = _fixture.Create<long>(),
                 Name = _fixture.Create<string>()
             }
         };
@@ -674,7 +674,7 @@ public class ListsServiceTests
     public async Task AddListEntries_NoNewEntries_ReturnsEmptySuccess()
     {
         //ARRANGE
-        var gameId = Guid.NewGuid();
+        var gameId = _fixture.Create<long>();
         var entryToAdd = _fixture.Build<EntryToAddParameter>()
             .With(x => x.GameId, gameId)
             .Create();
@@ -687,7 +687,6 @@ public class ListsServiceTests
             new Game()
             {
                 Id = gameId,
-                IgdbGameId = _fixture.Create<long>(),
                 Name = _fixture.Create<string>()
             }
         };
@@ -745,7 +744,7 @@ public class ListsServiceTests
     public async Task DeleteListEntries_SuccessfulScenario()
     {
         //ARRANGE
-        var gameId = Guid.NewGuid();
+        var gameId = _fixture.Create<long>();
         var listEntryId1 = Guid.NewGuid();
         var listEntryId2 = Guid.NewGuid();
         var listId = Guid.NewGuid();
@@ -759,7 +758,6 @@ public class ListsServiceTests
             new Game()
             {
                 Id = gameId,
-                IgdbGameId = _fixture.Create<long>(),
                 Name = _fixture.Create<string>()
             }
         };
@@ -889,7 +887,7 @@ public class ListsServiceTests
     public async Task UpdateListEntries_SuccessfulScenario()
     {
         //ARRANGE
-        var gameId = Guid.NewGuid();
+        var gameId = _fixture.Create<long>();
         var listEntryId1 = Guid.NewGuid();
         var listEntryId2 = Guid.NewGuid();
         var listId = Guid.NewGuid();
@@ -923,7 +921,6 @@ public class ListsServiceTests
             new Game()
             {
                 Id = gameId,
-                IgdbGameId = _fixture.Create<long>(),
                 Name = _fixture.Create<string>()
             }
         };

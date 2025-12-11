@@ -1,0 +1,63 @@
+﻿@using YourGamesList.Contracts.Dto
+@using YourGamesList.Web.Page.Services
+@using YourGamesList.Web.Page.Services.StaticStorage
+@using YourGamesList.Web.Page.Services.Ygl
+
+<MudStack>
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true"></MudProgressCircular>
+    }
+    else
+    {
+        @foreach (var userList in _userLists)
+        {
+            <MudButton OnClick="() => SelectList(userList.Id)">@userList.Name</MudButton>
+        }
+    }
+
+</MudStack>
+
+@code {
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private IUserListsManager IUserListsManager { get; set; } = default!;
+
+    [Parameter] public required EventCallback<Guid> OnListSelect { get; set; }
+
+    private bool _isLoading = false;
+    private List<GamesListDto> _userLists = [];
+
+    public Guid? SelectedListId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _isLoading = true;
+        try
+        {
+            _userLists = await FetchUserLists();
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task<List<GamesListDto>> FetchUserLists()
+    {
+        var currentLists = await IUserListsManager.ReadOrRefresh();
+        if (currentLists.IsFailure)
+        {
+            Snackbar.Add("Failed to fetch user lists.", Severity.Warning);
+        }
+
+        return currentLists.Value ?? [];
+    }
+
+    private async Task SelectList(Guid listId)
+    {
+        SelectedListId = listId;
+        await OnListSelect.InvokeAsync(listId);
+    }
+
+}

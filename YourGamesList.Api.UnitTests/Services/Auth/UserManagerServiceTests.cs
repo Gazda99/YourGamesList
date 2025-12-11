@@ -191,6 +191,8 @@ public class UserManagerServiceTests
         var hashedPasswordResult = new HashedPassword(hash, userSalt);
         var id = Guid.NewGuid();
         var token = _fixture.Create<string>();
+        var now = DateTimeOffset.UtcNow;
+        _timeProvider.GetUtcNow().Returns(now);
         _passwordHasher.HashPassword(password, Arg.Is<byte[]>(x => x.SequenceEqual(userSalt))).Returns(hashedPasswordResult);
         _tokenProvider.CreateToken(username, id).Returns(token);
         var users = new List<User>()
@@ -216,6 +218,9 @@ public class UserManagerServiceTests
         _passwordHasher.Received(1).HashPassword(password, Arg.Is<byte[]>(x => x.SequenceEqual(userSalt)));
         _tokenProvider.Received(1).CreateToken(username, id);
         _logger.ReceivedLog(LogLevel.Information, $"User with username '{username}' logged in successfully.");
+        var userAfterTest = _yglDbContextBuilder.Get().Users.FirstOrDefault(u => u.Id == id);
+        Assert.That(userAfterTest, Is.Not.Null);
+        Assert.That(userAfterTest.LastLoginDate, Is.EqualTo(now));
     }
 
     [Test]

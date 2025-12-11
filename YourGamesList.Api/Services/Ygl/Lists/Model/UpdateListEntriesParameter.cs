@@ -1,6 +1,7 @@
 ﻿using System;
 using YourGamesList.Api.Model;
-using YourGamesList.Api.Model.Dto;
+using YourGamesList.Contracts.Dto;
+
 
 namespace YourGamesList.Api.Services.Ygl.Lists.Model;
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using YourGamesList.Api.Model;
-using YourGamesList.Api.Model.Dto;
+using YourGamesList.Contracts.Dto;
+
 
 namespace YourGamesList.Api.Services.Ygl.Lists.Model;
 
@@ -13,7 +14,7 @@ public class AddEntriesToListParameter
 
 public class EntryToAddParameter
 {
-    public required Guid GameId { get; init; }
+    public required long GameId { get; init; }
 
     public string? Desc { get; set; }
     public PlatformDto[]? Platforms { get; set; }

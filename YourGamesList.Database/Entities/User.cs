@@ -15,5 +15,15 @@ public class User
     [StringLength(256)] public required string PasswordHash { get; set; }
     [MaxLength(16)] public required byte[] Salt { get; set; }
 
+    public DateTimeOffset? LastLoginDate { get; set; }
+
+    #region About
+
+    [StringLength(512)] public string Description { get; set; } = string.Empty;
+    public DateTimeOffset? DateOfBirth { get; set; }
+    public string Country { get; set; } = string.Empty;
+
+    #endregion
+
     public virtual ICollection<GamesList> GamesLists { get; } = [];
 }

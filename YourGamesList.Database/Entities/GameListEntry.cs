@@ -14,7 +14,7 @@ public class GameListEntry
     public CompletionStatus CompletionStatus { get; set; } = CompletionStatus.Unspecified;
 
     public virtual Game Game { get; set; } = null!;
-    public virtual Guid GameId { get; set; }
+    public virtual long GameId { get; set; }
 
     public virtual GamesList GamesList { get; set; } = null!;
     public virtual Guid GamesListId { get; set; }
