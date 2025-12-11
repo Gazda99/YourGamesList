@@ -13,10 +13,11 @@ using Refit;
 using Serilog;
 using YourGamesList.Common.Http;
 using YourGamesList.Common.Options.Validators;
+using YourGamesList.Web.Page.Services;
 using YourGamesList.Web.Page.Services.LocalStorage;
-using YourGamesList.Web.Page.Services.StaticState;
-using YourGamesList.Web.Page.Services.UserState;
-using YourGamesList.Web.Page.Services.UserState.Options;
+using YourGamesList.Web.Page.Services.StaticStorage;
+using YourGamesList.Web.Page.Services.UserLoginStateManager;
+using YourGamesList.Web.Page.Services.UserLoginStateManager.Options;
 using YourGamesList.Web.Page.Services.Ygl;
 using YourGamesList.Web.Page.Services.Ygl.Options;
 
@@ -45,9 +46,9 @@ public static partial class AppBuilder
         builder.Services.AddStaticState();
 
         builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
-        builder.Services.AddOptionsWithFluentValidation<UserLoginStateManagerOptions, UserLoginStateManagerOptionsValidator>(UserLoginStateManagerOptions
-            .SectionName);
+        builder.Services.AddOptionsWithFluentValidation<UserLoginStateManagerOptions, UserLoginStateManagerOptionsValidator>(UserLoginStateManagerOptions.SectionName);
         builder.Services.AddScoped<IUserLoginStateManager, UserLoginStateManager>();
+        builder.Services.AddScoped<IUserListsManager, UserListsManager>();
 
         builder.Services.AddYourGamesListApi();
 
@@ -87,7 +88,7 @@ public static partial class AppBuilder
         services.AddMudServices(config =>
         {
             config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopRight;
-            config.SnackbarConfiguration.PreventDuplicates = true;
+            config.SnackbarConfiguration.PreventDuplicates = false;
             config.SnackbarConfiguration.NewestOnTop = false;
             config.SnackbarConfiguration.ShowCloseIcon = true;
             config.SnackbarConfiguration.VisibleStateDuration = 5000;

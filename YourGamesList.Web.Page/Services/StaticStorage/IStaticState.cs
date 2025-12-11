@@ -1,4 +1,4 @@
-﻿namespace YourGamesList.Web.Page.Services.StaticState;
+﻿namespace YourGamesList.Web.Page.Services.StaticStorage;
 
 public interface IStaticState<TState>
 {

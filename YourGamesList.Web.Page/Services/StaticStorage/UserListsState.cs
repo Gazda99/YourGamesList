@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using YourGamesList.Contracts.Dto;
 
-namespace YourGamesList.Web.Page.Services.StaticState;
+namespace YourGamesList.Web.Page.Services.StaticStorage;
 
 public class UserListsState : IStaticState<List<GamesListDto>>
 {

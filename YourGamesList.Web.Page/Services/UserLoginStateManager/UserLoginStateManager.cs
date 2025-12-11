@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using YourGamesList.Web.Page.Services.LocalStorage;
 using YourGamesList.Web.Page.Services.LocalStorage.Model;
-using YourGamesList.Web.Page.Services.UserState.Options;
+using YourGamesList.Web.Page.Services.UserLoginStateManager.Options;
 
-namespace YourGamesList.Web.Page.Services.UserState;
+namespace YourGamesList.Web.Page.Services.UserLoginStateManager;
 
 public interface IUserLoginStateManager
 {

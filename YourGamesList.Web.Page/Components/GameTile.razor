@@ -1,6 +1,8 @@
-﻿@using YourGamesList.Contracts.Dto
-@using YourGamesList.Web.Page.Services.StaticState
-@using YourGamesList.Web.Page.Services.Ygl.Model
+﻿@using Microsoft.Extensions.Logging
+@using YourGamesList.Contracts.Dto
+@using YourGamesList.Web.Page.Services
+@using YourGamesList.Web.Page.Services.UserLoginStateManager
+@using YourGamesList.Web.Page.Services.Ygl
 
 
 <style>
@@ -44,7 +46,12 @@
 
 
 @code {
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
     [Inject] private IDialogService DialogService { get; set; } = default!;
+    [Inject] private IYglListsClient ListsClient { get; set; } = default!;
+    [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
+    [Inject] private ILogger<GameTile> Logger { get; set; } = default!;
+    [Inject] private IUserListsManager IUserListsManager { get; set; } = default!;
 
 
     private const string GameReleaseDateFormat = "yyyy MMMM dd";
@@ -75,8 +82,75 @@
     {
         var dialog = await DialogService.ShowAsync<UserListsDialog>("Choose list");
         var result = await dialog.Result;
-        if (result is not { Canceled: true })
+        if (result != null && !result.Canceled)
         {
+            var dialogData = result.Data?.ToString();
+            if (Guid.TryParse(dialogData, out var selectedListId))
+            {
+                var gameId = Game.Id;
+
+                var listsState = await IUserListsManager.ReadOrRefresh();
+                if (listsState.IsFailure)
+                {
+                    //TODO:
+                    return;
+                }
+
+                var selectedList = listsState.Value.FirstOrDefault(x => x.Id == selectedListId);
+                if (selectedList == null)
+                {
+                    //TODO:
+                    return;
+                }
+
+                //Check if selected list already contains the game
+                if (selectedList.Entries.Any(x => x.Game?.Id == gameId))
+                {
+                    Logger.LogInformation($"Selected list '{selectedListId.ToString()}' already contains game id '{gameId}'.");
+                    Snackbar.Add("Selected game already was added to that list.", Severity.Normal);
+                    return;
+                }
+
+                //Try to add game to list
+                try
+                {
+                    var userToken = await UserLoginStateManager.GetUserToken();
+                    if (string.IsNullOrWhiteSpace(userToken))
+                    {
+                        //TODO:
+                        return;
+                    }
+
+                    var res = await ListsClient.AddListEntries(userToken, selectedListId, [gameId]);
+
+                    if (res.IsFailure)
+                    {
+                        //TODO:
+                        Snackbar.Add("Could not add game to selected list!.", Severity.Error);
+                        return;
+                    }
+                    else
+                    {
+                        // Fire and forget
+                        _ = IUserListsManager.Refresh();
+
+                        //TODO: navigate to edit page 
+                        Snackbar.Add("Successfully added game to selected list. Click me to edit entry.", Severity.Info, config =>
+                        {
+                            config.OnClick = snackbar =>
+                            {
+                                Snackbar.Add("Hello World!");
+                                return Task.CompletedTask;
+                            };
+                        });
+                    }
+                }
+                finally
+                {
+                }
+            }
+
+            Logger.LogWarning($"Could not parse selected list id. '{dialogData}'");
         }
     }
 

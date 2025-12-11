@@ -1,6 +1,6 @@
 ﻿@using YourGamesList.Contracts.Dto
-@using YourGamesList.Web.Page.Services.StaticState
-@using YourGamesList.Web.Page.Services.UserState
+@using YourGamesList.Web.Page.Services
+@using YourGamesList.Web.Page.Services.StaticStorage
 @using YourGamesList.Web.Page.Services.Ygl
 
 <MudStack>
@@ -19,10 +19,8 @@
 </MudStack>
 
 @code {
-    [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
-    [Inject] private IStaticState<List<GamesListDto>> UserListsState { get; set; } = default!;
-    [Inject] private IYglListsClient ListsClient { get; set; } = default!;
+    [Inject] private IUserListsManager IUserListsManager { get; set; } = default!;
 
     [Parameter] public required EventCallback<Guid> OnListSelect { get; set; }
 
@@ -47,24 +45,13 @@
 
     private async Task<List<GamesListDto>> FetchUserLists()
     {
-        var currentLists = UserListsState.GetState();
-        if (currentLists != null)
+        var currentLists = await IUserListsManager.ReadOrRefresh();
+        if (currentLists.IsFailure)
         {
-            return currentLists;
+            Snackbar.Add("Failed to fetch user lists.", Severity.Warning);
         }
-        else
-        {
-            var token = await UserLoginStateManager.GetUserToken();
-            var userListsRes = await ListsClient.GetSelfLists(token!, includeGames: true);
-            if (userListsRes.IsFailure)
-            {
-                Snackbar.Add("Failed to fetch user lists.", Severity.Warning);
-            }
 
-            var userLists = userListsRes.Value ?? [];
-            UserListsState.SetState(userLists);
-            return userLists;
-        }
+        return currentLists.Value ?? [];
     }
 
     private async Task SelectList(Guid listId)

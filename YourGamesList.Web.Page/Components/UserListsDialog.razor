@@ -24,8 +24,7 @@
 
     private void OnListSelect(Guid selectedListId)
     {
-        Snackbar.Add($"Selected id {selectedListId.ToString()}", Severity.Info);
-        Cancel();
+        MudDialog.Close(DialogResult.Ok(selectedListId));
     }
 
 }

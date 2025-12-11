@@ -6,6 +6,7 @@ using YourGamesList.Common.Http;
 using YourGamesList.Common.Refit;
 using YourGamesList.Contracts.Dto;
 using YourGamesList.Contracts.Requests.Games;
+using YourGamesList.Contracts.Requests.Lists;
 using YourGamesList.Contracts.Requests.Users;
 using YourGamesList.Contracts.Responses.Games;
 using YourGamesList.Contracts.Responses.Users;
@@ -69,6 +70,14 @@ public interface IYglApi : IHandlesHttpRefitException
     Task<IApiResponse<List<GamesListDto>>> GetSelfLists(
         [Authorize("Bearer")] string userToken,
         [Query] bool includeGames = false
+    ); 
+    
+    [Post("/lists/entries/add")]
+    [Headers($"Content-Type: {ContentTypes.ApplicationJson}", $"Content-Type: {ContentTypes.ApplicationJson}")]
+    Task<IApiResponse<List<Guid>>> AddListEntries(
+        [Authorize("Bearer")] string userToken,
+        [Body(BodySerializationMethod.Serialized)]
+        AddEntriesToListRequestBody request
     );
 
     #endregion
