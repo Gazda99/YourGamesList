@@ -1,0 +1,86 @@
+﻿@page "/viewList/{ListId:guid}"
+@using Microsoft.Extensions.Logging
+@using YourGamesList.Contracts.Dto
+@using YourGamesList.Web.Page.Services
+@using YourGamesList.Web.Page.Services.UserLoginStateManager
+@using YourGamesList.Web.Page.Services.Ygl
+
+@if (!_isPageInitialized)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="mx-auto"/>
+}
+else
+{
+    @if (!_isUserLoggedIn)
+    {
+        <LoginFirst></LoginFirst>
+    }
+    else
+    {
+        <MudGrid Justify="Justify.FlexStart" Spacing="3">
+
+            @foreach (var game in _selectedList?.Entries?.Select(x => x.Game) ?? [])
+            {
+                <MudItem xs="12" sm="12" md="12" lg="6" xl="6" xxl="4">
+                    <GameTile Game="@game"></GameTile>
+                </MudItem>
+            }
+
+
+        </MudGrid>
+    }
+}
+
+
+@code {
+
+    [Inject] private ILogger<SearchGamesV2> Logger { get; set; } = default!;
+
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private IYglListsClient ListsClient { get; set; } = default!;
+    [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
+    [Inject] private IUserListsManager UserListsManager { get; set; } = default!;
+
+    private bool _isUserLoggedIn = false;
+    private bool _isPageInitialized = false;
+
+    private GamesListDto? _selectedList;
+
+    [Parameter] public Guid ListId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _isUserLoggedIn = await UserLoginStateManager.IsUserLoggedIn();
+
+        if (_isUserLoggedIn)
+        {
+            _isPageInitialized = false;
+
+            var userLists = await UserListsManager.ReadOrRefresh();
+            if (userLists.IsFailure)
+            {
+                CouldNotLoadListSnackbar();
+                return;
+            }
+
+            var selectedList = userLists.Value.FirstOrDefault(x => x.Id == ListId);
+            if (selectedList == null)
+            {
+                CouldNotLoadListSnackbar();
+                return;
+            }
+
+            _selectedList = selectedList;
+        }
+
+        _isPageInitialized = true;
+    }
+
+
+    private void CouldNotLoadListSnackbar()
+    {
+        Snackbar.Add("Could not load selected list. Please try to refresh page.", Severity.Warning);
+    }
+
+}
