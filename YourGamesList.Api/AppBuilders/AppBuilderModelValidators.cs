@@ -1,11 +1,12 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
-using YourGamesList.Api.ControllerModelValidators;
 using YourGamesList.Api.Model;
 using YourGamesList.Api.Model.Requests.Auth;
 using YourGamesList.Api.Model.Requests.Lists;
 using YourGamesList.Api.Model.Requests.SearchIgdbGames;
 using YourGamesList.Api.Model.Requests.SearchYglGames;
+using YourGamesList.Api.Model.Requests.Users;
+using YourGamesList.Api.Services.ControllerModelValidators;
 
 namespace YourGamesList.Api.AppBuilders;
 
@@ -30,6 +31,13 @@ public static partial class AppBuilder
             .AddScoped<IValidator<UserLoginRequest>, UserLoginRequestValidator>()
             .AddScoped<IValidator<UserDeleteRequest>, UserDeleteRequestValidator>()
             ;
+        
+        //User controller validators
+        services
+            .AddScoped<IValidator<UserGetSelfRequest>, UserGetSelfRequestValidator>()
+            .AddScoped<IValidator<UserUpdateRequest>, UserUpdateRequestValidator>()
+            ;
+
 
         //Search IGDB Games controller validators
         services
@@ -46,6 +54,7 @@ public static partial class AppBuilder
         services
             //list
             .AddScoped<IValidator<CreateListRequest>, CreateListRequestValidator>()
+            .AddScoped<IValidator<GetListRequest>, GetListRequestValidator>()
             .AddScoped<IValidator<SearchListsRequest>, SearchListsRequestValidator>()
             .AddScoped<IValidator<GetSelfListsRequest>, GetSelfListsRequestValidator>()
             .AddScoped<IValidator<UpdateListRequest>, UpdateListRequestValidator>()

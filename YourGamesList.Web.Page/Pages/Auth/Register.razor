@@ -1,0 +1,79 @@
+﻿@page "/register"
+@using Microsoft.Extensions.Logging
+@using YourGamesList.Web.Page.Services.Ygl
+@using YourGamesList.Web.Page.Services.Ygl.Model
+
+<PageTitle>Register</PageTitle>
+
+<UsernameInput @ref="@_usernameInput"></UsernameInput>
+<PasswordInput @ref="@_passwordInput"></PasswordInput>
+
+<MudButton OnClick="@RegisterClick" Disabled="@_registerButtonDisabled">@_registerButtonText</MudButton>
+
+@code {
+
+    [Inject] private ILogger<Register> Logger { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private IYglAuthClient AuthClient { get; set; } = default!;
+
+    private PasswordInput _passwordInput = default!;
+    private UsernameInput _usernameInput = default!;
+
+    private bool _registerButtonDisabled = false;
+    private string _registerButtonText = "Register";
+
+    private async Task RegisterClick()
+    {
+        _registerButtonDisabled = true;
+        _registerButtonText = "Registering...";
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_passwordInput.Password))
+            {
+                _passwordInput.PasswordTextFieldError = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(_usernameInput.Username))
+            {
+                _usernameInput.UsernameTextFieldError = true;
+            }
+
+            if (_passwordInput.PasswordTextFieldError || _usernameInput.UsernameTextFieldError)
+            {
+                return;
+            }
+
+            var res = await AuthClient.Register(_usernameInput.Username, _passwordInput.Password);
+            if (res.IsFailure)
+            {
+                switch (res.Error)
+                {
+                    case YglAuthAuthClientError.RegisterUserAlreadyExists:
+                        Snackbar.Add("User with same username already exists. Please chose different username.", Severity.Warning);
+                        break;
+                    case YglAuthAuthClientError.RegisterWeakPassword:
+                        //TODO: read these values from config
+                        Snackbar.Add("Your password does not meet criteria. It has to be at least 8 characters long but smaller than 64", Severity.Warning);
+                        break;
+                    default:
+                        Snackbar.Add("Failed to register. Please try again.", Severity.Warning);
+                        break;
+                }
+
+                Snackbar.Add("Successfully registered.", Severity.Success);
+
+                return;
+            }
+
+            Navigation.NavigateTo(Paths.Login);
+        }
+        finally
+        {
+            _registerButtonDisabled = false;
+            _registerButtonText = "Register";
+        }
+    }
+
+}

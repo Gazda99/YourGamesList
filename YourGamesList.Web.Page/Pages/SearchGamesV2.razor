@@ -1,0 +1,133 @@
+﻿@page "/searchGamesV2"
+@using Microsoft.Extensions.Logging
+@using YourGamesList.Contracts.Dto
+@using YourGamesList.Contracts.Responses.Games
+@using YourGamesList.Web.Page.Services.StaticStorage
+@using YourGamesList.Web.Page.Services.UserLoginStateManager
+@using YourGamesList.Web.Page.Services.Ygl
+
+@if (!_isPageInitialized)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="mx-auto"/>
+}
+else
+{
+    @if (!_isUserLoggedIn)
+    {
+        <LoginFirst></LoginFirst>
+    }
+    else
+    {
+        <MudGrid Justify="Justify.FlexStart" Spacing="3">
+
+            <MudItem xs="12" sm="12" md="12" lg="12" xl="12" xxl="12">
+                <SearchGamesInputPanel
+                    @ref="@_searchGamesInputPanel"
+                    OnSearchButtonClick="@OnSearchButtonClick"
+                    Themes="@_availableQueryArguments.Themes"
+                    GameTypes="@_availableQueryArguments.GameTypes"
+                    Genres="@_availableQueryArguments.Genres"
+                ></SearchGamesInputPanel>
+            </MudItem>
+
+            @if (_isLoading)
+            {
+                <MudItem xs="12" sm="12" md="12" lg="12" xl="12" xxl="12">
+                    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="mx-auto"/>
+                </MudItem>
+            }
+            else if (!_isLoading && !_searchResults.Any())
+            {
+            }
+            else
+            {
+                @foreach (var game in _searchResults)
+                {
+                    <MudItem xs="12" sm="12" md="12" lg="6" xl="6" xxl="4">
+                        <GameTile Game="@game"></GameTile>
+                    </MudItem>
+                }
+            }
+
+        </MudGrid>
+    }
+}
+
+
+
+@code {
+    [Inject] private ILogger<SearchGamesV2> Logger { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private IYglGamesClient GamesClient { get; set; } = default!;
+    [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
+    [Inject] private IStaticState<AvailableSearchQueryArgumentsResponse> AvailableQueryArgumentsState { get; set; } = default!;
+
+    private SearchGamesInputPanel? _searchGamesInputPanel;
+
+    private bool _isUserLoggedIn = false;
+    private bool _isPageInitialized = false;
+    private bool _isLoading = false;
+
+    private List<GameDto> _searchResults = [];
+
+    private AvailableSearchQueryArgumentsResponse _availableQueryArguments = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _isUserLoggedIn = await UserLoginStateManager.IsUserLoggedIn();
+
+        if (_isUserLoggedIn)
+        {
+            _isPageInitialized = false;
+
+            if (AvailableQueryArgumentsState.GetState() == null)
+            {
+                var token = await UserLoginStateManager.GetUserToken();
+                await FetchQueryArguments(token);
+            }
+
+            _availableQueryArguments = AvailableQueryArgumentsState.GetState()!;
+        }
+
+        _isPageInitialized = true;
+    }
+
+    private async Task OnSearchButtonClick(SearchGamesInputPanel.SearchGamesParameters searchParameters)
+    {
+        _isLoading = true;
+
+        try
+        {
+            var token = await UserLoginStateManager.GetUserToken();
+            var res = await GamesClient.SearchGames(
+                token!,
+                searchParameters.SearchGameName,
+                themes: searchParameters.SelectedThemes,
+                genres: searchParameters.SelectedGenres,
+                gameType: searchParameters.SelectedGameType,
+                releaseYearQuery: searchParameters.SelectedTypeOfDate != TypeOfDateDto.None ? new ValueTuple<TypeOfDateDto, int>(searchParameters.SelectedTypeOfDate, searchParameters.SelectedYear) : null
+            );
+
+            if (res.IsSuccess)
+            {
+                _searchResults = res.Value!;
+            }
+            else
+            {
+                Snackbar.Add("Failed to obtain games.", Severity.Warning);
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task FetchQueryArguments(string? token)
+    {
+        var res = await GamesClient.GetAvailableSearchParams(token!);
+        AvailableQueryArgumentsState.SetState(res.Value!);
+    }
+
+}

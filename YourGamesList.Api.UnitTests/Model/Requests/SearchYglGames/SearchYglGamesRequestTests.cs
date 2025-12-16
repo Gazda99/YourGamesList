@@ -2,6 +2,7 @@
 using AutoFixture;
 using FluentValidation.TestHelper;
 using YourGamesList.Api.Model.Requests.SearchYglGames;
+using YourGamesList.Contracts.Requests.Games;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.SearchYglGames;
 
@@ -31,7 +32,7 @@ public class SearchYglGamesRequestTests
         //ASSERT
         Assert.That(res.IsValid, Is.True);
     }
-    
+
     [Test]
     public void Validate_InvalidGameName_ReturnsFalse()
     {

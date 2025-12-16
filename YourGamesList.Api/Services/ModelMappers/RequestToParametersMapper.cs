@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using YourGamesList.Api.Model.Requests.Lists;
+using YourGamesList.Api.Model.Requests.Users;
+using YourGamesList.Api.Services.Users.Model;
 using YourGamesList.Api.Services.Ygl.Lists.Model;
 
 namespace YourGamesList.Api.Services.ModelMappers;
@@ -12,6 +14,8 @@ public interface IRequestToParametersMapper
     AddEntriesToListParameter Map(AddEntriesToListRequest request);
     DeleteListEntriesParameter Map(DeleteListEntriesRequest request);
     UpdateListEntriesParameter Map(UpdateListEntriesRequest request);
+    UserUpdateParameters Map(UserUpdateRequest request);
+    UserGetSelfParameters Map(UserGetSelfRequest request);
 }
 
 public class RequestToParametersMapper : IRequestToParametersMapper
@@ -95,7 +99,7 @@ public class RequestToParametersMapper : IRequestToParametersMapper
         {
             throw new ArgumentNullException(nameof(request.Body));
         }
-        
+
         return new UpdateListEntriesParameter()
         {
             UserInformation = request.UserInformation,
@@ -110,6 +114,30 @@ public class RequestToParametersMapper : IRequestToParametersMapper
                 Rating = x.Rating,
                 CompletionStatus = x.CompletionStatus
             }).ToArray()
+        };
+    }
+
+    public UserUpdateParameters Map(UserUpdateRequest request)
+    {
+        if (request.Body is null)
+        {
+            throw new ArgumentNullException(nameof(request.Body));
+        }
+
+        return new UserUpdateParameters()
+        {
+            UserInformation = request.UserInformation,
+            Country = request.Body.Country,
+            Description = request.Body.Description,
+            DateOfBirth = request.Body.DateOfBirth,
+        };
+    }
+
+    public UserGetSelfParameters Map(UserGetSelfRequest request)
+    {
+        return new UserGetSelfParameters()
+        {
+            UserInformation = request.UserInformation
         };
     }
 }

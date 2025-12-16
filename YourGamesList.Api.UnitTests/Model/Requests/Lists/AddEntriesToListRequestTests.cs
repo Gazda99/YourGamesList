@@ -5,6 +5,7 @@ using FluentValidation;
 using FluentValidation.TestHelper;
 using YourGamesList.Api.Model;
 using YourGamesList.Api.Model.Requests.Lists;
+using YourGamesList.Contracts.Requests.Lists;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Lists;
 
@@ -95,11 +96,11 @@ public class AddEntriesToListRequestTests
                         [
                             //Add one valid and one invalid
                             _fixture.Build<EntryToAddRequestPart>()
-                                .With(x => x.GameId, Guid.NewGuid())
+                                .With(x => x.GameId, _fixture.Create<long>())
                                 .WithAutoProperties()
                                 .Create(),
                             _fixture.Build<EntryToAddRequestPart>()
-                                .With(x => x.GameId, Guid.Empty)
+                                .With(x => x.GameId, -1)
                                 .WithAutoProperties()
                                 .Create()
                         ]

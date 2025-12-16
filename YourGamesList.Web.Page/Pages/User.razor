@@ -1,0 +1,29 @@
+﻿@page "/user"
+@using Microsoft.Extensions.Logging
+@using YourGamesList.Web.Page.Services.UserLoginStateManager
+
+
+<PageTitle>User</PageTitle>
+
+@if (!_isUserLoggedIn)
+{
+    <LoginFirst></LoginFirst>
+}
+else
+{
+    <MudText>You are already logged in!</MudText>
+}
+
+@code {
+    [Inject] private ILogger<User> Logger { get; set; } = default!;
+    [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
+
+    private bool _isUserLoggedIn = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _isUserLoggedIn = await UserLoginStateManager.IsUserLoggedIn();
+    }
+
+}

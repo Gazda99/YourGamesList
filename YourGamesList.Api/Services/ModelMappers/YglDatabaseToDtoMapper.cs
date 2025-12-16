@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using YourGamesList.Api.Model.Dto;
+using YourGamesList.Contracts.Dto;
 using YourGamesList.Database.Entities;
 
 namespace YourGamesList.Api.Services.ModelMappers;
@@ -10,6 +10,7 @@ public interface IYglDatabaseAndDtoMapper
     GamesListDto Map(GamesList gamesList);
     GameListEntryDto Map(GameListEntry gameListEntry);
     GameDto Map(Game game);
+    UserDto Map(User user);
     CompletionStatusDto Map(CompletionStatus completionStatus);
     GameDistributionDto Map(GameDistribution gameDistribution);
     PlatformDto Map(Platform platform);
@@ -57,17 +58,30 @@ public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
         return new GameDto()
         {
             Id = game.Id,
-            IgdbGameId = game.IgdbGameId,
+            FirstReleaseDate = game.FirstReleaseDate,
             GameType = game.GameType,
             Genres = game.Genres.ToList(),
+            ImageId = game.ImageId,
             Name = game.Name,
             StoryLine = game.StoryLine,
             Summary = game.Summary,
-            Themes = game.Themes.ToList()
+            Themes = game.Themes.ToList(),
+            RatingCount = game.RatingCount
         };
     }
 
-
+    public UserDto Map(User user)
+    {
+        return new UserDto()
+        {
+            Id = user.Id,
+            Username = user.Username,
+            DateOfBirth = user.DateOfBirth,
+            Description = user.Description,
+            Country = user.Country
+        };
+    }
+    
     public CompletionStatusDto Map(CompletionStatus completionStatus)
     {
         return MapEnums<CompletionStatus, CompletionStatusDto>(completionStatus);

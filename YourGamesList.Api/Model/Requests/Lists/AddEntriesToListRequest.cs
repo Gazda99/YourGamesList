@@ -1,8 +1,7 @@
-﻿using System;
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using YourGamesList.Api.Attributes;
-using YourGamesList.Api.Model.Dto;
+using YourGamesList.Contracts.Requests.Lists;
 
 namespace YourGamesList.Api.Model.Requests.Lists;
 
@@ -10,24 +9,6 @@ public class AddEntriesToListRequest
 {
     [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
     [FromBody] public required AddEntriesToListRequestBody Body { get; init; }
-}
-
-public class AddEntriesToListRequestBody
-{
-    public required Guid ListId { get; init; }
-    public EntryToAddRequestPart[] EntriesToAdd { get; init; } = [];
-}
-
-public class EntryToAddRequestPart
-{
-    public required Guid GameId { get; init; }
-
-    public string? Desc { get; set; }
-    public PlatformDto[]? Platforms { get; set; }
-    public GameDistributionDto[]? GameDistributions { get; set; }
-    public bool? IsStarred { get; set; }
-    public byte? Rating { get; set; }
-    public CompletionStatusDto? CompletionStatus { get; set; }
 }
 
 internal sealed class AddEntriesToListRequestValidator : AbstractValidator<AddEntriesToListRequest>
@@ -45,6 +26,7 @@ internal sealed class AddEntriesToListRequestValidator : AbstractValidator<AddEn
             {
                 entry.RuleFor(x => x.GameId)
                     .NotEmpty()
+                    .GreaterThanOrEqualTo(0)
                     .WithMessage("Game Id is required.");
             });
     }

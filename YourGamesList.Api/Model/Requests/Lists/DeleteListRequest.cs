@@ -8,7 +8,7 @@ namespace YourGamesList.Api.Model.Requests.Lists;
 public class DeleteListRequest
 {
     [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
-    [FromQuery(Name = "listId")] public required Guid ListId { get; init; }
+    [FromRoute(Name = "listId")] public required Guid ListId { get; init; }
 }
 
 internal sealed class DeleteListRequestValidator : AbstractValidator<DeleteListRequest>

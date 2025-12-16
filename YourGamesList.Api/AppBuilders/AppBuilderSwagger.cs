@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Any;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using YourGamesList.Api.Services.Scraper;
 using YourGamesList.Common.Http;
@@ -25,20 +25,25 @@ public static partial class AppBuilder
                 Scheme = "YglApiKey"
             });
 
-            var apiKeySchema = new OpenApiSecurityScheme()
+            // var apiKeySchema = new OpenApiSecurityScheme()
+            // {
+            //     Reference = new OpenApiReference
+            //     {
+            //         Type = ReferenceType.SecurityScheme,
+            //         Id = "YglApiKey"
+            //     },
+            //     In = ParameterLocation.Header
+            // };
+            // var apiKeyRequirements = new OpenApiSecurityRequirement
+            // {
+            //     { apiKeySchema, [] } // No specific scopes are required
+            // };
+            // c.AddSecurityRequirement(apiKeyRequirements);
+            
+            c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "YglApiKey"
-                },
-                In = ParameterLocation.Header
-            };
-            var apiKeyRequirements = new OpenApiSecurityRequirement
-            {
-                { apiKeySchema, [] } // No specific scopes are required
-            };
-            c.AddSecurityRequirement(apiKeyRequirements);
+                [new OpenApiSecuritySchemeReference("YglApiKey", document)] = []
+            });
 
 
             //Bearer Auth
@@ -52,21 +57,25 @@ public static partial class AppBuilder
                 Scheme = "bearer"
             });
 
-            var bearerTokenSchema = new OpenApiSecurityScheme
+            // var bearerTokenSchema = new OpenApiSecurityScheme
+            // {
+            //     Reference = new OpenApiReference
+            //     {
+            //         Type = ReferenceType.SecurityScheme,
+            //         Id = "Bearer"
+            //     }
+            // };
+            //
+            // var bearerTokenRequirements = new OpenApiSecurityRequirement
+            // {
+            //     { bearerTokenSchema, [] }
+            // };
+            //
+            // c.AddSecurityRequirement(bearerTokenRequirements);
+            c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            };
-
-            var bearerTokenRequirements = new OpenApiSecurityRequirement
-            {
-                { bearerTokenSchema, [] }
-            };
-
-            c.AddSecurityRequirement(bearerTokenRequirements);
+                [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+            });
 
             c.SchemaFilter<EnumSchemaFilter>();
         });
@@ -83,14 +92,14 @@ public static partial class AppBuilder
             typeof(ScrapeStatus)
         ];
 
-        public void Apply(OpenApiSchema schema, SchemaFilterContext context)
+        public void Apply(IOpenApiSchema schema, SchemaFilterContext context)
         {
-            if (context.Type.IsEnum && EnumTypesToBeDisplayedAsStrings.Contains(context.Type))
+            if (schema.Enum != null && context.Type.IsEnum && EnumTypesToBeDisplayedAsStrings.Contains(context.Type))
             {
                 schema.Enum.Clear();
                 Enum.GetNames(context.Type)
                     .ToList()
-                    .ForEach(name => schema.Enum.Add(new OpenApiString(name)));
+                    .ForEach(name => schema.Enum.Add(JsonValue.Create(name)));
             }
         }
     }

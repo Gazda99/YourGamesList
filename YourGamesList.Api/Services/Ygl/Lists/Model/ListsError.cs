@@ -5,6 +5,7 @@ public enum ListsError
     ListNotFound,
     ListAlreadyExists,
     ListHardLocked,
+    ForbiddenList,
 
     BadRequest
 }

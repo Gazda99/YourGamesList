@@ -5,12 +5,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using YourGamesList.Api.Controllers;
+using YourGamesList.Api.Controllers.Users;
 using YourGamesList.Api.Model.Requests.Auth;
-using YourGamesList.Api.Model.Responses.Auth;
 using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Model;
 using YourGamesList.Common;
+using YourGamesList.Contracts.Requests.Users;
+using YourGamesList.Contracts.Responses.Users;
 using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.Controllers;
@@ -40,8 +41,11 @@ public class AuthControllerTests
         var newUserId = Guid.NewGuid();
         var registerRequest = new UserRegisterRequest()
         {
-            Username = userName,
-            Password = password
+            Body = new AuthUserRegisterRequestBody()
+            {
+                Username = userName,
+                Password = password
+            }
         };
         _userManagerService.RegisterUser(userName, password).Returns(CombinedResult<Guid, UserAuthError>.Success(newUserId));
         var controller = new AuthController(_logger, _userManagerService);
@@ -65,8 +69,11 @@ public class AuthControllerTests
         var password = _fixture.Create<string>();
         var registerRequest = new UserRegisterRequest()
         {
-            Username = userName,
-            Password = password
+            Body = new AuthUserRegisterRequestBody()
+            {
+                Username = userName,
+                Password = password
+            }
         };
         _userManagerService.RegisterUser(userName, password).Returns(CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.RegisterNameAlreadyTaken));
         var controller = new AuthController(_logger, _userManagerService);
@@ -92,8 +99,11 @@ public class AuthControllerTests
         var password = _fixture.Create<string>();
         var registerRequest = new UserRegisterRequest()
         {
-            Username = userName,
-            Password = password
+            Body = new AuthUserRegisterRequestBody()
+            {
+                Username = userName,
+                Password = password
+            }
         };
         var error = CombinedResult<Guid, UserAuthError>.Failure(passwordRelatedError);
         _userManagerService.RegisterUser(userName, password).Returns(error);
@@ -124,8 +134,11 @@ public class AuthControllerTests
         var password = _fixture.Create<string>();
         var loginRequest = new UserLoginRequest()
         {
-            Username = userName,
-            Password = password
+            Body = new AuthUserLoginRequestBody()
+            {
+                Username = userName,
+                Password = password
+            }
         };
         _userManagerService.Login(userName, password).Returns(CombinedResult<string, UserAuthError>.Success(token));
         var controller = new AuthController(_logger, _userManagerService);
@@ -152,8 +165,11 @@ public class AuthControllerTests
         var password = _fixture.Create<string>();
         var loginRequest = new UserLoginRequest()
         {
-            Username = userName,
-            Password = password
+            Body = new AuthUserLoginRequestBody()
+            {
+                Username = userName,
+                Password = password
+            }
         };
         _userManagerService.Login(userName, password).Returns(CombinedResult<string, UserAuthError>.Failure(UserAuthError.NoUserFound));
         var controller = new AuthController(_logger, _userManagerService);
@@ -177,8 +193,11 @@ public class AuthControllerTests
         var password = _fixture.Create<string>();
         var loginRequest = new UserLoginRequest()
         {
-            Username = userName,
-            Password = password
+            Body = new AuthUserLoginRequestBody()
+            {
+                Username = userName,
+                Password = password
+            }
         };
         _userManagerService.Login(userName, password).Returns(CombinedResult<string, UserAuthError>.Failure(UserAuthError.WrongPassword));
         var controller = new AuthController(_logger, _userManagerService);
@@ -206,8 +225,11 @@ public class AuthControllerTests
         var password = _fixture.Create<string>();
         var deleteRequest = new UserDeleteRequest()
         {
-            Username = userName,
-            Password = password
+            Body = new AuthUserDeleteRequestBody()
+            {
+                Username = userName,
+                Password = password
+            }
         };
         _userManagerService.Delete(userName, password).Returns(ErrorResult<UserAuthError>.Clear());
         var controller = new AuthController(_logger, _userManagerService);
@@ -231,8 +253,11 @@ public class AuthControllerTests
         var password = _fixture.Create<string>();
         var deleteRequest = new UserDeleteRequest()
         {
-            Username = userName,
-            Password = password
+            Body = new AuthUserDeleteRequestBody()
+            {
+                Username = userName,
+                Password = password
+            }
         };
         _userManagerService.Delete(userName, password).Returns(ErrorResult<UserAuthError>.Failure(UserAuthError.NoUserFound));
         var controller = new AuthController(_logger, _userManagerService);
@@ -256,8 +281,11 @@ public class AuthControllerTests
         var password = _fixture.Create<string>();
         var deleteRequest = new UserDeleteRequest()
         {
-            Username = userName,
-            Password = password
+            Body = new AuthUserDeleteRequestBody()
+            {
+                Username = userName,
+                Password = password
+            }
         };
         _userManagerService.Delete(userName, password).Returns(ErrorResult<UserAuthError>.Failure(UserAuthError.WrongPassword));
         var controller = new AuthController(_logger, _userManagerService);

@@ -6,7 +6,7 @@ using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using YourGamesList.Api.ControllerModelValidators;
+using YourGamesList.Api.Services.ControllerModelValidators;
 using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.ControllerModelValidators;

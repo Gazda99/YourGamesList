@@ -9,8 +9,8 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Attributes;
-using YourGamesList.Api.ControllerModelValidators;
-using YourGamesList.Api.Model.Responses;
+using YourGamesList.Api.Services.ControllerModelValidators;
+using YourGamesList.Contracts.Responses;
 using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.Attributes;

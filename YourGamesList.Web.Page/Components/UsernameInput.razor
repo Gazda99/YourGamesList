@@ -1,0 +1,14 @@
+﻿<MudTextField @bind-Value="@Username" TextChanged="@UserNameTextChanged"
+              Label="Username" Variant="Variant.Outlined" InputType="@InputType.Text"
+              Error="@UsernameTextFieldError"/>
+
+@code {
+    public string Username { get; set; } = "";
+    public bool UsernameTextFieldError { get; set; } = false;
+
+    private void UserNameTextChanged(string text)
+    {
+        UsernameTextFieldError = false;
+    }
+
+}

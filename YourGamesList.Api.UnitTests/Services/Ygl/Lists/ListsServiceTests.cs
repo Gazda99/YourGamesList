@@ -7,10 +7,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Model;
-using YourGamesList.Api.Model.Dto;
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Ygl.Lists;
 using YourGamesList.Api.Services.Ygl.Lists.Model;
+using YourGamesList.Contracts.Dto;
 using YourGamesList.Database;
 using YourGamesList.Database.Entities;
 using YourGamesList.Database.TestUtils;
@@ -120,6 +120,73 @@ public class ListsServiceTests
 
     #endregion
 
+    #region GetList
+
+    [Test]
+    public async Task GetList_SuccessfulScenario()
+    {
+        //ARRANGE
+        var userInformation = _fixture.Create<JwtUserInformation>();
+        var listName = _fixture.Create<string>();
+        var listId = Guid.NewGuid();
+        var dto1 = _fixture.Create<GamesListDto>();
+
+        var users = new List<User>()
+        {
+            new User()
+            {
+                Id = userInformation.UserId,
+                Username = userInformation.Username,
+                PasswordHash = _fixture.Create<string>(),
+                CreatedDate = DateTime.UtcNow,
+                Salt = _fixture.Create<byte[]>()
+            }
+        };
+        var gl1 = new GamesList()
+        {
+            Id = listId,
+            Name = listName,
+            UserId = userInformation.UserId,
+            IsPublic = true,
+            CanBeDeleted = true
+        };
+        var gamesLists = new List<GamesList>() { gl1 };
+        _yglDbContextBuilder.WithUserDbSet(users);
+        _yglDbContextBuilder.WithListsDbSet(gamesLists);
+
+        _yglDatabaseAndDtoMapper.Map(Arg.Is<GamesList>(g => g.Id == gl1.Id)).Returns(dto1);
+
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+
+        //ACT
+        var result = await userManagerService.GetList(userInformation, listId, false);
+
+        //ASSERT
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo(dto1));
+        _logger.ReceivedLog(LogLevel.Information, $"Found list with id {listId.ToString()}.");
+    }
+
+    [Test]
+    public async Task GetList_ListDoesNotExists_ReturnsListNotFoundError()
+    {
+        //ARRANGE
+        var userInformation = _fixture.Create<JwtUserInformation>();
+        var listId = Guid.NewGuid();
+
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+
+        //ACT
+        var result = await userManagerService.GetList(userInformation, listId, false);
+
+        //ASSERT
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.EqualTo(ListsError.ListNotFound));
+        _logger.ReceivedLog(LogLevel.Information, $"No lists found with id '{listId.ToString()}'.");
+    }
+
+    #endregion
+
     #region SearchLists
 
     [Test]
@@ -156,14 +223,18 @@ public class ListsServiceTests
             Id = listId,
             Name = listName1,
             UserId = userId,
-            CanBeDeleted = false
+            CanBeDeleted = false,
+            //This will be returned because it is public
+            IsPublic = true
         };
         var gl2 = new GamesList()
         {
             Id = listId2,
             Name = listName2,
             UserId = userId,
-            CanBeDeleted = true
+            CanBeDeleted = true,
+            //This won't be returned because it is not public
+            IsPublic = false
         };
         var gamesLists = new List<GamesList>() { gl1, gl2 };
         _yglDbContextBuilder.WithUserDbSet(users);
@@ -179,10 +250,10 @@ public class ListsServiceTests
 
         //ASSERT
         Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Value.Count, Is.EqualTo(2));
+        Assert.That(result.Value.Count, Is.EqualTo(1));
         Assert.That(result.Value.Contains(dto1));
-        Assert.That(result.Value.Contains(dto2));
-        _logger.ReceivedLog(LogLevel.Information, $"Found '{gamesLists.Count}' lists.");
+        Assert.That(!result.Value.Contains(dto2));
+        _logger.ReceivedLog(LogLevel.Information, $"Found '{1.ToString()}' lists.");
     }
 
     [Test]
@@ -217,14 +288,16 @@ public class ListsServiceTests
             Id = listId,
             Name = _fixture.Create<string>(),
             UserId = userId,
-            CanBeDeleted = false
+            CanBeDeleted = false,
+            IsPublic = true
         };
         var gl2 = new GamesList()
         {
             Id = listId2,
             Name = _fixture.Create<string>(),
             UserId = userId,
-            CanBeDeleted = true
+            CanBeDeleted = true,
+            IsPublic = true
         };
         var gamesLists = new List<GamesList>() { gl1, gl2 };
         _yglDbContextBuilder.WithUserDbSet(users);
@@ -596,7 +669,7 @@ public class ListsServiceTests
     public async Task AddListEntries_SuccessfulScenario()
     {
         //ARRANGE
-        var gameId = Guid.NewGuid();
+        var gameId = _fixture.Create<long>();
         var entryToAdd = _fixture.Build<EntryToAddParameter>()
             .With(x => x.GameId, gameId)
             .Create();
@@ -609,7 +682,6 @@ public class ListsServiceTests
             new Game()
             {
                 Id = gameId,
-                IgdbGameId = _fixture.Create<long>(),
                 Name = _fixture.Create<string>()
             }
         };
@@ -674,7 +746,7 @@ public class ListsServiceTests
     public async Task AddListEntries_NoNewEntries_ReturnsEmptySuccess()
     {
         //ARRANGE
-        var gameId = Guid.NewGuid();
+        var gameId = _fixture.Create<long>();
         var entryToAdd = _fixture.Build<EntryToAddParameter>()
             .With(x => x.GameId, gameId)
             .Create();
@@ -687,7 +759,6 @@ public class ListsServiceTests
             new Game()
             {
                 Id = gameId,
-                IgdbGameId = _fixture.Create<long>(),
                 Name = _fixture.Create<string>()
             }
         };
@@ -745,7 +816,7 @@ public class ListsServiceTests
     public async Task DeleteListEntries_SuccessfulScenario()
     {
         //ARRANGE
-        var gameId = Guid.NewGuid();
+        var gameId = _fixture.Create<long>();
         var listEntryId1 = Guid.NewGuid();
         var listEntryId2 = Guid.NewGuid();
         var listId = Guid.NewGuid();
@@ -759,7 +830,6 @@ public class ListsServiceTests
             new Game()
             {
                 Id = gameId,
-                IgdbGameId = _fixture.Create<long>(),
                 Name = _fixture.Create<string>()
             }
         };
@@ -889,7 +959,7 @@ public class ListsServiceTests
     public async Task UpdateListEntries_SuccessfulScenario()
     {
         //ARRANGE
-        var gameId = Guid.NewGuid();
+        var gameId = _fixture.Create<long>();
         var listEntryId1 = Guid.NewGuid();
         var listEntryId2 = Guid.NewGuid();
         var listId = Guid.NewGuid();
@@ -923,7 +993,6 @@ public class ListsServiceTests
             new Game()
             {
                 Id = gameId,
-                IgdbGameId = _fixture.Create<long>(),
                 Name = _fixture.Create<string>()
             }
         };

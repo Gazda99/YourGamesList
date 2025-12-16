@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Model;
-using YourGamesList.Api.Model.Dto;
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Ygl.Lists.Model;
 using YourGamesList.Common;
+using YourGamesList.Contracts.Dto;
 using YourGamesList.Database;
 using YourGamesList.Database.Entities;
 
@@ -19,6 +19,7 @@ public interface IListsService
     #region List
 
     Task<CombinedResult<Guid, ListsError>> CreateList(JwtUserInformation userInfo, string listName, string? description);
+    Task<CombinedResult<GamesListDto, ListsError>> GetList(JwtUserInformation userInfo, Guid listId, bool includeGames);
     Task<CombinedResult<List<GamesListDto>, ListsError>> SearchLists(SearchListsParameters parameters);
     Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelfLists(JwtUserInformation userInfo, bool includeGames);
     Task<CombinedResult<Guid, ListsError>> UpdateList(UpdateListParameters parameters);
@@ -41,14 +42,14 @@ public class ListsService : IListsService
     private readonly IYglDatabaseAndDtoMapper _yglDatabaseAndDtoMapper;
     private readonly YglDbContext _yglDbContext;
 
-    #region List
-
     public ListsService(ILogger<ListsService> logger, IDbContextFactory<YglDbContext> yglDbContext, IYglDatabaseAndDtoMapper yglDatabaseAndDtoMapper)
     {
         _logger = logger;
         _yglDatabaseAndDtoMapper = yglDatabaseAndDtoMapper;
         _yglDbContext = yglDbContext.CreateDbContext();
     }
+
+    #region List
 
     public async Task<CombinedResult<Guid, ListsError>> CreateList(JwtUserInformation userInfo, string listName, string? description = null)
     {
@@ -74,6 +75,43 @@ public class ListsService : IListsService
         return CombinedResult<Guid, ListsError>.Success(list.Id);
     }
 
+    public async Task<CombinedResult<GamesListDto, ListsError>> GetList(JwtUserInformation userInfo, Guid listId, bool includeGames)
+    {
+        var listsQuery = _yglDbContext.Lists.AsNoTracking();
+
+        if (includeGames)
+        {
+            listsQuery = listsQuery.Include(x => x.Entries).ThenInclude(x => x.Game);
+        }
+        else
+        {
+            listsQuery = listsQuery.Include(x => x.Entries);
+        }
+
+        var list = await listsQuery.FirstOrDefaultAsync(x => x.Id == listId);
+
+        if (list == null)
+        {
+            _logger.LogInformation($"No lists found with id '{listId}'.");
+            return CombinedResult<GamesListDto, ListsError>.Failure(ListsError.ListNotFound);
+        }
+
+        //If list is public, we need to verify if the user making the request is the user owning that list
+        if (list.IsPublic == false)
+        {
+            if (list.UserId != userInfo.UserId)
+            {
+                _logger.LogInformation($"List with id '{listId}' found, but is not public and does not belong to the user making the request.");
+                return CombinedResult<GamesListDto, ListsError>.Failure(ListsError.ForbiddenList); 
+            }
+        }
+
+        var listDto = _yglDatabaseAndDtoMapper.Map(list);
+
+        _logger.LogInformation($"Found list with id {listId}.");
+        return CombinedResult<GamesListDto, ListsError>.Success(listDto);
+    }
+
     public async Task<CombinedResult<List<GamesListDto>, ListsError>> SearchLists(SearchListsParameters parameters)
     {
         //Verify at least one search parameter is provided
@@ -85,6 +123,7 @@ public class ListsService : IListsService
 
         var listsQuery = _yglDbContext.Lists.AsNoTracking();
         listsQuery = listsQuery.Include(x => x.User);
+        listsQuery = listsQuery.Where(x => x.IsPublic == true);
 
         //List name first
         if (!string.IsNullOrWhiteSpace(parameters.ListName))
@@ -168,7 +207,8 @@ public class ListsService : IListsService
 
         if (!string.IsNullOrWhiteSpace(parameters.Name) && !list.Name.Equals(parameters.Name, StringComparison.CurrentCultureIgnoreCase))
         {
-            var nameExists = await _yglDbContext.Lists.AnyAsync(x => x.UserId == list.UserId && x.Id != list.Id && x.Name.ToLower() == parameters.Name.ToLower());
+            var nameExists =
+                await _yglDbContext.Lists.AnyAsync(x => x.UserId == list.UserId && x.Id != list.Id && x.Name.ToLower() == parameters.Name.ToLower());
             if (nameExists)
             {
                 _logger.LogInformation($"Cannot rename list to '{parameters.Name}' because it already exists for user '{list.UserId}'.");

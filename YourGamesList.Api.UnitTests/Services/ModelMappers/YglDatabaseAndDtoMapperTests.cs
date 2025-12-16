@@ -1,6 +1,8 @@
-﻿using AutoFixture;
-using YourGamesList.Api.Model.Dto;
+﻿using System.Collections.Generic;
+using AutoFixture;
+
 using YourGamesList.Api.Services.ModelMappers;
+using YourGamesList.Contracts.Dto;
 using YourGamesList.Database.Entities;
 
 namespace YourGamesList.Api.UnitTests.Services.ModelMappers;
@@ -77,13 +79,35 @@ public class YglDatabaseAndDtoMapperTests
 
         //ASSERT
         Assert.That(dto.Id, Is.EqualTo(entity.Id));
-        Assert.That(dto.IgdbGameId, Is.EqualTo(entity.IgdbGameId));
+        Assert.That(dto.FirstReleaseDate, Is.EqualTo(entity.FirstReleaseDate));
         Assert.That(dto.GameType, Is.EquivalentTo(entity.GameType));
         Assert.That(dto.Genres, Is.EquivalentTo(entity.Genres));
+        Assert.That(dto.ImageId, Is.EquivalentTo(entity.ImageId));
         Assert.That(dto.Name, Is.EquivalentTo(entity.Name));
         Assert.That(dto.StoryLine, Is.EquivalentTo(entity.StoryLine));
         Assert.That(dto.Summary, Is.EquivalentTo(entity.Summary));
         Assert.That(dto.Themes, Is.EquivalentTo(entity.Themes));
+        Assert.That(dto.RatingCount, Is.EqualTo(entity.RatingCount));
+    }
+    
+    [Test]
+    public void Map_User_To_UserDto()
+    {
+        //ARRANGE
+        var entity = _fixture.Build<User>()
+            .WithAutoProperties()
+            .Create();
+        var mapper = new YglDatabaseAndDtoMapper();
+
+        //ACT
+        var dto = mapper.Map(entity);
+
+        //ASSERT
+        Assert.That(dto.Id, Is.EqualTo(entity.Id));
+        Assert.That(dto.Username, Is.EquivalentTo(entity.Username));
+        Assert.That(dto.Country, Is.EquivalentTo(entity.Country));
+        Assert.That(dto.Description, Is.EquivalentTo(entity.Description));
+        Assert.That(dto.DateOfBirth, Is.EqualTo(entity.DateOfBirth));
     }
 
     [Test]

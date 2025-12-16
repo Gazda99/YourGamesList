@@ -8,12 +8,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Controllers;
-using YourGamesList.Api.Model.Dto;
+using YourGamesList.Api.Controllers.Lists;
 using YourGamesList.Api.Model.Requests.Lists;
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Ygl.Lists;
 using YourGamesList.Api.Services.Ygl.Lists.Model;
 using YourGamesList.Common;
+using YourGamesList.Contracts.Dto;
 using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.Controllers;
@@ -79,6 +80,53 @@ public class ListsControllerTests
         Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status409Conflict));
         await _listsService.Received(1).CreateList(request.UserInformation, request.Body.ListName, request.Body.Description);
         _logger.ReceivedLog(LogLevel.Information, $"Requested to create list '{request.Body.ListName}' for user '{request.UserInformation.UserId}'");
+    }
+
+    #endregion
+
+    #region GetList
+
+    [Test]
+    public async Task GetList_SuccessScenario()
+    {
+        //ARRANGE
+        var expectedResValue = _fixture.Create<GamesListDto>();
+        var request = _fixture.Create<GetListRequest>();
+        _listsService.GetList(request.UserInformation, request.ListId, request.IncludeGames ?? false).Returns(CombinedResult<GamesListDto, ListsError>.Success(expectedResValue));
+
+        var controller = new ListsController(_logger, _requestToParametersMapper, _listsService);
+
+        //ACT
+        var res = await controller.GetList(request);
+
+        //ASSERT
+        Assert.That(res, Is.TypeOf<ObjectResult>());
+        var objectResult = (ObjectResult) res;
+        Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
+        Assert.That(objectResult.Value, Is.EqualTo(expectedResValue));
+        await _listsService.Received(1).GetList(request.UserInformation, request.ListId, request.IncludeGames ?? false);
+        _logger.ReceivedLog(LogLevel.Information, $"Requested to find list with id '{request.ListId}'");
+    }
+
+    [Test]
+    public async Task GetList_OnErrorListNotFound_ReturnsStatus404NotFound()
+    {
+        //ARRANGE
+        var expectedError = ListsError.ListNotFound;
+        var request = _fixture.Create<GetListRequest>();
+        _listsService.GetList(request.UserInformation, request.ListId, request.IncludeGames ?? false).Returns(CombinedResult<GamesListDto, ListsError>.Failure(expectedError));
+
+        var controller = new ListsController(_logger, _requestToParametersMapper, _listsService);
+
+        //ACT
+        var res = await controller.GetList(request);
+
+        //ASSERT
+        Assert.That(res, Is.TypeOf<ObjectResult>());
+        var objectResult = (ObjectResult) res;
+        Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status404NotFound));
+        await _listsService.Received(1).GetList(request.UserInformation, request.ListId, request.IncludeGames ?? false);
+        _logger.ReceivedLog(LogLevel.Information, $"Requested to find list with id '{request.ListId}'");
     }
 
     #endregion

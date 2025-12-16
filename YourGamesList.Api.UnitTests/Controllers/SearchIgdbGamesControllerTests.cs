@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Controllers;
+using YourGamesList.Api.Controllers.Games;
 using YourGamesList.Api.Model.Requests.SearchIgdbGames;
 using YourGamesList.Api.Services.Igdb;
 using YourGamesList.Api.Services.Igdb.Model;
