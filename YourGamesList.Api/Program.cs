@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 using YourGamesList.Api.AppBuilders;
 using YourGamesList.Api.Middlewares;
+using YourGamesList.Common.Logging;
 
 namespace YourGamesList.Api;
 
@@ -30,6 +31,8 @@ public class Program
         app.MapControllers();
 
         app.UseMiddleware<ExceptionMiddleware>();
+
+        app.Lifetime.AddApplicationLifetimeActions(app.Services);
 
         app.Run();
     }
