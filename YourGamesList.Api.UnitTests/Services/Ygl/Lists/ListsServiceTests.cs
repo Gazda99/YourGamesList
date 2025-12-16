@@ -158,7 +158,7 @@ public class ListsServiceTests
         var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
 
         //ACT
-        var result = await userManagerService.GetList(listId, false);
+        var result = await userManagerService.GetList(userInformation, listId, false);
 
         //ASSERT
         Assert.That(result.IsSuccess, Is.True);
@@ -176,7 +176,7 @@ public class ListsServiceTests
         var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
 
         //ACT
-        var result = await userManagerService.GetList(listId, false);
+        var result = await userManagerService.GetList(userInformation, listId, false);
 
         //ASSERT
         Assert.That(result.IsSuccess, Is.False);

@@ -65,7 +65,7 @@ public class ListsController : YourGamesListBaseController
     {
         _logger.LogInformation($"Requested to find list with id '{getListRequest.ListId.ToString()}'");
 
-        var res = await _listsService.GetList(getListRequest.ListId, getListRequest.IncludeGames ?? false);
+        var res = await _listsService.GetList(getListRequest.UserInformation, getListRequest.ListId, getListRequest.IncludeGames ?? false);
         if (res.IsSuccess)
         {
             return Result(StatusCodes.Status200OK, res.Value);

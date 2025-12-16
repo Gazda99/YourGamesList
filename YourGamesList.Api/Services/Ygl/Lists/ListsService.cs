@@ -19,7 +19,7 @@ public interface IListsService
     #region List
 
     Task<CombinedResult<Guid, ListsError>> CreateList(JwtUserInformation userInfo, string listName, string? description);
-    Task<CombinedResult<GamesListDto, ListsError>> GetList(Guid listId, bool includeGames);
+    Task<CombinedResult<GamesListDto, ListsError>> GetList(JwtUserInformation userInfo, Guid listId, bool includeGames);
     Task<CombinedResult<List<GamesListDto>, ListsError>> SearchLists(SearchListsParameters parameters);
     Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelfLists(JwtUserInformation userInfo, bool includeGames);
     Task<CombinedResult<Guid, ListsError>> UpdateList(UpdateListParameters parameters);
@@ -75,7 +75,7 @@ public class ListsService : IListsService
         return CombinedResult<Guid, ListsError>.Success(list.Id);
     }
 
-    public async Task<CombinedResult<GamesListDto, ListsError>> GetList(Guid listId, bool includeGames)
+    public async Task<CombinedResult<GamesListDto, ListsError>> GetList(JwtUserInformation userInfo, Guid listId, bool includeGames)
     {
         var listsQuery = _yglDbContext.Lists.AsNoTracking();
 

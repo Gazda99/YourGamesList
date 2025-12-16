@@ -92,7 +92,7 @@ public class ListsControllerTests
         //ARRANGE
         var expectedResValue = _fixture.Create<GamesListDto>();
         var request = _fixture.Create<GetListRequest>();
-        _listsService.GetList(request.ListId, request.IncludeGames ?? false).Returns(CombinedResult<GamesListDto, ListsError>.Success(expectedResValue));
+        _listsService.GetList(request.UserInformation, request.ListId, request.IncludeGames ?? false).Returns(CombinedResult<GamesListDto, ListsError>.Success(expectedResValue));
 
         var controller = new ListsController(_logger, _requestToParametersMapper, _listsService);
 
@@ -104,7 +104,7 @@ public class ListsControllerTests
         var objectResult = (ObjectResult) res;
         Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
         Assert.That(objectResult.Value, Is.EqualTo(expectedResValue));
-        await _listsService.Received(1).GetList(request.ListId, request.IncludeGames ?? false);
+        await _listsService.Received(1).GetList(request.UserInformation, request.ListId, request.IncludeGames ?? false);
         _logger.ReceivedLog(LogLevel.Information, $"Requested to find list with id '{request.ListId}'");
     }
 
@@ -114,7 +114,7 @@ public class ListsControllerTests
         //ARRANGE
         var expectedError = ListsError.ListNotFound;
         var request = _fixture.Create<GetListRequest>();
-        _listsService.GetList(request.ListId, request.IncludeGames ?? false).Returns(CombinedResult<GamesListDto, ListsError>.Failure(expectedError));
+        _listsService.GetList(request.UserInformation, request.ListId, request.IncludeGames ?? false).Returns(CombinedResult<GamesListDto, ListsError>.Failure(expectedError));
 
         var controller = new ListsController(_logger, _requestToParametersMapper, _listsService);
 
@@ -125,7 +125,7 @@ public class ListsControllerTests
         Assert.That(res, Is.TypeOf<ObjectResult>());
         var objectResult = (ObjectResult) res;
         Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status404NotFound));
-        await _listsService.Received(1).GetList(request.ListId, request.IncludeGames ?? false);
+        await _listsService.Received(1).GetList(request.UserInformation, request.ListId, request.IncludeGames ?? false);
         _logger.ReceivedLog(LogLevel.Information, $"Requested to find list with id '{request.ListId}'");
     }
 
