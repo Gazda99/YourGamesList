@@ -10,9 +10,9 @@ public static class ApplicationLifetimeLoggingActions
     public static IHostApplicationLifetime AddApplicationLifetimeActions(this IHostApplicationLifetime lifetime, IServiceProvider serviceProvider)
     {
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        lifetime.ApplicationStarted.Register(() => OnStarted(loggerFactory.CreateLogger("ApplicationStarted")));
-        lifetime.ApplicationStopping.Register(() => OnStopping(loggerFactory.CreateLogger("ApplicationStopping")));
-        lifetime.ApplicationStopped.Register(() => OnStopped(loggerFactory.CreateLogger("ApplicationStopped")));
+        lifetime.ApplicationStarted.Register(() => OnStarted(loggerFactory.CreateLogger($"{nameof(IHostApplicationLifetime)}.ApplicationStarted")));
+        lifetime.ApplicationStopping.Register(() => OnStopping(loggerFactory.CreateLogger($"{nameof(IHostApplicationLifetime)}.ApplicationStopping")));
+        lifetime.ApplicationStopped.Register(() => OnStopped(loggerFactory.CreateLogger($"{nameof(IHostApplicationLifetime)}.ApplicationStopped")));
 
         return lifetime;
     }
