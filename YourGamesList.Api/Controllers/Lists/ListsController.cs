@@ -59,6 +59,7 @@ public class ListsController : YourGamesListBaseController
     [HttpGet("get/{listId}")]
     [Authorize]
     [ProducesResponseType(typeof(GamesListDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [TypeFilter(typeof(RequestValidatorAttribute<GetListRequest>), Arguments = ["getListRequest"])]
     public async Task<IActionResult> GetList(GetListRequest getListRequest)
@@ -74,6 +75,10 @@ public class ListsController : YourGamesListBaseController
         else if (res.Error == ListsError.ListNotFound)
         {
             return Result(StatusCodes.Status404NotFound);
+        }
+        else if (res.Error == ListsError.ForbiddenList)
+        {
+            return Result(StatusCodes.Status403Forbidden);
         }
         else
         {

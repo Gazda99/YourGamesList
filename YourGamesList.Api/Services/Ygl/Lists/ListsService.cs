@@ -92,13 +92,23 @@ public class ListsService : IListsService
 
         if (list == null)
         {
-            _logger.LogInformation($"No lists found with id '{listId.ToString()}'.");
+            _logger.LogInformation($"No lists found with id '{listId}'.");
             return CombinedResult<GamesListDto, ListsError>.Failure(ListsError.ListNotFound);
+        }
+
+        //If list is public, we need to verify if the user making the request is the user owning that list
+        if (list.IsPublic == false)
+        {
+            if (list.UserId != userInfo.UserId)
+            {
+                _logger.LogInformation($"List with id '{listId}' found, but is not public and does not belong to the user making the request.");
+                return CombinedResult<GamesListDto, ListsError>.Failure(ListsError.ForbiddenList); 
+            }
         }
 
         var listDto = _yglDatabaseAndDtoMapper.Map(list);
 
-        _logger.LogInformation($"Found list with id {listId.ToString()}.");
+        _logger.LogInformation($"Found list with id {listId}.");
         return CombinedResult<GamesListDto, ListsError>.Success(listDto);
     }
 
@@ -113,6 +123,7 @@ public class ListsService : IListsService
 
         var listsQuery = _yglDbContext.Lists.AsNoTracking();
         listsQuery = listsQuery.Include(x => x.User);
+        listsQuery = listsQuery.Where(x => x.IsPublic == true);
 
         //List name first
         if (!string.IsNullOrWhiteSpace(parameters.ListName))

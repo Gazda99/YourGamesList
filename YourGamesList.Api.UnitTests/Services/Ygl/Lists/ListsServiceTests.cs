@@ -147,6 +147,7 @@ public class ListsServiceTests
             Id = listId,
             Name = listName,
             UserId = userInformation.UserId,
+            IsPublic = true,
             CanBeDeleted = true
         };
         var gamesLists = new List<GamesList>() { gl1 };
@@ -222,14 +223,18 @@ public class ListsServiceTests
             Id = listId,
             Name = listName1,
             UserId = userId,
-            CanBeDeleted = false
+            CanBeDeleted = false,
+            //This will be returned because it is public
+            IsPublic = true
         };
         var gl2 = new GamesList()
         {
             Id = listId2,
             Name = listName2,
             UserId = userId,
-            CanBeDeleted = true
+            CanBeDeleted = true,
+            //This won't be returned because it is not public
+            IsPublic = false
         };
         var gamesLists = new List<GamesList>() { gl1, gl2 };
         _yglDbContextBuilder.WithUserDbSet(users);
@@ -245,10 +250,10 @@ public class ListsServiceTests
 
         //ASSERT
         Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Value.Count, Is.EqualTo(2));
+        Assert.That(result.Value.Count, Is.EqualTo(1));
         Assert.That(result.Value.Contains(dto1));
-        Assert.That(result.Value.Contains(dto2));
-        _logger.ReceivedLog(LogLevel.Information, $"Found '{gamesLists.Count}' lists.");
+        Assert.That(!result.Value.Contains(dto2));
+        _logger.ReceivedLog(LogLevel.Information, $"Found '{1.ToString()}' lists.");
     }
 
     [Test]
@@ -283,14 +288,16 @@ public class ListsServiceTests
             Id = listId,
             Name = _fixture.Create<string>(),
             UserId = userId,
-            CanBeDeleted = false
+            CanBeDeleted = false,
+            IsPublic = true
         };
         var gl2 = new GamesList()
         {
             Id = listId2,
             Name = _fixture.Create<string>(),
             UserId = userId,
-            CanBeDeleted = true
+            CanBeDeleted = true,
+            IsPublic = true
         };
         var gamesLists = new List<GamesList>() { gl1, gl2 };
         _yglDbContextBuilder.WithUserDbSet(users);

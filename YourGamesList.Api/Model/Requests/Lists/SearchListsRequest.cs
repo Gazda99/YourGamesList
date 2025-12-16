@@ -18,7 +18,7 @@ internal sealed class SearchListsRequestValidator : AbstractValidator<SearchList
         RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
 
         RuleFor(x => new { x.Body.UserName, x.Body.ListName })
-            .Must(x => !string.IsNullOrWhiteSpace(x.UserName) && !string.IsNullOrWhiteSpace(x.ListName))
+            .Must(x => !string.IsNullOrWhiteSpace(x.UserName) || !string.IsNullOrWhiteSpace(x.ListName))
             .WithMessage("You must provide user name or list name.");
 
         //If List Name is provided, validate its length
