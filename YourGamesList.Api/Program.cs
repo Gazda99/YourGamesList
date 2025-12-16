@@ -1,7 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using YourGamesList.Api.AppBuilders;
 using YourGamesList.Api.Middlewares;
