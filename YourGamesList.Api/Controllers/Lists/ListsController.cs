@@ -56,8 +56,35 @@ public class ListsController : YourGamesListBaseController
         }
     }
 
+    [HttpGet("get/{listId}")]
+    [Authorize]
+    [ProducesResponseType(typeof(GamesListDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+    [TypeFilter(typeof(RequestValidatorAttribute<GetListRequest>), Arguments = ["getListRequest"])]
+    public async Task<IActionResult> GetList(GetListRequest getListRequest)
+    {
+        _logger.LogInformation($"Requested to find list with id '{getListRequest.ListId.ToString()}'");
+
+        var res = await _listsService.GetList(getListRequest.ListId, getListRequest.IncludeGames ?? false);
+        if (res.IsSuccess)
+        {
+            return Result(StatusCodes.Status200OK, res.Value);
+        }
+
+        else if (res.Error == ListsError.ListNotFound)
+        {
+            return Result(StatusCodes.Status404NotFound);
+        }
+        else
+        {
+            return Result(StatusCodes.Status500InternalServerError);
+        }
+    }
+
     [HttpPost("search")]
     [Authorize]
+    [ProducesResponseType(typeof(List<GamesListDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [TypeFilter(typeof(RequestValidatorAttribute<SearchListsRequest>), Arguments = ["searchListsRequest"])]
     public async Task<IActionResult> SearchLists(SearchListsRequest searchListsRequest)
     {
@@ -136,7 +163,7 @@ public class ListsController : YourGamesListBaseController
         }
     }
 
-    [HttpDelete("delete")]
+    [HttpDelete("delete/{listId}")]
     [Authorize]
     [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
@@ -178,8 +205,9 @@ public class ListsController : YourGamesListBaseController
     [TypeFilter(typeof(RequestValidatorAttribute<AddEntriesToListRequest>), Arguments = ["addEntriesToListRequest"])]
     public async Task<IActionResult> AddListEntries(AddEntriesToListRequest addEntriesToListRequest)
     {
-        _logger.LogInformation($"Requested to add entries to list '{addEntriesToListRequest.Body.ListId}' for user '{addEntriesToListRequest.UserInformation.UserId}'");
-        
+        _logger.LogInformation(
+            $"Requested to add entries to list '{addEntriesToListRequest.Body.ListId}' for user '{addEntriesToListRequest.UserInformation.UserId}'");
+
         var parameters = _requestToParametersMapper.Map(addEntriesToListRequest);
 
         var res = await _listsService.AddListEntries(parameters);
@@ -204,8 +232,9 @@ public class ListsController : YourGamesListBaseController
     [TypeFilter(typeof(RequestValidatorAttribute<DeleteListEntriesRequest>), Arguments = ["deleteListEntriesRequest"])]
     public async Task<IActionResult> DeleteListEntries(DeleteListEntriesRequest deleteListEntriesRequest)
     {
-        _logger.LogInformation($"Requested to delete entries from list '{deleteListEntriesRequest.Body.ListId}' for user '{deleteListEntriesRequest.UserInformation.UserId}'");
-        
+        _logger.LogInformation(
+            $"Requested to delete entries from list '{deleteListEntriesRequest.Body.ListId}' for user '{deleteListEntriesRequest.UserInformation.UserId}'");
+
         var parameters = _requestToParametersMapper.Map(deleteListEntriesRequest);
 
         var res = await _listsService.DeleteListEntries(parameters);
@@ -230,8 +259,9 @@ public class ListsController : YourGamesListBaseController
     [TypeFilter(typeof(RequestValidatorAttribute<UpdateListEntriesRequest>), Arguments = ["updateListEntriesRequest"])]
     public async Task<IActionResult> UpdateListEntries(UpdateListEntriesRequest updateListEntriesRequest)
     {
-        _logger.LogInformation($"Requested to update entries in list '{updateListEntriesRequest.Body.ListId}' for user '{updateListEntriesRequest.UserInformation.UserId}'");
-        
+        _logger.LogInformation(
+            $"Requested to update entries in list '{updateListEntriesRequest.Body.ListId}' for user '{updateListEntriesRequest.UserInformation.UserId}'");
+
         var parameters = _requestToParametersMapper.Map(updateListEntriesRequest);
 
         var res = await _listsService.UpdateListEntries(parameters);

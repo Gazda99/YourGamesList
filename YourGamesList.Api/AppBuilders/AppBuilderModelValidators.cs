@@ -54,6 +54,7 @@ public static partial class AppBuilder
         services
             //list
             .AddScoped<IValidator<CreateListRequest>, CreateListRequestValidator>()
+            .AddScoped<IValidator<GetListRequest>, GetListRequestValidator>()
             .AddScoped<IValidator<SearchListsRequest>, SearchListsRequestValidator>()
             .AddScoped<IValidator<GetSelfListsRequest>, GetSelfListsRequestValidator>()
             .AddScoped<IValidator<UpdateListRequest>, UpdateListRequestValidator>()

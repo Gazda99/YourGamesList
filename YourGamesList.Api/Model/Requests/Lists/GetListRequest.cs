@@ -5,17 +5,19 @@ using YourGamesList.Api.Attributes;
 
 namespace YourGamesList.Api.Model.Requests.Lists;
 
-public class DeleteListRequest
+public class GetListRequest
 {
     [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
+
     [FromRoute(Name = "listId")] public required Guid ListId { get; init; }
+    [FromQuery] public bool? IncludeGames { get; init; } = false;
 }
 
-internal sealed class DeleteListRequestValidator : AbstractValidator<DeleteListRequest>
+internal sealed class GetListRequestValidator : AbstractValidator<GetListRequest>
 {
-    public DeleteListRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
+    public GetListRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
     {
         RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
-        RuleFor(x => x.ListId).NotEmpty();
+        RuleFor(x => x.ListId).NotNull().NotEmpty();
     }
 }

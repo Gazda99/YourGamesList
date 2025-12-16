@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Model;
-
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Ygl.Lists.Model;
 using YourGamesList.Common;
@@ -20,6 +19,7 @@ public interface IListsService
     #region List
 
     Task<CombinedResult<Guid, ListsError>> CreateList(JwtUserInformation userInfo, string listName, string? description);
+    Task<CombinedResult<GamesListDto, ListsError>> GetList(Guid listId, bool includeGames);
     Task<CombinedResult<List<GamesListDto>, ListsError>> SearchLists(SearchListsParameters parameters);
     Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelfLists(JwtUserInformation userInfo, bool includeGames);
     Task<CombinedResult<Guid, ListsError>> UpdateList(UpdateListParameters parameters);
@@ -73,6 +73,33 @@ public class ListsService : IListsService
         await _yglDbContext.SaveChangesAsync();
         _logger.LogInformation($"Created new list with id '{list.Id}' for user '{userInfo.UserId}'.");
         return CombinedResult<Guid, ListsError>.Success(list.Id);
+    }
+
+    public async Task<CombinedResult<GamesListDto, ListsError>> GetList(Guid listId, bool includeGames)
+    {
+        var listsQuery = _yglDbContext.Lists.AsNoTracking();
+
+        if (includeGames)
+        {
+            listsQuery = listsQuery.Include(x => x.Entries).ThenInclude(x => x.Game);
+        }
+        else
+        {
+            listsQuery = listsQuery.Include(x => x.Entries);
+        }
+
+        var list = await listsQuery.FirstOrDefaultAsync(x => x.Id == listId);
+
+        if (list == null)
+        {
+            _logger.LogInformation($"No lists found with id '{listId.ToString()}'.");
+            return CombinedResult<GamesListDto, ListsError>.Failure(ListsError.ListNotFound);
+        }
+
+        var listDto = _yglDatabaseAndDtoMapper.Map(list);
+
+        _logger.LogInformation($"Found list with id {listId.ToString()}.");
+        return CombinedResult<GamesListDto, ListsError>.Success(listDto);
     }
 
     public async Task<CombinedResult<List<GamesListDto>, ListsError>> SearchLists(SearchListsParameters parameters)

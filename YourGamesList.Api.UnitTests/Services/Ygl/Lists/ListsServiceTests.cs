@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Model;
-
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Ygl.Lists;
 using YourGamesList.Api.Services.Ygl.Lists.Model;
@@ -117,6 +116,72 @@ public class ListsServiceTests
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.Error, Is.EqualTo(ListsError.ListAlreadyExists));
         _logger.ReceivedLog(LogLevel.Information, $"'{listName}' already exists.");
+    }
+
+    #endregion
+
+    #region GetList
+
+    [Test]
+    public async Task GetList_SuccessfulScenario()
+    {
+        //ARRANGE
+        var userInformation = _fixture.Create<JwtUserInformation>();
+        var listName = _fixture.Create<string>();
+        var listId = Guid.NewGuid();
+        var dto1 = _fixture.Create<GamesListDto>();
+
+        var users = new List<User>()
+        {
+            new User()
+            {
+                Id = userInformation.UserId,
+                Username = userInformation.Username,
+                PasswordHash = _fixture.Create<string>(),
+                CreatedDate = DateTime.UtcNow,
+                Salt = _fixture.Create<byte[]>()
+            }
+        };
+        var gl1 = new GamesList()
+        {
+            Id = listId,
+            Name = listName,
+            UserId = userInformation.UserId,
+            CanBeDeleted = true
+        };
+        var gamesLists = new List<GamesList>() { gl1 };
+        _yglDbContextBuilder.WithUserDbSet(users);
+        _yglDbContextBuilder.WithListsDbSet(gamesLists);
+
+        _yglDatabaseAndDtoMapper.Map(Arg.Is<GamesList>(g => g.Id == gl1.Id)).Returns(dto1);
+
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+
+        //ACT
+        var result = await userManagerService.GetList(listId, false);
+
+        //ASSERT
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo(dto1));
+        _logger.ReceivedLog(LogLevel.Information, $"Found list with id {listId.ToString()}.");
+    }
+
+    [Test]
+    public async Task GetList_ListDoesNotExists_ReturnsListNotFoundError()
+    {
+        //ARRANGE
+        var userInformation = _fixture.Create<JwtUserInformation>();
+        var listId = Guid.NewGuid();
+
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+
+        //ACT
+        var result = await userManagerService.GetList(listId, false);
+
+        //ASSERT
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.EqualTo(ListsError.ListNotFound));
+        _logger.ReceivedLog(LogLevel.Information, $"No lists found with id '{listId.ToString()}'.");
     }
 
     #endregion
