@@ -41,6 +41,7 @@ public class ExceptionMiddleware
             }
 
             await response.WriteAsync(string.Empty);
+            return;
         }
         catch (Exception exception)
         {
@@ -48,6 +49,7 @@ public class ExceptionMiddleware
             var response = context.Response;
             response.StatusCode = (int) HttpStatusCode.InternalServerError;
             await response.WriteAsync(string.Empty);
+            return;
         }
     }
 }

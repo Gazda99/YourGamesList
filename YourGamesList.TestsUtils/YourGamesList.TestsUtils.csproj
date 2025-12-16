@@ -15,6 +15,7 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
+        <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.15.0" />
         <PackageReference Include="NUnit" Version="4.4.0" />
         <PackageReference Include="NUnit.Analyzers" Version="4.11.2">
           <PrivateAssets>all</PrivateAssets>
