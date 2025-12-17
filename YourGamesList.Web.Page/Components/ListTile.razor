@@ -1,0 +1,53 @@
+﻿@using YourGamesList.Contracts.Dto
+
+<style>
+
+
+    .list-tile-card {
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+
+    .list-tile-card:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+</style>
+
+<MudCard @onclick="@TileClick" Outlined="true" Style="position: relative;" Class="list-tile-card">
+    <MudStack Row="true">
+        <MudStack Style="width: 100%;">
+            <MudStack>
+                <MudText>@List.Name</MudText>
+                <MudText>@TruncateText(List.Desc, 150)</MudText>
+            </MudStack>
+        </MudStack>
+    </MudStack>
+</MudCard>
+
+
+@code {
+
+    /// <summary>
+    /// On Tile Click. Returns selected list id
+    /// </summary>
+    [Parameter]
+    public required EventCallback<Guid> OnTileClick { get; set; }
+
+    [Parameter] public required GamesListDto List { get; set; }
+
+    private static string TruncateText(string text, int maxLength)
+    {
+        if (maxLength <= 10)
+        {
+            maxLength = 10;
+        }
+
+        return text.Length >= maxLength ? $"{text[0..(maxLength - 3)]}..." : text;
+    }
+
+    private async Task TileClick()
+    {
+        await OnTileClick.InvokeAsync(List.Id);
+    }
+
+}
