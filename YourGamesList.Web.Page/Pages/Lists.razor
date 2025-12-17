@@ -18,7 +18,15 @@ else
     else
     {
         <MudGrid Justify="Justify.FlexStart" Spacing="3">
-            @foreach (var list in _lists)
+            <MudItem xs="12" sm="12" md="12" lg="12" xl="12" xxl="12">
+                <MudTextField
+                    Immediate="true"
+                    @bind-Value="@_filterByListName"
+                    Label="Filter by list name" Variant="Variant.Outlined" InputType="InputType.Text"
+                ></MudTextField>
+            </MudItem>
+
+            @foreach (var list in FilteredLists())
             {
                 <MudItem xs="12" sm="12" md="6" lg="4" xl="4" xxl="3">
                     <ListTile List="@list" OnTileClick="@OnTileClick"></ListTile>
@@ -39,6 +47,8 @@ else
 
     private bool _isUserLoggedIn = false;
     private bool _isPageInitialized = false;
+
+    private string _filterByListName = string.Empty;
 
     private List<GamesListDto> _lists = [];
 
@@ -64,10 +74,22 @@ else
 
         _isPageInitialized = true;
     }
-    
+
     private void OnTileClick(Guid selectedListId)
     {
         Navigation.NavigateTo(Paths.ViewList(selectedListId.ToString()));
     }
+
+    private List<GamesListDto> FilteredLists()
+    {
+        var filteredLists = _lists.AsEnumerable();
+        if (!string.IsNullOrWhiteSpace(_filterByListName))
+        {
+            filteredLists = filteredLists.Where(x => x.Name.Contains(_filterByListName, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        return filteredLists.ToList();
+    }
+
 
 }
