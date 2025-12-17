@@ -64,9 +64,8 @@ else
 
         _isPageInitialized = true;
     }
-
-
-    private async Task OnTileClick(Guid selectedListId)
+    
+    private void OnTileClick(Guid selectedListId)
     {
         Navigation.NavigateTo(Paths.ViewList(selectedListId.ToString()));
     }
