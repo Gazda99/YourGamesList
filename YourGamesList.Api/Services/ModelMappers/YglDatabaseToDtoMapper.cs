@@ -81,7 +81,7 @@ public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
             Country = user.Country
         };
     }
-    
+
     public CompletionStatusDto Map(CompletionStatus completionStatus)
     {
         return MapEnums<CompletionStatus, CompletionStatusDto>(completionStatus);

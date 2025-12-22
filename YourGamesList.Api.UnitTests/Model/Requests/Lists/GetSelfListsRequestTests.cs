@@ -1,8 +1,6 @@
 ﻿using AutoFixture;
 using FluentValidation;
-using FluentValidation.Results;
 using FluentValidation.TestHelper;
-using NSubstitute;
 using YourGamesList.Api.Model;
 using YourGamesList.Api.Model.Requests.Lists;
 
@@ -12,7 +10,7 @@ public class GetSelfListsRequestTests
 {
     private IFixture _fixture;
     private InlineValidator<JwtUserInformation> _jwtUserInformationValidator;
-    
+
 
     [SetUp]
     public void Setup()

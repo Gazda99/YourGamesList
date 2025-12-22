@@ -3,6 +3,6 @@
 public enum LocalStorageError
 {
     Other,
-    NotFound, 
+    NotFound,
     Expired
 }

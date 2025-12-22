@@ -5,7 +5,10 @@ namespace YourGamesList.Api.Services.Igdb.Model;
 public class IgdbGame
 {
     [JsonPropertyName("cover")] public IgdbCover Cover { get; init; } = new IgdbCover();
-    [JsonPropertyName("first_release_date")] public long FirstReleaseDate { get; init; }
+
+    [JsonPropertyName("first_release_date")]
+    public long FirstReleaseDate { get; init; }
+
     [JsonPropertyName("game_type")] public IgdbGameType GameType { get; init; } = new IgdbGameType();
     [JsonPropertyName("genres")] public IgdbGenre[] Genres { get; init; } = [];
     [JsonPropertyName("id")] public long Id { get; init; }

@@ -102,7 +102,7 @@ public class ListsService : IListsService
             if (list.UserId != userInfo.UserId)
             {
                 _logger.LogInformation($"List with id '{listId}' found, but is not public and does not belong to the user making the request.");
-                return CombinedResult<GamesListDto, ListsError>.Failure(ListsError.ForbiddenList); 
+                return CombinedResult<GamesListDto, ListsError>.Failure(ListsError.ForbiddenList);
             }
         }
 

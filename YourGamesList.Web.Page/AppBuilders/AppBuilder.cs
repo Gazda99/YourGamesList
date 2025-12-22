@@ -46,7 +46,8 @@ public static partial class AppBuilder
         builder.Services.AddStaticState();
 
         builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
-        builder.Services.AddOptionsWithFluentValidation<UserLoginStateManagerOptions, UserLoginStateManagerOptionsValidator>(UserLoginStateManagerOptions.SectionName);
+        builder.Services.AddOptionsWithFluentValidation<UserLoginStateManagerOptions, UserLoginStateManagerOptionsValidator>(UserLoginStateManagerOptions
+            .SectionName);
         builder.Services.AddScoped<IUserLoginStateManager, UserLoginStateManager>();
         builder.Services.AddScoped<IUserListsManager, UserListsManager>();
 

@@ -5,8 +5,7 @@ namespace YourGamesList.Api.Model.Requests.SearchIgdbGames;
 
 public class SearchIgdbGameByNameRequest
 {
-    [FromQuery(Name = "gameName")]
-    public required string GameName { get; init; }
+    [FromQuery(Name = "gameName")] public required string GameName { get; init; }
 }
 
 internal sealed class SearchGameByNameRequestValidator : AbstractValidator<SearchIgdbGameByNameRequest>

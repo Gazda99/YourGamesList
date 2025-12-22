@@ -7,7 +7,7 @@ public enum UserAuthError
 {
     InvalidUsername,
     WrongPassword,
-    
+
     NoUserFound,
 
     #region Register
@@ -17,7 +17,7 @@ public enum UserAuthError
     #endregion
 
     #region Password
-    
+
     PasswordIsTooShort,
     PasswordIsTooLong,
 

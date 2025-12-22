@@ -70,8 +70,8 @@ public interface IYglApi : IHandlesHttpRefitException
     Task<IApiResponse<List<GamesListDto>>> GetSelfLists(
         [Authorize("Bearer")] string userToken,
         [Query] bool includeGames = false
-    ); 
-    
+    );
+
     [Post("/lists/entries/add")]
     [Headers($"Content-Type: {ContentTypes.ApplicationJson}", $"Content-Type: {ContentTypes.ApplicationJson}")]
     Task<IApiResponse<List<Guid>>> AddListEntries(

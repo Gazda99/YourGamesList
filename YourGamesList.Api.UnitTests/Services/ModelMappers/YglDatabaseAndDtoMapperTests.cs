@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using AutoFixture;
-
+﻿using AutoFixture;
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Contracts.Dto;
 using YourGamesList.Database.Entities;
@@ -89,7 +87,7 @@ public class YglDatabaseAndDtoMapperTests
         Assert.That(dto.Themes, Is.EquivalentTo(entity.Themes));
         Assert.That(dto.RatingCount, Is.EqualTo(entity.RatingCount));
     }
-    
+
     [Test]
     public void Map_User_To_UserDto()
     {

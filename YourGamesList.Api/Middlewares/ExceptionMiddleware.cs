@@ -27,7 +27,8 @@ public class ExceptionMiddleware
         }
         catch (ModelBindingException exception)
         {
-            _logger.LogError(exception, $"Exception during model binding of '{exception.ModelName}' of type '{exception.ModelType}'. Detailed error message: '{exception.ErrorDescription}'.");
+            _logger.LogError(exception,
+                $"Exception during model binding of '{exception.ModelName}' of type '{exception.ModelType}'. Detailed error message: '{exception.ErrorDescription}'.");
             var response = context.Response;
 
             if (exception.ModelType == typeof(JwtUserInformation))

@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Users.Model;
 using YourGamesList.Common;

@@ -96,8 +96,8 @@ public class RequestToParametersMapperTests
         Assert.That(parameter.UserInformation.Username, Is.EqualTo(request.UserInformation.Username));
         Assert.That(parameter.ListId, Is.EqualTo(request.Body.ListId));
         Assert.That(parameter.EntriesToRemove, Is.EquivalentTo(request.Body.EntriesToRemove));
-    }  
-    
+    }
+
     [Test]
     public void Map_From_UpdateListEntriesRequest_To_UpdateListEntriesParameter()
     {
@@ -125,7 +125,7 @@ public class RequestToParametersMapperTests
             i++;
         }
     }
-    
+
     [Test]
     public void Map_From_UserUpdateRequest_To_UserUpdateParameters()
     {
@@ -141,6 +141,5 @@ public class RequestToParametersMapperTests
         Assert.That(parameter.Country, Is.EqualTo(request.Body.Country));
         Assert.That(parameter.Description, Is.EqualTo(request.Body.Description));
         Assert.That(parameter.DateOfBirth, Is.EqualTo(request.Body.DateOfBirth));
-    }  
-
+    }
 }

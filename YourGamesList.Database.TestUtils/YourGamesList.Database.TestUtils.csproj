@@ -7,8 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\YourGamesList.Database\YourGamesList.Database.csproj" />
-      <ProjectReference Include="..\YourGamesList.TestsUtils\YourGamesList.TestsUtils.csproj" />
+        <ProjectReference Include="..\YourGamesList.Database\YourGamesList.Database.csproj"/>
+        <ProjectReference Include="..\YourGamesList.TestsUtils\YourGamesList.TestsUtils.csproj"/>
     </ItemGroup>
 
 </Project>

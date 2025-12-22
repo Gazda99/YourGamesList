@@ -9,17 +9,17 @@
 
 
     <ItemGroup>
-        <PackageReference Include="MudBlazor" Version="8.15.0" />
+        <PackageReference Include="MudBlazor" Version="8.15.0"/>
         <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0"/>
     </ItemGroup>
 
 
     <ItemGroup>
         <ProjectReference Include="..\YourGamesList.Common\YourGamesList.Common.csproj"/>
-        <ProjectReference Include="..\YourGamesList.Contracts\YourGamesList.Contracts.csproj" />
+        <ProjectReference Include="..\YourGamesList.Contracts\YourGamesList.Contracts.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-        <InternalsVisibleTo Include="$(AssemblyName).UnitTests" />
+        <InternalsVisibleTo Include="$(AssemblyName).UnitTests"/>
     </ItemGroup>
 </Project>

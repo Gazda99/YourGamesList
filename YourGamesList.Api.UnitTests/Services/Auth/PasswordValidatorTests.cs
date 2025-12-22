@@ -41,7 +41,7 @@ public class PasswordValidatorTests
         //ASSERT
         Assert.That(res.IsSuccess, Is.True);
     }
-    
+
     [Test]
     public void ValidatePassword_PasswordTooShort_ReturnsFalse()
     {
@@ -62,7 +62,7 @@ public class PasswordValidatorTests
         Assert.That(res.Error, Is.EqualTo(UserAuthError.PasswordIsTooShort));
         _logger.ReceivedLog(LogLevel.Information, $"Password length '{password.Length}' is less than '{options.MinimumPasswordLength}' required.");
     }
-    
+
     [Test]
     public void ValidatePassword_PasswordTooLong_ReturnsFalse()
     {

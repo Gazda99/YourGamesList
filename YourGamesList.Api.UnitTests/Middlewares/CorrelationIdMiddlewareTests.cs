@@ -80,7 +80,7 @@ public class CorrelationIdMiddlewareTests
 
         HttpContext ctx = new DefaultHttpContext();
         ctx.Request.Headers.Append(HttpHeaders.CorrelationId, corId);
-        
+
         RequestDelegate next = async (innerHttpContext) => { await Task.CompletedTask; };
 
         var feature = Substitute.For<IHttpResponseFeature>();
