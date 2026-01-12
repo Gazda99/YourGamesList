@@ -23,7 +23,8 @@ public class UsersServiceTests
     private IFixture _fixture;
     private ILogger<UsersService> _logger;
     private IYglDatabaseAndDtoMapper _yglDatabaseAndDtoMapper;
-
+    private TimeProvider _timeProvider;
+    
     private TestYglDbContextBuilder _yglDbContextBuilder;
     private IDbContextFactory<YglDbContext> _dbContextFactory;
 
@@ -35,6 +36,7 @@ public class UsersServiceTests
         _fixture = new Fixture();
         _logger = Substitute.For<ILogger<UsersService>>();
         _yglDatabaseAndDtoMapper = Substitute.For<IYglDatabaseAndDtoMapper>();
+        _timeProvider = Substitute.For<TimeProvider>();
 
         _yglDbContextBuilder = TestYglDbContextBuilder.Build();
         _dbContextFactory = Substitute.For<IDbContextFactory<YglDbContext>>();
@@ -68,7 +70,7 @@ public class UsersServiceTests
         var userDto = _fixture.Create<UserDto>();
         _yglDatabaseAndDtoMapper.Map(Arg.Is<User>(u => u.Id == userId)).Returns(userDto);
 
-        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await usersService.GetSelfUser(parameters);
@@ -84,7 +86,7 @@ public class UsersServiceTests
     {
         //ARRANGE
         var parameters = _fixture.Create<UserGetSelfParameters>();
-        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await usersService.GetSelfUser(parameters);
@@ -112,6 +114,8 @@ public class UsersServiceTests
                 .Create())
             .WithAutoProperties()
             .Create();
+        var time = _fixture.Create<DateTimeOffset>();
+        _timeProvider.GetUtcNow().Returns(time);
         var user = new User()
         {
             Id = userId,
@@ -125,7 +129,7 @@ public class UsersServiceTests
         var userDto = _fixture.Create<UserDto>();
         _yglDatabaseAndDtoMapper.Map(Arg.Is<User>(u => u.Id == userId)).Returns(userDto);
 
-        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await usersService.UpdateUser(parameters);
@@ -140,6 +144,7 @@ public class UsersServiceTests
         Assert.That(userInDb!.Country, Is.EqualTo(parameters.Country));
         Assert.That(userInDb.Description, Is.EqualTo(parameters.Description));
         Assert.That(userInDb.DateOfBirth, Is.EqualTo(parameters.DateOfBirth));
+        Assert.That(userInDb.LastModifiedDate, Is.EqualTo(time));
     }
 
     [Test]
@@ -147,7 +152,7 @@ public class UsersServiceTests
     {
         //ARRANGE
         var parameters = _fixture.Create<UserUpdateParameters>();
-        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await usersService.UpdateUser(parameters);

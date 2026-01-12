@@ -33,6 +33,8 @@ public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
             IsPublic = gamesList.IsPublic,
             CanBeDeleted = gamesList.CanBeDeleted,
             Entries = gamesList.Entries.Select(Map).ToList(),
+            CreatedDate = gamesList.CreatedDate,
+            LastModifiedDate = gamesList.LastModifiedDate
         };
     }
 
@@ -48,7 +50,9 @@ public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
             GameDistributions = gameListEntry.GameDistributions.Select(Map).ToArray(),
             IsStarred = gameListEntry.IsStarred,
             Rating = gameListEntry.Rating,
-            CompletionStatus = Map(gameListEntry.CompletionStatus)
+            CompletionStatus = Map(gameListEntry.CompletionStatus),
+            CreatedDate = gameListEntry.CreatedDate,
+            LastModifiedDate = gameListEntry.LastModifiedDate
         };
     }
 
@@ -78,7 +82,9 @@ public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
             Username = user.Username,
             DateOfBirth = user.DateOfBirth,
             Description = user.Description,
-            Country = user.Country
+            Country = user.Country,
+            CreatedDate = user.CreatedDate,
+            LastModifiedDate = user.LastModifiedDate
         };
     }
 
