@@ -34,11 +34,11 @@ else
             @if (_selectedList?.Entries.Any() ?? false)
             {
                 @* @foreach (var game in _selectedList?.Entries?.Select(x => x.Game) ?? []) *@
-                @foreach (var game in FilteredGames() ?? [])
+                @foreach (var gamelistEntry in FilteredGames() ?? [])
                 {
                     <MudItem xs="12" sm="12" md="12" lg="6" xl="6" xxl="4">
                         @* TODO: create new game tile with all required fields, like custom note, score etc*@
-                        <GameTile Game="@game"></GameTile>
+                        <GameListEntryTile GameListEntry="@gamelistEntry" ListId="@ListId"></GameListEntryTile>
                     </MudItem>
                 }
             }
@@ -105,15 +105,14 @@ else
         Snackbar.Add("Could not load selected list. Please try to refresh page.", Severity.Warning);
     }
 
-    private List<GameDto?> FilteredGames()
+    private List<GameListEntryDto> FilteredGames()
     {
         var filteredGames = _selectedList?.Entries
-            .Select(x => x.Game)
-            .Where(x => x != null) ?? [];
+            .Where(x => x.Game != null) ?? [];
 
         if (!string.IsNullOrWhiteSpace(_filterByGameName))
         {
-            filteredGames = filteredGames.Where(x => x!.Name.Contains(_filterByGameName, StringComparison.InvariantCultureIgnoreCase));
+            filteredGames = filteredGames.Where(x => x.Game?.Name.Contains(_filterByGameName, StringComparison.InvariantCultureIgnoreCase) ?? false);
         }
 
         return filteredGames.ToList();

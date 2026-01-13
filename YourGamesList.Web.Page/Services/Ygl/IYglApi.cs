@@ -80,5 +80,13 @@ public interface IYglApi : IHandlesHttpRefitException
         AddEntriesToListRequestBody request
     );
 
+    [Patch("/lists/entries/update")]
+    [Headers($"Content-Type: {ContentTypes.ApplicationJson}", $"Content-Type: {ContentTypes.ApplicationJson}")]
+    Task<IApiResponse<List<Guid>>> UpdateListEntries(
+        [Authorize("Bearer")] string userToken,
+        [Body(BodySerializationMethod.Serialized)]
+        UpdateListEntriesRequestBody request
+    );
+
     #endregion
 }
