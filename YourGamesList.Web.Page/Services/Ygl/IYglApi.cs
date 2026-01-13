@@ -13,10 +13,32 @@ using YourGamesList.Contracts.Responses.Users;
 
 namespace YourGamesList.Web.Page.Services.Ygl;
 
-public interface IYglApi : IHandlesHttpRefitException
+public interface IYglApi
 {
-    #region Auth
+    public IYglApiAuth Auth { get; }
+    public IYglApiUsers Users { get; }
+    public IYglApiSearchGames SearchGames { get; }
+    public IYglApiLists Lists { get; }
+}
 
+public class YglApi : IYglApi
+{
+    public IYglApiAuth Auth { get; }
+    public IYglApiUsers Users { get; }
+    public IYglApiSearchGames SearchGames { get; }
+    public IYglApiLists Lists { get; }
+
+    public YglApi(IYglApiAuth auth, IYglApiUsers users, IYglApiSearchGames searchGames, IYglApiLists lists)
+    {
+        Auth = auth;
+        Users = users;
+        SearchGames = searchGames;
+        Lists = lists;
+    }
+}
+
+public interface IYglApiAuth : IHandlesHttpRefitException
+{
     [Post("/users/auth/register")]
     [Headers($"Accept: {ContentTypes.ApplicationJson}", $"Content-Type: {ContentTypes.ApplicationJson}")]
     Task<IApiResponse<Guid>> Register([Body(BodySerializationMethod.Serialized)] AuthUserRegisterRequestBody request);
@@ -28,11 +50,10 @@ public interface IYglApi : IHandlesHttpRefitException
     [Post("/users/auth/delete")]
     [Headers($"Content-Type: {ContentTypes.ApplicationJson}")]
     Task<IApiResponse<Guid>> Delete([Body(BodySerializationMethod.Serialized)] AuthUserDeleteRequestBody request);
+}
 
-    #endregion
-
-    #region SearchGames
-
+public interface IYglApiSearchGames : IHandlesHttpRefitException
+{
     [Get("/games/ygl/search")]
     [Headers($"Accept: {ContentTypes.ApplicationJson}", $"Content-Type: {ContentTypes.ApplicationJson}")]
     Task<IApiResponse<List<GameDto>>> SearchGames(
@@ -46,25 +67,10 @@ public interface IYglApi : IHandlesHttpRefitException
     Task<IApiResponse<AvailableSearchQueryArgumentsResponse>> GetAvailableSearchParams(
         [Authorize("Bearer")] string userToken
     );
+}
 
-    #endregion
-
-    #region Users
-
-    [Post("/users/getSelf")]
-    [Headers($"Accept: {ContentTypes.ApplicationJson}")]
-    Task<IApiResponse<UserDto>> GetSelfUser([Authorize("Bearer")] string userToken);
-
-    [Post("/users/update")]
-    [Headers($"Content-Type: {ContentTypes.ApplicationJson}")]
-    Task<IApiResponse<Guid>> UpdateUser([Authorize("Bearer")] string userToken,
-        [Body(BodySerializationMethod.Serialized)]
-        UserUpdateRequestBody request);
-
-    #endregion
-
-    #region Lists
-
+public interface IYglApiLists : IHandlesHttpRefitException
+{
     [Get("/lists/getSelf")]
     [Headers($"Content-Type: {ContentTypes.ApplicationJson}")]
     Task<IApiResponse<List<GamesListDto>>> GetSelfLists(
@@ -87,6 +93,17 @@ public interface IYglApi : IHandlesHttpRefitException
         [Body(BodySerializationMethod.Serialized)]
         UpdateListEntriesRequestBody request
     );
+}
 
-    #endregion
+public interface IYglApiUsers : IHandlesHttpRefitException
+{
+    [Post("/users/getSelf")]
+    [Headers($"Accept: {ContentTypes.ApplicationJson}")]
+    Task<IApiResponse<UserDto>> GetSelfUser([Authorize("Bearer")] string userToken);
+
+    [Post("/users/update")]
+    [Headers($"Content-Type: {ContentTypes.ApplicationJson}")]
+    Task<IApiResponse<Guid>> UpdateUser([Authorize("Bearer")] string userToken,
+        [Body(BodySerializationMethod.Serialized)]
+        UserUpdateRequestBody request);
 }

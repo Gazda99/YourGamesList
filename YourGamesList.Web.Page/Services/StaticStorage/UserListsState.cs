@@ -7,6 +7,8 @@ public class UserListsState : IStaticState<List<GamesListDto>>
 {
     private List<GamesListDto>? _state;
 
+    public string StateName => $"{nameof(UserListsState)}:List<GamesListDto>";
+
     public List<GamesListDto>? GetState()
     {
         return _state;

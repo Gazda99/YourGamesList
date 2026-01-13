@@ -72,7 +72,7 @@ public class YglGamesClient : IYglGamesClient
 
         _logger.LogInformation($"Searching for game '{gameName}'.");
 
-        var callResult = await _yglApi.TryRefit(() => _yglApi.SearchGames(userToken, request), _logger);
+        var callResult = await _yglApi.SearchGames.TryRefit(() => _yglApi.SearchGames.SearchGames(userToken, request), _logger);
         if (callResult.IsFailure)
         {
             return CombinedResult<List<GameDto>, YglGamesClientError>.Failure(YglGamesClientError.General);
@@ -96,7 +96,7 @@ public class YglGamesClient : IYglGamesClient
 
     public async Task<CombinedResult<AvailableSearchQueryArgumentsResponse, YglGamesClientError>> GetAvailableSearchParams(string userToken)
     {
-        var callResult = await _yglApi.TryRefit(() => _yglApi.GetAvailableSearchParams(userToken), _logger);
+        var callResult = await _yglApi.SearchGames.TryRefit(() => _yglApi.SearchGames.GetAvailableSearchParams(userToken), _logger);
         if (callResult.IsFailure)
         {
             return CombinedResult<AvailableSearchQueryArgumentsResponse, YglGamesClientError>.Failure(YglGamesClientError.General);

@@ -6,6 +6,8 @@ public class AvailableQueryArgumentsState : IStaticState<AvailableSearchQueryArg
 {
     private AvailableSearchQueryArgumentsResponse? _state;
 
+    public string StateName => $"{nameof(AvailableQueryArgumentsState)}:{nameof(AvailableSearchQueryArgumentsResponse)}";
+
     public AvailableSearchQueryArgumentsResponse? GetState()
     {
         return _state;

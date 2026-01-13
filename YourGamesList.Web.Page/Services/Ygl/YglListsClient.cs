@@ -43,7 +43,7 @@ public class YglListsClient : IYglListsClient
 
     public async Task<CombinedResult<List<GamesListDto>, YglListsClientError>> GetSelfLists(string userToken, bool includeGames = false)
     {
-        var callResult = await _yglApi.TryRefit(() => _yglApi.GetSelfLists(userToken, includeGames), _logger);
+        var callResult = await _yglApi.Lists.TryRefit(() => _yglApi.Lists.GetSelfLists(userToken, includeGames), _logger);
         if (callResult.IsFailure)
         {
             return CombinedResult<List<GamesListDto>, YglListsClientError>.Failure(YglListsClientError.General);
@@ -75,7 +75,7 @@ public class YglListsClient : IYglListsClient
             }).ToArray()
         };
 
-        var callResult = await _yglApi.TryRefit(() => _yglApi.AddListEntries(userToken, request), _logger);
+        var callResult = await _yglApi.Lists.TryRefit(() => _yglApi.Lists.AddListEntries(userToken, request), _logger);
         if (callResult.IsFailure)
         {
             return CombinedResult<List<Guid>, YglListsClientError>.Failure(YglListsClientError.General);
@@ -101,7 +101,7 @@ public class YglListsClient : IYglListsClient
             EntriesToUpdate = entriesToUpdate.ToArray()
         };
         
-        var callResult = await _yglApi.TryRefit(() => _yglApi.UpdateListEntries(userToken, request), _logger);
+        var callResult = await _yglApi.Lists.TryRefit(() => _yglApi.Lists.UpdateListEntries(userToken, request), _logger);
         if (callResult.IsFailure)
         {
             return CombinedResult<List<Guid>, YglListsClientError>.Failure(YglListsClientError.General);
