@@ -11,7 +11,7 @@ public interface ITokenParser
 public class TokenParser : ITokenParser
 {
     private readonly JsonWebTokenHandler _tokenHandler = new JsonWebTokenHandler();
-    
+
     public bool CanReadToken(string token)
     {
         return _tokenHandler.CanReadToken(token);

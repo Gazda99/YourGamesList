@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using AutoFixture;
-
+﻿using AutoFixture;
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Contracts.Dto;
 using YourGamesList.Database.Entities;
@@ -36,6 +34,8 @@ public class YglDatabaseAndDtoMapperTests
         Assert.That(dto.Name, Is.EquivalentTo(entity.Name));
         Assert.That(dto.IsPublic, Is.EqualTo(entity.IsPublic));
         Assert.That(dto.CanBeDeleted, Is.EqualTo(entity.CanBeDeleted));
+        Assert.That(dto.CreatedDate, Is.EqualTo(entity.CreatedDate));
+        Assert.That(dto.LastModifiedDate, Is.EqualTo(entity.LastModifiedDate));
         //GameListEntries
     }
 
@@ -60,6 +60,8 @@ public class YglDatabaseAndDtoMapperTests
         //GameDistributions
         Assert.That(dto.IsStarred, Is.EqualTo(entity.IsStarred));
         Assert.That(dto.Rating, Is.EqualTo(entity.Rating));
+        Assert.That(dto.CreatedDate, Is.EqualTo(entity.CreatedDate));
+        Assert.That(dto.LastModifiedDate, Is.EqualTo(entity.LastModifiedDate));
         //CompletionStatus
     }
 
@@ -89,7 +91,7 @@ public class YglDatabaseAndDtoMapperTests
         Assert.That(dto.Themes, Is.EquivalentTo(entity.Themes));
         Assert.That(dto.RatingCount, Is.EqualTo(entity.RatingCount));
     }
-    
+
     [Test]
     public void Map_User_To_UserDto()
     {
@@ -108,6 +110,8 @@ public class YglDatabaseAndDtoMapperTests
         Assert.That(dto.Country, Is.EquivalentTo(entity.Country));
         Assert.That(dto.Description, Is.EquivalentTo(entity.Description));
         Assert.That(dto.DateOfBirth, Is.EqualTo(entity.DateOfBirth));
+        Assert.That(dto.CreatedDate, Is.EqualTo(entity.CreatedDate));
+        Assert.That(dto.LastModifiedDate, Is.EqualTo(entity.LastModifiedDate));
     }
 
     [Test]

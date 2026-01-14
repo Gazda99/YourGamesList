@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Users.Model;
 using YourGamesList.Common;
@@ -21,12 +20,14 @@ public class UsersService : IUsersService
 {
     private readonly ILogger<UsersService> _logger;
     private readonly IYglDatabaseAndDtoMapper _yglDatabaseAndDtoMapper;
+    private readonly TimeProvider _timeProvider;
     private readonly YglDbContext _yglDbContext;
 
-    public UsersService(ILogger<UsersService> logger, IDbContextFactory<YglDbContext> yglDbContext, IYglDatabaseAndDtoMapper yglDatabaseAndDtoMapper)
+    public UsersService(ILogger<UsersService> logger, IDbContextFactory<YglDbContext> yglDbContext, IYglDatabaseAndDtoMapper yglDatabaseAndDtoMapper, TimeProvider timeProvider)
     {
         _logger = logger;
         _yglDatabaseAndDtoMapper = yglDatabaseAndDtoMapper;
+        _timeProvider = timeProvider;
         _yglDbContext = yglDbContext.CreateDbContext();
     }
 
@@ -56,6 +57,7 @@ public class UsersService : IUsersService
         user.Country = parameters.Country ?? string.Empty;
         user.Description = parameters.Description ?? string.Empty;
         user.DateOfBirth = parameters.DateOfBirth;
+        user.LastModifiedDate = _timeProvider.GetUtcNow();
 
         await _yglDbContext.SaveChangesAsync();
         _logger.LogInformation($"Updated user with ID '{user.Id}'");

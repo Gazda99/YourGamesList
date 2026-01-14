@@ -23,6 +23,7 @@ public class ListsServiceTests
     private IFixture _fixture;
     private ILogger<ListsService> _logger;
     private IYglDatabaseAndDtoMapper _yglDatabaseAndDtoMapper;
+    private TimeProvider _timeProvider;
 
     private TestYglDbContextBuilder _yglDbContextBuilder;
     private IDbContextFactory<YglDbContext> _dbContextFactory;
@@ -39,6 +40,7 @@ public class ListsServiceTests
         _yglDbContextBuilder = TestYglDbContextBuilder.Build();
         _dbContextFactory = Substitute.For<IDbContextFactory<YglDbContext>>();
         _dbContextFactory.CreateDbContext().Returns(_yglDbContextBuilder.Get());
+        _timeProvider = Substitute.For<TimeProvider>();
     }
 
     #region CreateList
@@ -50,6 +52,8 @@ public class ListsServiceTests
         var userInformation = _fixture.Create<JwtUserInformation>();
         var listName = _fixture.Create<string>();
         var desc = _fixture.Create<string>();
+        var time = _fixture.Create<DateTimeOffset>();
+        _timeProvider.GetUtcNow().Returns(time);
         var users = new List<User>()
         {
             new User()
@@ -63,7 +67,7 @@ public class ListsServiceTests
         };
         _yglDbContextBuilder.WithUserDbSet(users);
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.CreateList(userInformation, listName, desc);
@@ -75,6 +79,7 @@ public class ListsServiceTests
         Assert.That(createdList, Is.Not.Null);
         Assert.That(createdList.Name, Is.EqualTo(listName));
         Assert.That(createdList.Desc, Is.EqualTo(desc));
+        Assert.That(createdList.CreatedDate, Is.EqualTo(time));
     }
 
     [Test]
@@ -107,7 +112,7 @@ public class ListsServiceTests
         _yglDbContextBuilder.WithListsDbSet(gamesLists);
 
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.CreateList(userInformation, listName);
@@ -156,7 +161,7 @@ public class ListsServiceTests
 
         _yglDatabaseAndDtoMapper.Map(Arg.Is<GamesList>(g => g.Id == gl1.Id)).Returns(dto1);
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.GetList(userInformation, listId, false);
@@ -174,7 +179,7 @@ public class ListsServiceTests
         var userInformation = _fixture.Create<JwtUserInformation>();
         var listId = Guid.NewGuid();
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.GetList(userInformation, listId, false);
@@ -243,7 +248,7 @@ public class ListsServiceTests
         _yglDatabaseAndDtoMapper.Map(Arg.Is<GamesList>(g => g.Id == gl1.Id)).Returns(dto1);
         _yglDatabaseAndDtoMapper.Map(Arg.Is<GamesList>(g => g.Id == gl2.Id)).Returns(dto2);
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.SearchLists(parameters);
@@ -306,7 +311,7 @@ public class ListsServiceTests
         _yglDatabaseAndDtoMapper.Map(Arg.Is<GamesList>(g => g.Id == gl1.Id)).Returns(dto1);
         _yglDatabaseAndDtoMapper.Map(Arg.Is<GamesList>(g => g.Id == gl2.Id)).Returns(dto2);
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.SearchLists(parameters);
@@ -329,7 +334,7 @@ public class ListsServiceTests
             .With(x => x.UserName, string.Empty)
             .Create();
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.SearchLists(parameters);
@@ -346,7 +351,7 @@ public class ListsServiceTests
         //ARRANGE
         var parameters = _fixture.Create<SearchListsParameters>();
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.SearchLists(parameters);
@@ -406,7 +411,7 @@ public class ListsServiceTests
         _yglDatabaseAndDtoMapper.Map(Arg.Is<GamesList>(g => g.Id == gl1.Id)).Returns(dto1);
         _yglDatabaseAndDtoMapper.Map(Arg.Is<GamesList>(g => g.Id == gl2.Id)).Returns(dto2);
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.GetSelfLists(userInformation, true);
@@ -424,7 +429,7 @@ public class ListsServiceTests
     {
         //ARRANGE
         var userInformation = _fixture.Create<JwtUserInformation>();
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.GetSelfLists(userInformation, false);
@@ -447,6 +452,8 @@ public class ListsServiceTests
         var parameters = _fixture.Build<UpdateListParameters>()
             .With(x => x.ListId, listId)
             .Create();
+        var time = _fixture.Create<DateTimeOffset>();
+        _timeProvider.GetUtcNow().Returns(time);
         var users = new List<User>()
         {
             new User()
@@ -470,7 +477,7 @@ public class ListsServiceTests
         _yglDbContextBuilder.WithUserDbSet(users);
         _yglDbContextBuilder.WithListsDbSet(gamesLists);
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.UpdateList(parameters);
@@ -479,6 +486,9 @@ public class ListsServiceTests
         Assert.That(result.IsSuccess, Is.True);
         Assert.That(result.Value, Is.EqualTo(listId));
         _logger.ReceivedLog(LogLevel.Information, "List updated successfully.");
+        var updatedList = _yglDbContextBuilder.Get().Lists.FirstOrDefault(x => x.Id == listId);
+        Assert.That(updatedList, Is.Not.Null);
+        Assert.That(updatedList.LastModifiedDate, Is.EqualTo(time));
     }
 
     [Test]
@@ -487,7 +497,7 @@ public class ListsServiceTests
         //ARRANGE
         var parameters = _fixture.Create<UpdateListParameters>();
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.UpdateList(parameters);
@@ -539,7 +549,7 @@ public class ListsServiceTests
         _yglDbContextBuilder.WithListsDbSet(gamesLists);
 
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.UpdateList(parameters);
@@ -587,7 +597,7 @@ public class ListsServiceTests
         _yglDbContextBuilder.WithUserDbSet(users);
         _yglDbContextBuilder.WithListsDbSet(gamesLists);
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.DeleteList(userInformation, listId);
@@ -606,7 +616,7 @@ public class ListsServiceTests
         var userInformation = _fixture.Create<JwtUserInformation>();
         var listId = Guid.NewGuid();
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.DeleteList(userInformation, listId);
@@ -649,7 +659,7 @@ public class ListsServiceTests
         _yglDbContextBuilder.WithUserDbSet(users);
         _yglDbContextBuilder.WithListsDbSet(gamesLists);
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.DeleteList(userInformation, listId);
@@ -676,6 +686,8 @@ public class ListsServiceTests
         var parameters = _fixture.Build<AddEntriesToListParameter>()
             .With(x => x.EntriesToAdd, [entryToAdd])
             .Create();
+        var time = _fixture.Create<DateTimeOffset>();
+        _timeProvider.GetUtcNow().Returns(time);
 
         var games = new List<Game>()
         {
@@ -710,7 +722,7 @@ public class ListsServiceTests
         _yglDbContextBuilder.WithUserDbSet(users);
         _yglDbContextBuilder.WithListsDbSet(gamesLists);
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.AddListEntries(parameters);
@@ -723,6 +735,11 @@ public class ListsServiceTests
         Assert.That(list, Is.Not.Null);
         Assert.That(list.Entries.Count, Is.EqualTo(1));
         Assert.That(list.Entries.First().GameId, Is.EqualTo(gameId));
+        Assert.That(list.LastModifiedDate, Is.EqualTo(time));
+        foreach (var entry in list.Entries)
+        {
+            Assert.That(entry.CreatedDate, Is.EqualTo(time));
+        }
     }
 
     [Test]
@@ -731,7 +748,7 @@ public class ListsServiceTests
         //ARRANGE
         var parameters = _fixture.Create<AddEntriesToListParameter>();
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.AddListEntries(parameters);
@@ -797,7 +814,7 @@ public class ListsServiceTests
         _yglDbContextBuilder.WithListsDbSet(gamesLists);
         _yglDbContextBuilder.WithGameListEntriesDbSet(gameListEntries);
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.AddListEntries(parameters);
@@ -873,7 +890,7 @@ public class ListsServiceTests
         _yglDbContextBuilder.WithListsDbSet(gamesLists);
         _yglDbContextBuilder.WithGameListEntriesDbSet(gameListEntries);
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.DeleteListEntries(parameters);
@@ -897,7 +914,7 @@ public class ListsServiceTests
         //ARRANGE
         var parameters = _fixture.Create<DeleteListEntriesParameter>();
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.DeleteListEntries(parameters);
@@ -940,7 +957,7 @@ public class ListsServiceTests
         _yglDbContextBuilder.WithUserDbSet(users);
         _yglDbContextBuilder.WithListsDbSet(gamesLists);
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.DeleteListEntries(parameters);
@@ -969,6 +986,8 @@ public class ListsServiceTests
         var gameDistribution = _fixture.Create<GameDistribution>();
         var platformDto = _fixture.Create<PlatformDto>();
         var platform = _fixture.Create<Platform>();
+        var time = _fixture.Create<DateTimeOffset>();
+        _timeProvider.GetUtcNow().Returns(time);
         //This should be updated
         var entryToUpdateParameter = _fixture.Build<EntryToUpdateParameter>()
             .With(x => x.EntryId, listEntryId1)
@@ -988,6 +1007,7 @@ public class ListsServiceTests
             .With(x => x.ListId, listId)
             .With(x => x.EntriesToUpdate, entriesToUpdate)
             .Create();
+
         var games = new List<Game>()
         {
             new Game()
@@ -1035,7 +1055,7 @@ public class ListsServiceTests
         _yglDatabaseAndDtoMapper.Map(gameDistributionDto).Returns(gameDistribution);
         _yglDatabaseAndDtoMapper.Map(platformDto).Returns(platform);
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.UpdateListEntries(parameters);
@@ -1045,6 +1065,7 @@ public class ListsServiceTests
         _logger.ReceivedLog(LogLevel.Information, $"Entry to update '{listEntryId2}' not found in the list '{listId}'.");
         _logger.ReceivedLog(LogLevel.Information, ["Updated '1' entries", $"from list '{listId}'."]);
         var list = _yglDbContextBuilder.Get().Lists.Include(x => x.Entries).FirstOrDefault(u => u.Id == parameters.ListId);
+        Assert.That(list.LastModifiedDate, Is.EqualTo(time));
         var updatedEntry = list.Entries.FirstOrDefault(e => e.Id == listEntryId1);
         Assert.That(updatedEntry, Is.Not.Null);
         Assert.That(updatedEntry.IsStarred, Is.EqualTo(entryToUpdateParameter.IsStarred));
@@ -1053,6 +1074,7 @@ public class ListsServiceTests
         Assert.That(updatedEntry.CompletionStatus, Is.EqualTo(completionStatus));
         Assert.That(updatedEntry.GameDistributions, Is.EquivalentTo([gameDistribution]));
         Assert.That(updatedEntry.Platforms, Is.EquivalentTo([platform]));
+        Assert.That(updatedEntry.LastModifiedDate, Is.EqualTo(time));
     }
 
     [Test]
@@ -1061,7 +1083,7 @@ public class ListsServiceTests
         //ARRANGE
         var parameters = _fixture.Create<UpdateListEntriesParameter>();
 
-        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper);
+        var userManagerService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
         var result = await userManagerService.UpdateListEntries(parameters);

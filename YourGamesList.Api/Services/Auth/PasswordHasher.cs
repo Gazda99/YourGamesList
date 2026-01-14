@@ -33,8 +33,7 @@ public class PasswordHasher : IPasswordHasher
 
     public HashedPassword HashPassword(string password, byte[] salt)
     {
-        using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, Iterations, HashAlgorithmName.SHA256);
-        var hash = pbkdf2.GetBytes(HashSizeBytes);
+        var hash = Rfc2898DeriveBytes.Pbkdf2(password, salt, Iterations, HashAlgorithmName.SHA256, HashSizeBytes);
         var hashString = Convert.ToBase64String(hash);
 
         return new HashedPassword(hashString, salt);

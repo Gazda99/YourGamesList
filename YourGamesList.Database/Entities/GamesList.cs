@@ -12,6 +12,8 @@ public class GamesList
     [StringLength(50)] public required string Name { get; set; }
     public bool IsPublic { get; set; } = true;
     public bool CanBeDeleted { get; set; } = true;
+    public DateTimeOffset CreatedDate { get; set; }
+    public DateTimeOffset? LastModifiedDate { get; set; }
 
     public virtual ICollection<GameListEntry> Entries { get; } = [];
 

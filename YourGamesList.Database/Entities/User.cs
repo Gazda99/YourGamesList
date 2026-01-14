@@ -9,6 +9,7 @@ public class User
     public Guid Id { get; init; }
 
     public required DateTimeOffset CreatedDate { get; init; }
+    public DateTimeOffset? LastModifiedDate { get; set; }
 
     [StringLength(50)] public required string Username { get; set; }
 

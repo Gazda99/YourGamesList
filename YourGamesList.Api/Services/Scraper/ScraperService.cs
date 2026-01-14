@@ -113,7 +113,7 @@ public class ScraperService : IScraperService
 
         cacheEntry.IsCancellationRequested = true;
         _scraperCache.WriteCache(cacheEntry);
-        
+
         _logger.LogInformation("Scrape will be stopped.");
 
         return true;

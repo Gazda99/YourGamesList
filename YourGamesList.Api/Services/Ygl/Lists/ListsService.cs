@@ -40,12 +40,19 @@ public class ListsService : IListsService
 {
     private readonly ILogger<ListsService> _logger;
     private readonly IYglDatabaseAndDtoMapper _yglDatabaseAndDtoMapper;
+    private readonly TimeProvider _timeProvider;
     private readonly YglDbContext _yglDbContext;
 
-    public ListsService(ILogger<ListsService> logger, IDbContextFactory<YglDbContext> yglDbContext, IYglDatabaseAndDtoMapper yglDatabaseAndDtoMapper)
+    public ListsService(
+        ILogger<ListsService> logger,
+        IDbContextFactory<YglDbContext> yglDbContext,
+        IYglDatabaseAndDtoMapper yglDatabaseAndDtoMapper,
+        TimeProvider timeProvider
+    )
     {
         _logger = logger;
         _yglDatabaseAndDtoMapper = yglDatabaseAndDtoMapper;
+        _timeProvider = timeProvider;
         _yglDbContext = yglDbContext.CreateDbContext();
     }
 
@@ -66,7 +73,8 @@ public class ListsService : IListsService
             UserId = userInfo.UserId,
             Desc = string.IsNullOrEmpty(description) ? string.Empty : description,
             IsPublic = true,
-            CanBeDeleted = true
+            CanBeDeleted = true,
+            CreatedDate = _timeProvider.GetUtcNow()
         };
 
         await _yglDbContext.Lists.AddAsync(list);
@@ -102,7 +110,7 @@ public class ListsService : IListsService
             if (list.UserId != userInfo.UserId)
             {
                 _logger.LogInformation($"List with id '{listId}' found, but is not public and does not belong to the user making the request.");
-                return CombinedResult<GamesListDto, ListsError>.Failure(ListsError.ForbiddenList); 
+                return CombinedResult<GamesListDto, ListsError>.Failure(ListsError.ForbiddenList);
             }
         }
 
@@ -228,6 +236,7 @@ public class ListsService : IListsService
             list.IsPublic = parameters.IsPublic.Value;
         }
 
+        list.LastModifiedDate = _timeProvider.GetUtcNow();
         await _yglDbContext.SaveChangesAsync();
 
         _logger.LogInformation("List updated successfully.");
@@ -302,7 +311,8 @@ public class ListsService : IListsService
                 Rating = entryToAdd.Rating ?? null,
                 CompletionStatus = entryToAdd.CompletionStatus == null
                     ? CompletionStatus.Unspecified
-                    : _yglDatabaseAndDtoMapper.Map(entryToAdd.CompletionStatus.Value)
+                    : _yglDatabaseAndDtoMapper.Map(entryToAdd.CompletionStatus.Value),
+                CreatedDate = _timeProvider.GetUtcNow()
             };
 
             if (entryToAdd.Platforms != null)
@@ -318,6 +328,7 @@ public class ListsService : IListsService
             listEntries.Add(listEntry);
         }
 
+        list.LastModifiedDate = _timeProvider.GetUtcNow();
         await _yglDbContext.GameListEntries.AddRangeAsync(listEntries);
         await _yglDbContext.SaveChangesAsync();
 
@@ -339,7 +350,7 @@ public class ListsService : IListsService
         }
 
         var entriesToDelete = await _yglDbContext.GameListEntries
-            .Where(e => parameters.EntriesToRemove.Contains(e.Id))
+            .Where(e => ((IEnumerable<Guid>) parameters.EntriesToRemove).Contains(e.Id))
             .ToListAsync();
 
         if (entriesToDelete.Count == 0)
@@ -393,9 +404,11 @@ public class ListsService : IListsService
                 ? _yglDatabaseAndDtoMapper.Map(entryToUpdateParameter.CompletionStatus.Value)
                 : entry.CompletionStatus;
 
+            entry.LastModifiedDate = _timeProvider.GetUtcNow();
             updatedEntryIds.Add(entry.Id);
         }
 
+        list.LastModifiedDate = _timeProvider.GetUtcNow();
         await _yglDbContext.SaveChangesAsync();
         _logger.LogInformation($"Updated '{updatedEntryIds.Count}' entries [{string.Join(',', updatedEntryIds)}] from list '{list.Id}'.");
         return CombinedResult<List<Guid>, ListsError>.Success(updatedEntryIds);

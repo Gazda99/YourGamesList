@@ -31,7 +31,8 @@ public class CorrelationIdMiddleware
         string corId;
         if (_options.Value.ReadCorrelationIdFromRequestHeader &&
             context.Request.Headers.TryGetValue(HttpHeaders.CorrelationId, out var corIdFromHeader) &&
-            _correlationIdProvider.IsValidCorrelationId(corIdFromHeader.ToString()))
+            _correlationIdProvider.IsValidCorrelationId(corIdFromHeader.ToString())
+           )
         {
             corId = corIdFromHeader.ToString();
         }

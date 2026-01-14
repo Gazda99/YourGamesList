@@ -12,6 +12,8 @@ public class GameListEntry
     public bool IsStarred { get; set; }
     [Range(0, 5)] public byte? Rating { get; set; }
     public CompletionStatus CompletionStatus { get; set; } = CompletionStatus.Unspecified;
+    public DateTimeOffset CreatedDate { get; set; }
+    public DateTimeOffset? LastModifiedDate { get; set; }
 
     public virtual Game Game { get; set; } = null!;
     public virtual long GameId { get; set; }

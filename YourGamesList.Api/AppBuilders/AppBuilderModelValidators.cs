@@ -31,7 +31,7 @@ public static partial class AppBuilder
             .AddScoped<IValidator<UserLoginRequest>, UserLoginRequestValidator>()
             .AddScoped<IValidator<UserDeleteRequest>, UserDeleteRequestValidator>()
             ;
-        
+
         //User controller validators
         services
             .AddScoped<IValidator<UserGetSelfRequest>, UserGetSelfRequestValidator>()

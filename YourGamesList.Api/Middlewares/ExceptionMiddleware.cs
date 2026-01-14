@@ -27,7 +27,8 @@ public class ExceptionMiddleware
         }
         catch (ModelBindingException exception)
         {
-            _logger.LogError(exception, $"Exception during model binding of '{exception.ModelName}' of type '{exception.ModelType}'. Detailed error message: '{exception.ErrorDescription}'.");
+            _logger.LogError(exception,
+                $"Exception during model binding of '{exception.ModelName}' of type '{exception.ModelType}'. Detailed error message: '{exception.ErrorDescription}'.");
             var response = context.Response;
 
             if (exception.ModelType == typeof(JwtUserInformation))
@@ -41,6 +42,7 @@ public class ExceptionMiddleware
             }
 
             await response.WriteAsync(string.Empty);
+            return;
         }
         catch (Exception exception)
         {
@@ -48,6 +50,7 @@ public class ExceptionMiddleware
             var response = context.Response;
             response.StatusCode = (int) HttpStatusCode.InternalServerError;
             await response.WriteAsync(string.Empty);
+            return;
         }
     }
 }

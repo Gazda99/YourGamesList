@@ -36,7 +36,7 @@ public class YglAuthAuthClient : IYglAuthClient
         };
 
         _logger.LogInformation($"Sending register request for user '{username}'.");
-        var callResult = await _yglApi.TryRefit(() => _yglApi.Register(request), _logger);
+        var callResult = await _yglApi.Auth.TryRefit(() => _yglApi.Auth.Register(request), _logger);
 
         if (callResult.IsFailure)
         {
@@ -78,7 +78,7 @@ public class YglAuthAuthClient : IYglAuthClient
         };
 
         _logger.LogInformation($"Sending login request for user '{username}'.");
-        var callResult = await _yglApi.TryRefit(() => _yglApi.Login(request), _logger);
+        var callResult = await _yglApi.Auth.TryRefit(() => _yglApi.Auth.Login(request), _logger);
 
         if (callResult.IsFailure)
         {
@@ -115,7 +115,7 @@ public class YglAuthAuthClient : IYglAuthClient
         };
 
         _logger.LogInformation($"Sending delete request for user '{username}'.");
-        var callResult = await _yglApi.TryRefit(() => _yglApi.Delete(request), _logger);
+        var callResult = await _yglApi.Auth.TryRefit(() => _yglApi.Auth.Delete(request), _logger);
 
         if (callResult.IsFailure)
         {

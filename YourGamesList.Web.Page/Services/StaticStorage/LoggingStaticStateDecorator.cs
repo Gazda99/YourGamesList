@@ -16,19 +16,21 @@ public class LoggingStaticStateDecorator<TState> : IStaticState<TState>
         _logger = logger;
     }
 
+    public string StateName => _inner.StateName;
+
     public TState? GetState()
     {
-        _logger.LogInformation("Retrieving state for {StateType}", typeof(TState).Name);
+        _logger.LogInformation("Retrieving state for {StateType}", StateName);
 
         var state = _inner.GetState();
 
         if (state == null)
         {
-            _logger.LogInformation("State for {StateType} is null.", typeof(TState).Name);
+            _logger.LogInformation("State for {StateType} is null.", StateName);
         }
         else
         {
-            _logger.LogInformation("State for {StateType} retrieved successfully.", typeof(TState).Name);
+            _logger.LogInformation("State for {StateType} retrieved successfully.", StateName);
         }
 
         return state;
@@ -36,10 +38,10 @@ public class LoggingStaticStateDecorator<TState> : IStaticState<TState>
 
     public void SetState(TState state)
     {
-        _logger.LogInformation("Setting state for {StateType}.", typeof(TState).Name);
+        _logger.LogInformation("Setting state for {StateType}.", StateName);
 
         _inner.SetState(state);
 
-        _logger.LogInformation("State for {StateType} set successfully.", typeof(TState).Name);
+        _logger.LogInformation("State for {StateType} set successfully.", StateName);
     }
 }

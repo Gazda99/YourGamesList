@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 using YourGamesList.Api.AppBuilders;
 using YourGamesList.Api.Middlewares;
+using YourGamesList.Common.Logging;
 
 namespace YourGamesList.Api;
 
@@ -12,6 +13,9 @@ public class Program
     public static void Main(string[] args)
     {
         var app = AppBuilder.GetApp(args);
+        app.UseRouting();
+
+        app.UseMiddleware<JwtUserInformationMiddleware>();
         app.UseMiddleware<CorrelationIdMiddleware>();
 
         if (app.Environment.IsDevelopment())
@@ -25,11 +29,13 @@ public class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.UseOutputCache();
+        app.UseMiddleware<ExceptionMiddleware>();
 
         app.MapControllers();
 
-        app.UseMiddleware<ExceptionMiddleware>();
+        app.UseOutputCache();
+
+        app.Lifetime.AddApplicationLifetimeActions(app.Services);
 
         app.Run();
     }

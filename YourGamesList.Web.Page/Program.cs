@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
+using YourGamesList.Common.Logging;
 using YourGamesList.Web.Page.AppBuilders;
 using YourGamesList.Web.Page.Components;
 
@@ -28,6 +29,8 @@ public class Program
         app.MapStaticAssets();
         app.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode();
+
+        app.Lifetime.AddApplicationLifetimeActions(app.Services);
 
         app.Run();
     }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace YourGamesList.Api.Services.Scraper;
+
 //TODO: unit tests
 public class RateLimiter
 {

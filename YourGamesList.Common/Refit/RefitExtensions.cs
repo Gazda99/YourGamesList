@@ -27,8 +27,9 @@ public static class RefitExtensions
                 HttpRequestException => HttpFailureReason.Network,
                 _ => HttpFailureReason.General,
             };
-            
-            logger?.LogWarning(ex, $"Http related exception occured while making http request with refit to '{destinationServiceName ?? "N/A"}', results in network error '{enumValue.ToString()}'");
+
+            logger?.LogWarning(ex,
+                $"Http related exception occured while making http request with refit to '{destinationServiceName ?? "N/A"}', results in network error '{enumValue.ToString()}'");
 
             return CombinedResult<T, HttpFailureReason>.Failure(enumValue);
         }

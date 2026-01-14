@@ -39,7 +39,7 @@ public static partial class AppBuilder
             //     { apiKeySchema, [] } // No specific scopes are required
             // };
             // c.AddSecurityRequirement(apiKeyRequirements);
-            
+
             c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
             {
                 [new OpenApiSecuritySchemeReference("YglApiKey", document)] = []

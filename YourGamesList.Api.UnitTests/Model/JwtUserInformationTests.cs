@@ -52,7 +52,7 @@ public class JwtUserInformationTests
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
         res.ShouldHaveValidationErrorFor(x => x.Username);
-      //  Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(JwtUserInformation.Username)));
+        //  Assert.That(res.Errors.Select(x => x.PropertyName), Contains.Item(nameof(JwtUserInformation.Username)));
     }
 
     [Test]

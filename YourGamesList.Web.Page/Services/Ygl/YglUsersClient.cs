@@ -29,7 +29,7 @@ public class YglUsersClient : IYglUsersClient
     public async Task<CombinedResult<UserDto, YglUserClientError>> GetSelfUser(string userToken)
     {
         _logger.LogInformation($"Sending request to get self user.");
-        var callResult = await _yglApi.TryRefit(() => _yglApi.GetSelfUser(userToken), _logger);
+        var callResult = await _yglApi.Users.TryRefit(() => _yglApi.Users.GetSelfUser(userToken), _logger);
 
         if (callResult.IsFailure)
         {

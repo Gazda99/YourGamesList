@@ -21,6 +21,12 @@ public interface IYglListsClient
         Guid listId,
         IEnumerable<long> gamesToAddIds
     );
+
+    Task<CombinedResult<List<Guid>, YglListsClientError>> UpdateListEntries(
+        string userToken,
+        Guid listId,
+        IEnumerable<EntryToUpdateRequestPart> entriesToUpdate
+    );
 }
 
 //TODO: unit tests
@@ -37,7 +43,7 @@ public class YglListsClient : IYglListsClient
 
     public async Task<CombinedResult<List<GamesListDto>, YglListsClientError>> GetSelfLists(string userToken, bool includeGames = false)
     {
-        var callResult = await _yglApi.TryRefit(() => _yglApi.GetSelfLists(userToken, includeGames), _logger);
+        var callResult = await _yglApi.Lists.TryRefit(() => _yglApi.Lists.GetSelfLists(userToken, includeGames), _logger);
         if (callResult.IsFailure)
         {
             return CombinedResult<List<GamesListDto>, YglListsClientError>.Failure(YglListsClientError.General);
@@ -69,7 +75,33 @@ public class YglListsClient : IYglListsClient
             }).ToArray()
         };
 
-        var callResult = await _yglApi.TryRefit(() => _yglApi.AddListEntries(userToken, request), _logger);
+        var callResult = await _yglApi.Lists.TryRefit(() => _yglApi.Lists.AddListEntries(userToken, request), _logger);
+        if (callResult.IsFailure)
+        {
+            return CombinedResult<List<Guid>, YglListsClientError>.Failure(YglListsClientError.General);
+        }
+
+        var res = callResult.Value;
+        if (res.StatusCode == HttpStatusCode.OK)
+        {
+            return CombinedResult<List<Guid>, YglListsClientError>.Success(res.Content!);
+        }
+        else
+        {
+            return CombinedResult<List<Guid>, YglListsClientError>.Failure(YglListsClientError.General);
+        }
+    }
+
+    public async Task<CombinedResult<List<Guid>, YglListsClientError>> UpdateListEntries(string userToken, Guid listId,
+       IEnumerable<EntryToUpdateRequestPart> entriesToUpdate)
+    {
+        var request = new UpdateListEntriesRequestBody()
+        {
+            ListId = listId,
+            EntriesToUpdate = entriesToUpdate.ToArray()
+        };
+        
+        var callResult = await _yglApi.Lists.TryRefit(() => _yglApi.Lists.UpdateListEntries(userToken, request), _logger);
         if (callResult.IsFailure)
         {
             return CombinedResult<List<Guid>, YglListsClientError>.Failure(YglListsClientError.General);

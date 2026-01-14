@@ -92,7 +92,8 @@ public class ListsControllerTests
         //ARRANGE
         var expectedResValue = _fixture.Create<GamesListDto>();
         var request = _fixture.Create<GetListRequest>();
-        _listsService.GetList(request.UserInformation, request.ListId, request.IncludeGames ?? false).Returns(CombinedResult<GamesListDto, ListsError>.Success(expectedResValue));
+        _listsService.GetList(request.UserInformation, request.ListId, request.IncludeGames ?? false)
+            .Returns(CombinedResult<GamesListDto, ListsError>.Success(expectedResValue));
 
         var controller = new ListsController(_logger, _requestToParametersMapper, _listsService);
 
@@ -114,7 +115,8 @@ public class ListsControllerTests
         //ARRANGE
         var expectedError = ListsError.ListNotFound;
         var request = _fixture.Create<GetListRequest>();
-        _listsService.GetList(request.UserInformation, request.ListId, request.IncludeGames ?? false).Returns(CombinedResult<GamesListDto, ListsError>.Failure(expectedError));
+        _listsService.GetList(request.UserInformation, request.ListId, request.IncludeGames ?? false)
+            .Returns(CombinedResult<GamesListDto, ListsError>.Failure(expectedError));
 
         var controller = new ListsController(_logger, _requestToParametersMapper, _listsService);
 

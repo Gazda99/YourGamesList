@@ -111,7 +111,7 @@ public class UsersControllerTests
         await _usersService.Received(1).UpdateUser(parameters);
         _logger.ReceivedLog(LogLevel.Information, $"Requested to update user '{request.UserInformation.UserId}'");
     }
-    
+
     [Test]
     public async Task UpdateUser_OnErrorUserNotFound_ReturnsStatus404NotFound()
     {

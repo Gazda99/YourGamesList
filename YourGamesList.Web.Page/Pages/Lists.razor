@@ -1,0 +1,95 @@
+﻿@page "/lists"
+@using Microsoft.Extensions.Logging
+@using YourGamesList.Contracts.Dto
+@using YourGamesList.Web.Page.Services
+@using YourGamesList.Web.Page.Services.UserLoginStateManager
+@using YourGamesList.Web.Page.Services.Ygl
+
+@if (!_isPageInitialized)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="mx-auto"/>
+}
+else
+{
+    @if (!_isUserLoggedIn)
+    {
+        <LoginFirst></LoginFirst>
+    }
+    else
+    {
+        <MudGrid Justify="Justify.FlexStart" Spacing="3">
+            <MudItem xs="12" sm="12" md="12" lg="12" xl="12" xxl="12">
+                <MudTextField
+                    Immediate="true"
+                    @bind-Value="@_filterByListName"
+                    Label="Filter by list name" Variant="Variant.Outlined" InputType="InputType.Text"
+                ></MudTextField>
+            </MudItem>
+
+            @foreach (var list in FilteredLists())
+            {
+                <MudItem xs="12" sm="12" md="6" lg="4" xl="4" xxl="3">
+                    <ListTile List="@list" OnTileClick="@OnTileClick"></ListTile>
+                </MudItem>
+            }
+
+        </MudGrid>
+    }
+}
+
+@code {
+
+    [Inject] private ILogger<SearchGamesV2> Logger { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
+    [Inject] private IUserListsManager UserListsManager { get; set; } = default!;
+
+    private bool _isUserLoggedIn = false;
+    private bool _isPageInitialized = false;
+
+    private string _filterByListName = string.Empty;
+
+    private List<GamesListDto> _lists = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _isUserLoggedIn = await UserLoginStateManager.IsUserLoggedIn();
+
+        if (_isUserLoggedIn)
+        {
+            _isPageInitialized = false;
+
+            var userLists = await UserListsManager.ReadOrRefresh();
+            if (userLists.IsFailure)
+            {
+                Snackbar.Add("Could not load your lists. Please try to refresh page.", Severity.Warning);
+
+                return;
+            }
+
+            _lists = userLists.Value;
+        }
+
+        _isPageInitialized = true;
+    }
+
+    private void OnTileClick(Guid selectedListId)
+    {
+        Navigation.NavigateTo(Paths.ViewList(selectedListId.ToString()));
+    }
+
+    private List<GamesListDto> FilteredLists()
+    {
+        var filteredLists = _lists.AsEnumerable();
+        if (!string.IsNullOrWhiteSpace(_filterByListName))
+        {
+            filteredLists = filteredLists.Where(x => x.Name.Contains(_filterByListName, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        return filteredLists.ToList();
+    }
+
+
+}

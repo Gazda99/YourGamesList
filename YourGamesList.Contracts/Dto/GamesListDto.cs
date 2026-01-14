@@ -11,4 +11,6 @@ public class GamesListDto
     public required bool IsPublic { get; init; }
     public required bool CanBeDeleted { get; init; }
     public required List<GameListEntryDto> Entries { get; init; }
+    public required DateTimeOffset CreatedDate { get; init; }
+    public required DateTimeOffset? LastModifiedDate { get; init; }
 }
