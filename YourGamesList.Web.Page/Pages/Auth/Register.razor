@@ -61,13 +61,14 @@
                         Snackbar.Add("Failed to register. Please try again.", Severity.Warning);
                         break;
                 }
-
+            }
+            else
+            {
                 Snackbar.Add("Successfully registered.", Severity.Success);
 
-                return;
-            }
 
-            Navigation.NavigateTo(Paths.Login);
+                Navigation.NavigateTo(Paths.Login);
+            }
         }
         finally
         {

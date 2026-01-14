@@ -10,6 +10,7 @@ namespace YourGamesList.Web.Page.Services.UserLoginStateManager;
 
 public interface IUserLoginStateManager
 {
+    event Action OnLoginStateChanged;
     Task SaveUserToken(string token);
     Task<bool> IsUserLoggedIn();
     Task<string?> GetUserToken();
@@ -36,10 +37,13 @@ public class UserLoginStateManager : IUserLoginStateManager
         _localStorageService = localStorageService;
     }
 
+    public event Action? OnLoginStateChanged;
+
     public async Task SaveUserToken(string token)
     {
         var ttl = TimeSpan.FromMinutes(_options.Value.TokenTtlInMinutes);
         await _localStorageService.SetItem(UserTokenLocalStorageKey, token, ttl);
+        OnLoginStateChanged?.Invoke();
     }
 
     public async Task<bool> IsUserLoggedIn()
@@ -69,5 +73,6 @@ public class UserLoginStateManager : IUserLoginStateManager
     public async Task RemoveUserToken()
     {
         await _localStorageService.RemoveItem(UserTokenLocalStorageKey);
+        OnLoginStateChanged?.Invoke();
     }
 }

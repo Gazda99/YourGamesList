@@ -1,4 +1,7 @@
-﻿@inherits LayoutComponentBase
+﻿@using Microsoft.Extensions.Logging
+@using YourGamesList.Web.Page.Components.Dialogs
+@using YourGamesList.Web.Page.Services.UserLoginStateManager
+@inherits LayoutComponentBase
 
 <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode"/>
 <MudPopoverProvider/>
@@ -10,6 +13,14 @@
         <MudText Typo="Typo.h5" Class="ml-3">Application</MudText>
         <MudSpacer/>
         <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle"/>
+        @if (_isUserLoggedIn)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Logout" OnClick="@SignOut"></MudIconButton>
+        }
+        else
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Login" OnClick="@GoToLogin"></MudIconButton>
+        }
         <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End"/>
     </MudAppBar>
     <MudDrawer id="nav-drawer" @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
@@ -28,13 +39,22 @@
 </div>
 
 @code {
+    private bool _isUserLoggedIn = false;
+
     private bool _drawerOpen = true;
     private bool _isDarkMode = false;
     private MudTheme? _theme = null;
 
-    protected override void OnInitialized()
+    [Inject] private ILogger<MainLayout> Logger { get; set; } = default!;
+    [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private IDialogService DialogService { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+
+
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        await base.OnInitializedAsync();
 
         _theme = new MudTheme()
         {
@@ -42,6 +62,45 @@
             PaletteDark = _darkPalette,
             LayoutProperties = new LayoutProperties()
         };
+
+        _isUserLoggedIn = await UserLoginStateManager.IsUserLoggedIn();
+        UserLoginStateManager.OnLoginStateChanged += HandleLoginStateChanged;
+    }
+
+    private void GoToLogin()
+    {
+        Navigation.NavigateTo(Paths.Login);
+    }
+
+    private async Task SignOut()
+    {
+        var dialogParams = new DialogParameters<ConfirmationDialog>
+        {
+            { x => x.ContentText, "Do you really want to sign out?" },
+            { x => x.ButtonText, "Sign out" },
+            { x => x.Color, Color.Info }
+        };
+
+        var options = new DialogOptions() { CloseButton = false, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Sign out?", dialogParams, options);
+        var dialogResult = await dialog.Result;
+        if (dialogResult != null && !dialogResult.Canceled)
+        {
+            var shouldSignOut = (bool) (dialogResult.Data ?? false);
+            if (shouldSignOut)
+            {
+                await UserLoginStateManager.RemoveUserToken();
+                _isUserLoggedIn = false;
+                Snackbar.Add("Successfuly signed out", Severity.Info);
+                Navigation.NavigateTo(Navigation.Uri, true);
+            }
+        }
+    }
+
+    private async void HandleLoginStateChanged()
+    {
+        _isUserLoggedIn = await UserLoginStateManager.IsUserLoggedIn();
+        StateHasChanged();
     }
 
     private void DrawerToggle()
@@ -93,7 +152,7 @@
         OverlayLight = "#1e1e2d80",
     };
 
-    public string DarkLightModeButtonIcon => _isDarkMode switch
+    private string DarkLightModeButtonIcon => _isDarkMode switch
     {
         true => Icons.Material.Rounded.AutoMode,
         false => Icons.Material.Outlined.DarkMode,
