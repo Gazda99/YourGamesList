@@ -15,6 +15,12 @@ public interface IUserLoginStateManager
     Task<bool> IsUserLoggedIn();
     Task<string?> GetUserToken();
     Task RemoveUserToken();
+    
+    
+    
+    
+    
+    
 }
 
 //TODO: unit tests

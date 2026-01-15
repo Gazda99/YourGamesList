@@ -18,4 +18,9 @@ public class UserListsState : IStaticState<List<GamesListDto>>
     {
         _state = state;
     }
+    
+    public void RemoveState()
+    {
+        _state = null;
+    }
 }

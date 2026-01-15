@@ -17,4 +17,9 @@ public class AvailableQueryArgumentsState : IStaticState<AvailableSearchQueryArg
     {
         _state = state;
     }
+
+    public void RemoveState()
+    {
+        _state = null;
+    }
 }

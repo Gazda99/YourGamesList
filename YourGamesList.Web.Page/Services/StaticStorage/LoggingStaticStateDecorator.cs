@@ -44,4 +44,13 @@ public class LoggingStaticStateDecorator<TState> : IStaticState<TState>
 
         _logger.LogInformation("State for {StateType} set successfully.", StateName);
     }
+
+    public void RemoveState()
+    {
+        _logger.LogInformation("Removing state for {StateType}.", StateName);
+
+        _inner.RemoveState();
+
+        _logger.LogInformation("State for {StateType} removed successfully.", StateName);
+    }
 }
