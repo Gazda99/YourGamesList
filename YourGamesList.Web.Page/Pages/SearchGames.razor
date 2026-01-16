@@ -41,6 +41,13 @@ else
             }
             else
             {
+                @if (_searchResults.Any())
+                {
+                    <MudItem xs="12" sm="12" md="12" lg="12" xl="12" xxl="12">
+                        @RenderPaginationControlPanel
+                    </MudItem>
+                }
+
                 @foreach (var game in _searchResults)
                 {
                     <MudItem xs="12" sm="12" md="12" lg="6" xl="6" xxl="4">
@@ -50,13 +57,56 @@ else
             }
 
         </MudGrid>
+        <MudSpacer></MudSpacer>
+
+        @if (_searchResults.Any())
+        {
+            @RenderPaginationControlPanel
+        }
     }
 }
 
 
 
 @code {
+
+    #region Renders
+
+    private RenderFragment RenderPaginationControlPanel => __builder =>
+    {
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowLeft"
+                           Color="Color.Secondary"
+                           Size="Size.Medium"
+                           OnClick="@MoveBack"/>
+
+            <MudText Typo="Typo.body1">@_currentPageNumber</MudText>
+
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowRight"
+                           Color="Color.Secondary"
+                           Size="Size.Medium"
+                           OnClick="@MoveForward"/>
+
+            <MudSelect T="int"
+                       Value="@_showOnPage"
+                       ValueChanged="@UpdateShowOnPage"
+                       MultiSelection="false"
+                       Label="Show on page"
+                       Variant="Variant.Outlined"
+                       Clearable="false">
+                @foreach (var showOnPage in ShowOnPageAllowedValues.OrderBy(x => x))
+                {
+                    <MudSelectItem Value="@showOnPage">@showOnPage</MudSelectItem>
+                }
+            </MudSelect>
+        </MudStack>
+    };
+
+    #endregion
+
+
     private const string AvailableQueryArgumentsStateKey = "available-search-games-query-arguments";
+    private static readonly int[] ShowOnPageAllowedValues = [10, 25];
 
     [Inject] private ILogger<SearchGames> Logger { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
@@ -71,6 +121,11 @@ else
     private bool _isUserLoggedIn = false;
     private bool _isPageInitialized = false;
     private bool _isLoading = false;
+    private bool _isSearchGamesCallInProgress = false;
+
+    private int _currentSkip = 0;
+    private int _currentPageNumber = 1;
+    private int _showOnPage = ShowOnPageAllowedValues[0];
 
     private List<GameDto> _searchResults = [];
 
@@ -103,7 +158,20 @@ else
 
     private async Task OnSearchButtonClick(SearchGamesInputPanel.SearchGamesParameters searchParameters)
     {
-        _isLoading = true;
+        _currentSkip = 0;
+        UpdateCurrentPageNumber();
+        var searchResults = await Search(searchParameters, 0);
+        _searchResults = searchResults;
+    }
+
+    private async Task<List<GameDto>> Search(SearchGamesInputPanel.SearchGamesParameters searchParameters, int skip, bool loadingEnabled = true)
+    {
+        _isSearchGamesCallInProgress = true;
+
+        if (loadingEnabled)
+        {
+            _isLoading = true;
+        }
 
         try
         {
@@ -114,21 +182,29 @@ else
                 themes: searchParameters.SelectedThemes,
                 genres: searchParameters.SelectedGenres,
                 gameType: searchParameters.SelectedGameType,
-                releaseYearQuery: searchParameters.SelectedTypeOfDate != TypeOfDateDto.None ? new ValueTuple<TypeOfDateDto, int>(searchParameters.SelectedTypeOfDate, searchParameters.SelectedYear) : null
+                releaseYearQuery: searchParameters.SelectedTypeOfDate != TypeOfDateDto.None ? new ValueTuple<TypeOfDateDto, int>(searchParameters.SelectedTypeOfDate, searchParameters.SelectedYear) : null,
+                skip: skip,
+                take: _showOnPage
             );
 
             if (res.IsSuccess)
             {
-                _searchResults = res.Value!;
+                //_searchResults = res.Value!;
+                return res.Value ?? [];
             }
             else
             {
                 Snackbar.Add("Failed to obtain games.", Severity.Warning);
+                return [];
             }
         }
         finally
         {
-            _isLoading = false;
+            _isSearchGamesCallInProgress = false;
+            if (loadingEnabled)
+            {
+                _isLoading = false;
+            }
         }
     }
 
@@ -140,5 +216,78 @@ else
         await CacheProvider.Set(AvailableQueryArgumentsStateKey, availableSearchQueryArguments);
         return availableSearchQueryArguments!;
     }
+
+    private async Task MoveBack()
+    {
+        if (_isSearchGamesCallInProgress)
+        {
+            return;
+        }
+
+        if (_searchGamesInputPanel == null)
+        {
+            return;
+        }
+
+        if (_currentSkip == 0)
+        {
+            return;
+        }
+
+        _currentSkip -= _showOnPage;
+        if (_currentSkip < 0)
+        {
+            _currentSkip = 0;
+        }
+
+        var searchResults = await Search(_searchGamesInputPanel.SearchParameters, _currentSkip, false);
+        _searchResults = searchResults;
+        UpdateCurrentPageNumber();
+    }
+
+    private async Task MoveForward()
+    {
+        if (_isSearchGamesCallInProgress)
+        {
+            return;
+        }
+
+        if (_searchGamesInputPanel == null)
+        {
+            return;
+        }
+
+        _currentSkip += _showOnPage;
+        var searchResults = await Search(_searchGamesInputPanel.SearchParameters, _currentSkip, false);
+        if (!searchResults.Any())
+        {
+            _currentSkip -= _showOnPage;
+        }
+        else
+        {
+            _searchResults = searchResults;
+            UpdateCurrentPageNumber();
+        }
+    }
+
+    private void UpdateCurrentPageNumber()
+    {
+        _currentPageNumber = (_currentSkip / _showOnPage) + 1;
+    }
+
+    private async Task UpdateShowOnPage(int showOnPage)
+    {
+        _currentSkip = 0;
+        _showOnPage = showOnPage;
+        UpdateCurrentPageNumber();
+
+
+        if (_searchGamesInputPanel != null)
+        {
+            var searchResults = await Search(_searchGamesInputPanel.SearchParameters, 0, false);
+            _searchResults = searchResults;
+        }
+    }
+
 
 }
