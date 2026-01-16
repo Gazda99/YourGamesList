@@ -78,8 +78,6 @@ else
 
 
 @code {
-    private const string AllCountriesCacheKey = "all-countries-array";
-
     [Inject] private ILogger<ViewUser> Logger { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
@@ -90,7 +88,7 @@ else
     [Inject(Key = CacheProviders.InMemory)]
     private ICacheProvider CacheProvider { get; set; } = default!;
 
-    private UserDto? _userData { get; set; } = null;
+    private UserDto? _userData = null;
 
     private bool _isUserLoggedIn = false;
     private bool _isPageInitialized = false;
@@ -123,17 +121,7 @@ else
             _selectedDescription = _userData.Description;
             _selectedDateOfBirth = _userData.DateOfBirth?.UtcDateTime;
 
-            var countries = await CacheProvider.Get<string[]>(AllCountriesCacheKey);
-
-            if (!countries.IsSuccess)
-            {
-                var token = await UserLoginStateManager.GetUserToken();
-                _countries = await FetchCountries(token);
-            }
-            else
-            {
-                _countries = countries.Value;
-            }
+            _countries = CountriesService.GetAllIsoCodes();
         }
 
         _isPageInitialized = true;
@@ -187,15 +175,5 @@ else
             Snackbar.Add("Could not update the user.", Severity.Error);
         }
     }
-
-    private async Task<string[]> FetchCountries(string? token)
-    {
-        //TODO: "!"
-        var res = await YglUsersClient.GetCountries(token!);
-        var countries = res.Value;
-        await CacheProvider.Set(AllCountriesCacheKey, countries);
-        return countries!;
-    }
-
 
 }

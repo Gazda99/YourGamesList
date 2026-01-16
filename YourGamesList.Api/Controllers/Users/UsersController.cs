@@ -92,14 +92,4 @@ public class UsersController : YourGamesListBaseController
             return Result(StatusCodes.Status500InternalServerError);
         }
     }
-
-    [HttpGet("countries")]
-    [Authorize]
-    [OutputCache(PolicyName = nameof(AlwaysOnOkOutputPolicy))]
-    [ProducesResponseType(typeof(string[]), StatusCodes.Status200OK)]
-    public Task<IActionResult> GetAvailableCountries()
-    {
-        var res = _countriesService.GetAllIsoCodes();
-        return Task.FromResult(Result(StatusCodes.Status200OK, res));
-    }
 }

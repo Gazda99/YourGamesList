@@ -106,10 +106,4 @@ public interface IYglApiUsers : IHandlesHttpRefitException
     Task<IApiResponse<Guid>> UpdateUser([Authorize("Bearer")] string userToken,
         [Body(BodySerializationMethod.Serialized)]
         UserUpdateRequestBody request);
-
-    [Get("/users/countries")]
-    [Headers($"Accept: {ContentTypes.ApplicationJson}")]
-    Task<IApiResponse<string[]>> GetAvailableCountries(
-        [Authorize("Bearer")] string userToken
-    );
 }

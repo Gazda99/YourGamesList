@@ -140,27 +140,4 @@ public class UsersControllerTests
     }
 
     #endregion
-
-    #region GetAvailableCountries
-
-    [Test]
-    public async Task GetAvailableCountries_SuccessScenario()
-    {
-        //ARRANGE
-        var expectedResValue = _fixture.CreateMany<string>(200).ToArray();
-        _countriesService.GetAllIsoCodes().Returns(expectedResValue);
-
-        var controller = new UsersController(_logger, _requestToParametersMapper, _usersService, _countriesService);
-
-        //ACT
-        var res = await controller.GetAvailableCountries();
-
-        //ASSERT
-        Assert.That(res, Is.TypeOf<ObjectResult>());
-        var objectResult = (ObjectResult) res;
-        Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
-        Assert.That(objectResult.Value, Is.EqualTo(expectedResValue));
-    }
-
-    #endregion
 }

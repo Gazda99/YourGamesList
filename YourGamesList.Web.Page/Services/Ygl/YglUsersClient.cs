@@ -14,7 +14,6 @@ public interface IYglUsersClient
 {
     Task<CombinedResult<UserDto, YglUserClientError>> GetSelfUser(string userToken);
     Task<CombinedResult<Guid, YglUserClientError>> UpdateUser(string userToken, UserUpdateRequestBody body);
-    Task<CombinedResult<string[], YglUserClientError>> GetCountries(string userToken);
 }
 
 //TODO: unit tests
@@ -81,26 +80,6 @@ public class YglUsersClient : IYglUsersClient
         else
         {
             return CombinedResult<Guid, YglUserClientError>.Failure(YglUserClientError.General);
-        }
-    }
-
-    public async Task<CombinedResult<string[], YglUserClientError>> GetCountries(string userToken)
-    {
-        _logger.LogInformation("Sending request to get list of available countries.");
-        var callResult = await _yglApi.Users.TryRefit(() => _yglApi.Users.GetAvailableCountries(userToken), _logger);
-        if (callResult.IsFailure)
-        {
-            return CombinedResult<string[], YglUserClientError>.Failure(YglUserClientError.General);
-        }
-
-        var res = callResult.Value;
-        if (res.StatusCode == HttpStatusCode.OK)
-        {
-            return CombinedResult<string[], YglUserClientError>.Success(res.Content!);
-        }
-        else
-        {
-            return CombinedResult<string[], YglUserClientError>.Failure(YglUserClientError.General);
         }
     }
 }
