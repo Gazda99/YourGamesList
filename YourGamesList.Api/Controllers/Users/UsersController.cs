@@ -8,10 +8,10 @@ using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Attributes;
 using YourGamesList.Api.Model.Requests.Users;
 using YourGamesList.Api.OutputCachePolicies;
-using YourGamesList.Api.Services;
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Users;
 using YourGamesList.Api.Services.Users.Model;
+using YourGamesList.Common;
 using YourGamesList.Contracts.Dto;
 
 namespace YourGamesList.Api.Controllers.Users;

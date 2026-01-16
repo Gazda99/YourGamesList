@@ -7,10 +7,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Model;
-using YourGamesList.Api.Services;
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Users;
 using YourGamesList.Api.Services.Users.Model;
+using YourGamesList.Common;
 using YourGamesList.Contracts.Dto;
 using YourGamesList.Database;
 using YourGamesList.Database.Entities;
@@ -133,7 +133,7 @@ public class UsersServiceTests
         _yglDbContextBuilder.WithUserDbSet(users);
         var userDto = _fixture.Create<UserDto>();
         _yglDatabaseAndDtoMapper.Map(Arg.Is<User>(u => u.Id == userId)).Returns(userDto);
-        _countriesService.ValidateThreeLetterIsoRegionName(parameters.Country).Returns(true);
+        _countriesService.ValidateThreeLetterIsoCode(parameters.Country).Returns(true);
 
         var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _countriesService, _timeProvider);
 
@@ -169,7 +169,7 @@ public class UsersServiceTests
             .Create();
         var time = _fixture.Create<DateTimeOffset>();
         _timeProvider.GetUtcNow().Returns(time);
-        _countriesService.ValidateThreeLetterIsoRegionName(parameters.Country).Returns(false);
+        _countriesService.ValidateThreeLetterIsoCode(parameters.Country).Returns(false);
 
         var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _countriesService, _timeProvider);
 
@@ -199,7 +199,7 @@ public class UsersServiceTests
             .Create();
         var time = _fixture.Create<DateTimeOffset>();
         _timeProvider.GetUtcNow().Returns(time);
-        _countriesService.ValidateThreeLetterIsoRegionName(parameters.Country).Returns(true);
+        _countriesService.ValidateThreeLetterIsoCode(parameters.Country).Returns(true);
 
         var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _countriesService, _timeProvider);
 
@@ -229,7 +229,7 @@ public class UsersServiceTests
             .Create();
         var time = _fixture.Create<DateTimeOffset>();
         _timeProvider.GetUtcNow().Returns(time);
-        _countriesService.ValidateThreeLetterIsoRegionName(parameters.Country).Returns(true);
+        _countriesService.ValidateThreeLetterIsoCode(parameters.Country).Returns(true);
 
         var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _countriesService, _timeProvider);
 
@@ -259,7 +259,7 @@ public class UsersServiceTests
             .Create();
         var time = _fixture.Create<DateTimeOffset>();
         _timeProvider.GetUtcNow().Returns(time);
-        _countriesService.ValidateThreeLetterIsoRegionName(parameters.Country).Returns(true);
+        _countriesService.ValidateThreeLetterIsoCode(parameters.Country).Returns(true);
         var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _countriesService, _timeProvider);
 
         //ACT

@@ -1,5 +1,7 @@
 ﻿@page "/user"
 @using Microsoft.Extensions.Logging
+@using YourGamesList.Common
+@using YourGamesList.Common.Caching
 @using YourGamesList.Contracts.Dto
 @using YourGamesList.Contracts.Requests.Users
 @using YourGamesList.Web.Page.Services
@@ -27,29 +29,34 @@ else
 
                 <MudItem xs="12" sm="6">
                     <MudPaper Class="pa-4">
-                        <MudText Typo="Typo.caption">Username</MudText>
-                        <MudText Typo="Typo.body1">@_userData.Username</MudText>
+                        <MudText>Username</MudText>
+                        <MudText>@_userData.Username</MudText>
                     </MudPaper>
                 </MudItem>
 
                 <MudItem xs="12" sm="6">
                     <MudPaper Class="pa-4">
-                        <MudText Typo="Typo.caption">Country</MudText>
-                        <MudText Typo="Typo.body1">@DisplayCountry()</MudText>
+                        <MudText>Country</MudText>
+                        <MudSelect @bind-Value="_selectedCountry">
+                            @foreach (var country in _countries)
+                            {
+                                <MudSelectItem Value="country">@DisplayCountry(country)</MudSelectItem>
+                            }
+                        </MudSelect>
                     </MudPaper>
                 </MudItem>
 
                 <MudItem xs="12" sm="6">
                     <MudPaper Class="pa-4">
-                        <MudText Typo="Typo.caption">Date of Birth</MudText>
-                        <MudText Typo="Typo.body1">@DisplayDateOfBirth()</MudText>
+                        <MudText>Date of Birth</MudText>
+                        <MudDatePicker @bind-Date="_selectedDateOfBirth"/>
                     </MudPaper>
                 </MudItem>
 
                 <MudItem xs="12">
                     <MudPaper Class="pa-4">
-                        <MudText Typo="Typo.caption">Description</MudText>
-                        <MudText Typo="Typo.body1">@DisplayDescription()</MudText>
+                        <MudText>Description</MudText>
+                        <MudTextField @bind-Value="@_selectedDescription" Variant="Variant.Outlined" InputType="InputType.Text"></MudTextField>
                     </MudPaper>
                 </MudItem>
 
@@ -71,11 +78,17 @@ else
 
 
 @code {
+    private const string AllCountriesCacheKey = "all-countries-array";
+
     [Inject] private ILogger<ViewUser> Logger { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
     [Inject] private IUserManager UserManager { get; set; } = default!;
     [Inject] private IYglUsersClient YglUsersClient { get; set; } = default!;
+    [Inject] private ICountriesService CountriesService { get; set; } = default!;
+
+    [Inject(Key = CacheProviders.InMemory)]
+    private ICacheProvider CacheProvider { get; set; } = default!;
 
     private UserDto? _userData { get; set; } = null;
 
@@ -83,6 +96,10 @@ else
     private bool _isPageInitialized = false;
 
     private string[] _countries = [];
+
+    private string _selectedCountry = string.Empty;
+    private string _selectedDescription = string.Empty;
+    private DateTime? _selectedDateOfBirth = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -101,26 +118,45 @@ else
                 return;
             }
 
-
             _userData = user.Value;
+            _selectedCountry = _userData.Country;
+            _selectedDescription = _userData.Description;
+            _selectedDateOfBirth = _userData.DateOfBirth?.UtcDateTime;
+
+            var countries = await CacheProvider.Get<string[]>(AllCountriesCacheKey);
+
+            if (!countries.IsSuccess)
+            {
+                var token = await UserLoginStateManager.GetUserToken();
+                _countries = await FetchCountries(token);
+            }
+            else
+            {
+                _countries = countries.Value;
+            }
         }
 
         _isPageInitialized = true;
     }
 
-    private string DisplayDateOfBirth()
+    private string DisplayCountry(string isoCode)
     {
-        return _userData?.DateOfBirth?.ToString("MMMM dd, yyyy") ?? "Not provided";
-    }
-
-    private string DisplayCountry()
-    {
-        return string.IsNullOrWhiteSpace(_userData?.Country) ? "Not provided" : _userData.Country;
-    }
-
-    private string DisplayDescription()
-    {
-        return string.IsNullOrWhiteSpace(_userData?.Description) ? "Not provided" : _userData.Description;
+        if (string.IsNullOrWhiteSpace(isoCode))
+        {
+            return "Not provided";
+        }
+        else
+        {
+            var parseResult = CountriesService.TryParseThreeLetterIsoRegionName(isoCode, out var fullEnglishName);
+            if (parseResult)
+            {
+                return fullEnglishName!;
+            }
+            else
+            {
+                return "Not provided";
+            }
+        }
     }
 
     private async Task SaveUserChanges()
@@ -134,13 +170,17 @@ else
 
         var requestBody = new UserUpdateRequestBody()
         {
+            Country = _selectedCountry,
+            Description = _selectedDescription,
+            DateOfBirth = _selectedDateOfBirth != null ? new DateTimeOffset(DateTime.SpecifyKind(_selectedDateOfBirth!.Value, DateTimeKind.Utc)) : _selectedDateOfBirth
         };
 
         var res = await YglUsersClient.UpdateUser(userToken, requestBody);
 
         if (res.IsSuccess)
         {
-            Snackbar.Add("Successfully updated the user.", Severity.Error);
+            Snackbar.Add("Successfully updated the user.", Severity.Info);
+            _ = UserManager.Refresh();
         }
         else
         {
@@ -148,9 +188,13 @@ else
         }
     }
 
-    private async Task FetchCountries(string? token)
+    private async Task<string[]> FetchCountries(string? token)
     {
+        //TODO: "!"
         var res = await YglUsersClient.GetCountries(token!);
+        var countries = res.Value;
+        await CacheProvider.Set(AllCountriesCacheKey, countries);
+        return countries!;
     }
 
 

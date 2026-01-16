@@ -9,6 +9,7 @@ using MudBlazor;
 using MudBlazor.Services;
 using Refit;
 using Serilog;
+using YourGamesList.Common;
 using YourGamesList.Common.Caching;
 using YourGamesList.Common.Http;
 using YourGamesList.Common.Options.Validators;
@@ -44,6 +45,8 @@ public static partial class AppBuilder
         builder.Services.AddMemoryCache();
         builder.Services.AddKeyedSingleton<ICacheProvider, InMemoryCacheProvider>(CacheProviders.InMemory);
         builder.Services.AddKeyedScoped<ICacheProvider, LocalStorageCache>(WebPageCacheProviders.LocalStorage);
+
+        builder.Services.AddSingleton<ICountriesService, CountriesService>();
         
         builder.Services.AddOptionsWithFluentValidation<UserLoginStateManagerOptions, UserLoginStateManagerOptionsValidator>(UserLoginStateManagerOptions
             .SectionName);
