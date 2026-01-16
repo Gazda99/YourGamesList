@@ -97,11 +97,11 @@ public interface IYglApiLists : IHandlesHttpRefitException
 
 public interface IYglApiUsers : IHandlesHttpRefitException
 {
-    [Post("/users/getSelf")]
+    [Get("/users/getSelf")]
     [Headers($"Accept: {ContentTypes.ApplicationJson}")]
     Task<IApiResponse<UserDto>> GetSelfUser([Authorize("Bearer")] string userToken);
 
-    [Post("/users/update")]
+    [Patch("/users/update")]
     [Headers($"Content-Type: {ContentTypes.ApplicationJson}")]
     Task<IApiResponse<Guid>> UpdateUser([Authorize("Bearer")] string userToken,
         [Body(BodySerializationMethod.Serialized)]

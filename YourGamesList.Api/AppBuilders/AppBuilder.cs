@@ -27,6 +27,7 @@ using YourGamesList.Api.Services.Twitch.Options;
 using YourGamesList.Api.Services.Users;
 using YourGamesList.Api.Services.Ygl.Games;
 using YourGamesList.Api.Services.Ygl.Lists;
+using YourGamesList.Common;
 using YourGamesList.Common.Caching;
 using YourGamesList.Common.Http;
 using YourGamesList.Common.Options.Validators;
@@ -81,6 +82,8 @@ public static partial class AppBuilder
 
         builder.Services.AddAuth();
         builder.Services.AddDatabases();
+
+        builder.Services.AddSingleton<ICountriesService, CountriesService>();
 
         builder.Services.AddSingleton<IYglDatabaseAndDtoMapper, YglDatabaseAndDtoMapper>();
         builder.Services.AddSingleton<IRequestToParametersMapper, RequestToParametersMapper>();

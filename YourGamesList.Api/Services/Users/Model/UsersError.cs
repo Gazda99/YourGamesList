@@ -3,4 +3,7 @@
 public enum UsersError
 {
     UserNotFound,
+    
+    
+    UserUpdateWrongInputData
 }
