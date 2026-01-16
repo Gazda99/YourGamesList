@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Model;
+using YourGamesList.Api.Services;
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Users;
 using YourGamesList.Api.Services.Users.Model;
@@ -24,7 +25,8 @@ public class UsersServiceTests
     private ILogger<UsersService> _logger;
     private IYglDatabaseAndDtoMapper _yglDatabaseAndDtoMapper;
     private TimeProvider _timeProvider;
-    
+    private ICountriesService _countriesService;
+
     private TestYglDbContextBuilder _yglDbContextBuilder;
     private IDbContextFactory<YglDbContext> _dbContextFactory;
 
@@ -37,6 +39,7 @@ public class UsersServiceTests
         _logger = Substitute.For<ILogger<UsersService>>();
         _yglDatabaseAndDtoMapper = Substitute.For<IYglDatabaseAndDtoMapper>();
         _timeProvider = Substitute.For<TimeProvider>();
+        _countriesService = Substitute.For<ICountriesService>();
 
         _yglDbContextBuilder = TestYglDbContextBuilder.Build();
         _dbContextFactory = Substitute.For<IDbContextFactory<YglDbContext>>();
@@ -70,7 +73,7 @@ public class UsersServiceTests
         var userDto = _fixture.Create<UserDto>();
         _yglDatabaseAndDtoMapper.Map(Arg.Is<User>(u => u.Id == userId)).Returns(userDto);
 
-        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
+        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _countriesService, _timeProvider);
 
         //ACT
         var result = await usersService.GetSelfUser(parameters);
@@ -86,7 +89,7 @@ public class UsersServiceTests
     {
         //ARRANGE
         var parameters = _fixture.Create<UserGetSelfParameters>();
-        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
+        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _countriesService, _timeProvider);
 
         //ACT
         var result = await usersService.GetSelfUser(parameters);
@@ -112,6 +115,8 @@ public class UsersServiceTests
                 .With(x => x.UserId, userId)
                 .WithAutoProperties()
                 .Create())
+            .With(x => x.Description, "ebebe")
+            .With(x => x.DateOfBirth, (DateTimeOffset?) null)
             .WithAutoProperties()
             .Create();
         var time = _fixture.Create<DateTimeOffset>();
@@ -128,8 +133,9 @@ public class UsersServiceTests
         _yglDbContextBuilder.WithUserDbSet(users);
         var userDto = _fixture.Create<UserDto>();
         _yglDatabaseAndDtoMapper.Map(Arg.Is<User>(u => u.Id == userId)).Returns(userDto);
+        _countriesService.ValidateThreeLetterIsoRegionName(parameters.Country).Returns(true);
 
-        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
+        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _countriesService, _timeProvider);
 
         //ACT
         var result = await usersService.UpdateUser(parameters);
@@ -148,11 +154,113 @@ public class UsersServiceTests
     }
 
     [Test]
+    public async Task UpdateUser_OnValidationError_WrongCountry_ReturnsUserUpdateWrongInputDataError()
+    {
+        //ARRANGE
+        var userId = Guid.NewGuid();
+        var parameters = _fixture.Build<UserUpdateParameters>()
+            .With(x => x.UserInformation, _fixture.Build<JwtUserInformation>()
+                .With(x => x.UserId, userId)
+                .WithAutoProperties()
+                .Create())
+            .With(x => x.Description, "ebebe")
+            .With(x => x.DateOfBirth, (DateTimeOffset?) null)
+            .WithAutoProperties()
+            .Create();
+        var time = _fixture.Create<DateTimeOffset>();
+        _timeProvider.GetUtcNow().Returns(time);
+        _countriesService.ValidateThreeLetterIsoRegionName(parameters.Country).Returns(false);
+
+        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _countriesService, _timeProvider);
+
+        //ACT
+        var result = await usersService.UpdateUser(parameters);
+
+        //ASSERT
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.EqualTo(UsersError.UserUpdateWrongInputData));
+        _logger.ReceivedLog(LogLevel.Warning, $"User with ID '{parameters.UserInformation.UserId}' cannot be updated due to validation errors.");
+        _logger.ReceivedLog(LogLevel.Information, $"Validation of '{nameof(UserUpdateParameters)}' failed. Reason: wrong country name.");
+    }
+
+    [Test]
+    public async Task UpdateUser_OnValidationError_WrongDescription_ReturnsUserUpdateWrongInputDataError()
+    {
+        //ARRANGE
+        var userId = Guid.NewGuid();
+        var parameters = _fixture.Build<UserUpdateParameters>()
+            .With(x => x.UserInformation, _fixture.Build<JwtUserInformation>()
+                .With(x => x.UserId, userId)
+                .WithAutoProperties()
+                .Create())
+            .With(x => x.Description, new string(_fixture.CreateMany<char>(1000).ToArray()))
+            .With(x => x.DateOfBirth, (DateTimeOffset?) null)
+            .WithAutoProperties()
+            .Create();
+        var time = _fixture.Create<DateTimeOffset>();
+        _timeProvider.GetUtcNow().Returns(time);
+        _countriesService.ValidateThreeLetterIsoRegionName(parameters.Country).Returns(true);
+
+        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _countriesService, _timeProvider);
+
+        //ACT
+        var result = await usersService.UpdateUser(parameters);
+
+        //ASSERT
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.EqualTo(UsersError.UserUpdateWrongInputData));
+        _logger.ReceivedLog(LogLevel.Warning, $"User with ID '{parameters.UserInformation.UserId}' cannot be updated due to validation errors.");
+        _logger.ReceivedLog(LogLevel.Information, $"Validation of '{nameof(UserUpdateParameters)}' failed. Reason: wrong description.");
+    }
+
+    [Test]
+    public async Task UpdateUser_OnValidationError_WrongDateOfBirth_ReturnsUserUpdateWrongInputDataError()
+    {
+        //ARRANGE
+        var userId = Guid.NewGuid();
+        var parameters = _fixture.Build<UserUpdateParameters>()
+            .With(x => x.UserInformation, _fixture.Build<JwtUserInformation>()
+                .With(x => x.UserId, userId)
+                .WithAutoProperties()
+                .Create())
+            .With(x => x.Description, "ebebe")
+            .With(x => x.DateOfBirth, DateTime.UtcNow)
+            .WithAutoProperties()
+            .Create();
+        var time = _fixture.Create<DateTimeOffset>();
+        _timeProvider.GetUtcNow().Returns(time);
+        _countriesService.ValidateThreeLetterIsoRegionName(parameters.Country).Returns(true);
+
+        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _countriesService, _timeProvider);
+
+        //ACT
+        var result = await usersService.UpdateUser(parameters);
+
+        //ASSERT
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.EqualTo(UsersError.UserUpdateWrongInputData));
+        _logger.ReceivedLog(LogLevel.Warning, $"User with ID '{parameters.UserInformation.UserId}' cannot be updated due to validation errors.");
+        _logger.ReceivedLog(LogLevel.Information, $"Validation of '{nameof(UserUpdateParameters)}' failed. Reason: wrong date of birth.");
+    }
+
+    [Test]
     public async Task UpdateUser_UserDoesNotExists_ReturnsUserNotFoundError()
     {
         //ARRANGE
-        var parameters = _fixture.Create<UserUpdateParameters>();
-        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
+        var userId = Guid.NewGuid();
+        var parameters = _fixture.Build<UserUpdateParameters>()
+            .With(x => x.UserInformation, _fixture.Build<JwtUserInformation>()
+                .With(x => x.UserId, userId)
+                .WithAutoProperties()
+                .Create())
+            .With(x => x.Description, "ebebe")
+            .With(x => x.DateOfBirth, (DateTimeOffset?) null)
+            .WithAutoProperties()
+            .Create();
+        var time = _fixture.Create<DateTimeOffset>();
+        _timeProvider.GetUtcNow().Returns(time);
+        _countriesService.ValidateThreeLetterIsoRegionName(parameters.Country).Returns(true);
+        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _countriesService, _timeProvider);
 
         //ACT
         var result = await usersService.UpdateUser(parameters);

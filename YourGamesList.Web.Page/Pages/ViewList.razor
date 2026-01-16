@@ -1,4 +1,4 @@
-﻿@page "/viewList/{ListId:guid}"
+﻿@page "/lists/{ListId:guid}"
 @using Microsoft.Extensions.Logging
 @using YourGamesList.Contracts.Dto
 @using YourGamesList.Web.Page.Services
@@ -53,7 +53,7 @@ else
 
 @code {
 
-    [Inject] private ILogger<SearchGamesV2> Logger { get; set; } = default!;
+    [Inject] private ILogger<SearchGames> Logger { get; set; } = default!;
 
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     [Inject] private IYglListsClient ListsClient { get; set; } = default!;

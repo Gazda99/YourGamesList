@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace YourGamesList.Web.Page.Services.LocalStorage.Model;
+namespace YourGamesList.Web.Page.Services.Caching.LocalStorage.Model;
 
 public class LocalStorageItem<T>
 {

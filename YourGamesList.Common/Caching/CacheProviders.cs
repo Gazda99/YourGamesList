@@ -2,5 +2,5 @@
 
 public static class CacheProviders
 {
-    public const string InMemory = "InMemory";
+    public const string InMemory = "InMemory_CacheProvider";
 }

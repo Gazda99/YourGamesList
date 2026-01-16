@@ -82,6 +82,8 @@ public static partial class AppBuilder
         builder.Services.AddAuth();
         builder.Services.AddDatabases();
 
+        builder.Services.AddSingleton<ICountriesService, CountriesService>();
+
         builder.Services.AddSingleton<IYglDatabaseAndDtoMapper, YglDatabaseAndDtoMapper>();
         builder.Services.AddSingleton<IRequestToParametersMapper, RequestToParametersMapper>();
 

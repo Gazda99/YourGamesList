@@ -1,8 +1,8 @@
-﻿@page "/searchGamesV2"
+﻿@page "/searchGames"
 @using Microsoft.Extensions.Logging
+@using YourGamesList.Common.Caching
 @using YourGamesList.Contracts.Dto
 @using YourGamesList.Contracts.Responses.Games
-@using YourGamesList.Web.Page.Services.StaticStorage
 @using YourGamesList.Web.Page.Services.UserLoginStateManager
 @using YourGamesList.Web.Page.Services.Ygl
 
@@ -56,11 +56,15 @@ else
 
 
 @code {
-    [Inject] private ILogger<SearchGamesV2> Logger { get; set; } = default!;
+    private const string AvailableQueryArgumentsStateKey = "available-search-games-query-arguments";
+
+    [Inject] private ILogger<SearchGames> Logger { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     [Inject] private IYglGamesClient GamesClient { get; set; } = default!;
     [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
-    [Inject] private IStaticState<AvailableSearchQueryArgumentsResponse> AvailableQueryArgumentsState { get; set; } = default!;
+
+    [Inject(Key = CacheProviders.InMemory)]
+    private ICacheProvider CacheProvider { get; set; } = default!;
 
     private SearchGamesInputPanel? _searchGamesInputPanel;
 
@@ -81,13 +85,17 @@ else
         {
             _isPageInitialized = false;
 
-            if (AvailableQueryArgumentsState.GetState() == null)
+            var availableQueryArgumentsRes = await CacheProvider.Get<AvailableSearchQueryArgumentsResponse>(AvailableQueryArgumentsStateKey);
+
+            if (!availableQueryArgumentsRes.IsSuccess)
             {
                 var token = await UserLoginStateManager.GetUserToken();
-                await FetchQueryArguments(token);
+                _availableQueryArguments = await FetchQueryArguments(token);
             }
-
-            _availableQueryArguments = AvailableQueryArgumentsState.GetState()!;
+            else
+            {
+                _availableQueryArguments = availableQueryArgumentsRes.Value;
+            }
         }
 
         _isPageInitialized = true;
@@ -124,10 +132,13 @@ else
         }
     }
 
-    private async Task FetchQueryArguments(string? token)
+    private async Task<AvailableSearchQueryArgumentsResponse> FetchQueryArguments(string? token)
     {
+        //TODO: "!"
         var res = await GamesClient.GetAvailableSearchParams(token!);
-        AvailableQueryArgumentsState.SetState(res.Value!);
+        var availableSearchQueryArguments = res.Value;
+        await CacheProvider.Set(AvailableQueryArgumentsStateKey, availableSearchQueryArguments);
+        return availableSearchQueryArguments!;
     }
 
 }

@@ -20,13 +20,17 @@ public class UsersService : IUsersService
 {
     private readonly ILogger<UsersService> _logger;
     private readonly IYglDatabaseAndDtoMapper _yglDatabaseAndDtoMapper;
+    private readonly ICountriesService _countriesService;
     private readonly TimeProvider _timeProvider;
     private readonly YglDbContext _yglDbContext;
 
-    public UsersService(ILogger<UsersService> logger, IDbContextFactory<YglDbContext> yglDbContext, IYglDatabaseAndDtoMapper yglDatabaseAndDtoMapper, TimeProvider timeProvider)
+    public UsersService(ILogger<UsersService> logger, IDbContextFactory<YglDbContext> yglDbContext, IYglDatabaseAndDtoMapper yglDatabaseAndDtoMapper,
+        ICountriesService countriesService,
+        TimeProvider timeProvider)
     {
         _logger = logger;
         _yglDatabaseAndDtoMapper = yglDatabaseAndDtoMapper;
+        _countriesService = countriesService;
         _timeProvider = timeProvider;
         _yglDbContext = yglDbContext.CreateDbContext();
     }
@@ -47,6 +51,12 @@ public class UsersService : IUsersService
 
     public async Task<CombinedResult<Guid, UsersError>> UpdateUser(UserUpdateParameters parameters)
     {
+        if (!ValidateUserUpdateParameters(parameters))
+        {
+            _logger.LogWarning($"User with ID '{parameters.UserInformation.UserId}' cannot be updated due to validation errors.");
+            return CombinedResult<Guid, UsersError>.Failure(UsersError.UserUpdateWrongInputData);
+        }
+
         var user = await _yglDbContext.Users.FirstOrDefaultAsync(x => x.Id == parameters.UserInformation.UserId);
         if (user == null)
         {
@@ -63,5 +73,47 @@ public class UsersService : IUsersService
         _logger.LogInformation($"Updated user with ID '{user.Id}'");
 
         return CombinedResult<Guid, UsersError>.Success(user.Id);
+    }
+
+    private void LogValidationError(string reason)
+    {
+        _logger.LogInformation($"Validation of '{nameof(UserUpdateParameters)}' failed. Reason: {reason}.");
+    }
+
+    private bool ValidateUserUpdateParameters(UserUpdateParameters parameters)
+    {
+        if (!_countriesService.ValidateThreeLetterIsoRegionName(parameters.Country))
+        {
+            LogValidationError("wrong country name");
+            return false;
+        }
+
+        if (parameters.DateOfBirth != null)
+        {
+            var now = _timeProvider.GetUtcNow().DateTime;
+            var dob = parameters.DateOfBirth.Value;
+
+            var age = now.Year - dob.Year;
+
+            // If the birthday hasn't occurred yet this year, subtract one year
+            if (dob.Date > now.AddYears(-age))
+            {
+                age--;
+            }
+
+            if (age < 12)
+            {
+                LogValidationError("wrong date of birth");
+                return false;
+            }
+        }
+
+        if (parameters.Description?.Length > 512)
+        {
+            LogValidationError("wrong description");
+            return false;
+        }
+
+        return true;
     }
 }
