@@ -10,7 +10,6 @@ namespace YourGamesList.Api.OutputCachePolicies;
 /// <summary>
 /// Serves cached responses only when the response status code is 200 OK. Otherwise, it bypasses the cache.
 /// </summary>
-// TODO: unit test
 public class AlwaysOnOkOutputPolicy : IOutputCachePolicy
 {
     private readonly TimeSpan _cacheTtl = TimeSpan.FromHours(1);
