@@ -1,13 +1,34 @@
-﻿<MudNavMenu>
+﻿@using YourGamesList.Web.Page.Services.UserLoginStateManager
+<MudNavMenu>
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-
-    <MudNavLink Href="@Paths.SearchGamesV2" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Search">Search Games</MudNavLink>
-
+    <MudNavLink Href="@Paths.SearchGames" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Search">Search Games</MudNavLink>
     <MudNavLink Href="@Paths.User" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.AccountCircle">User</MudNavLink>
-    <MudNavLink Href="@Paths.Register" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Add">Register</MudNavLink>
-    @* <MudNavLink Href="viewList/a4fb70b8-632b-4a1c-9d9e-79cd30d38a89" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.List">VIEW</MudNavLink> *@
     <MudNavLink Href="@Paths.Lists" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.List">Lists</MudNavLink>
+    @if (!_isUserLoggedIn)
+    {
+        <MudNavLink Href="@Paths.Register" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Add">Register</MudNavLink>
+    }
 
 </MudNavMenu>
 
 
+
+@code {
+    private bool _isUserLoggedIn = false;
+    [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        _isUserLoggedIn = await UserLoginStateManager.IsUserLoggedIn();
+        UserLoginStateManager.OnLoginStateChanged += HandleLoginStateChanged;
+    }
+
+    private async void HandleLoginStateChanged()
+    {
+        _isUserLoggedIn = await UserLoginStateManager.IsUserLoggedIn();
+        StateHasChanged();
+    }
+
+}

@@ -1,15 +1,14 @@
 ﻿@page "/login"
 @using Microsoft.Extensions.Logging
-@using YourGamesList.Contracts.Dto
-@using YourGamesList.Web.Page.Services.StaticStorage
+@using YourGamesList.Web.Page.Services
 @using YourGamesList.Web.Page.Services.UserLoginStateManager
 @using YourGamesList.Web.Page.Services.Ygl
 @using YourGamesList.Web.Page.Services.Ygl.Model
 
 <PageTitle>Login</PageTitle>
 
-<UsernameInput @ref="@_usernameInput"></UsernameInput>
-<PasswordInput @ref="@_passwordInput"></PasswordInput>
+<UsernameInput @ref="@_usernameInput" OnEnterCallback="@OnTextInputEnterPressed"></UsernameInput>
+<PasswordInput @ref="@_passwordInput" OnEnterCallback="@OnTextInputEnterPressed"></PasswordInput>
 
 <MudButton OnClick="@LoginClick" Disabled="@_loginButtonDisabled">@_loginButtonText</MudButton>
 
@@ -18,10 +17,8 @@
     [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     [Inject] private IYglAuthClient AuthClient { get; set; } = default!;
-    [Inject] private IYglListsClient ListsClient { get; set; } = default!;
     [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
-    [Inject] private IStaticState<List<GamesListDto>> UserListsState { get; set; } = default!;
-
+    [Inject] private IUserListsManager UserListsManager { get; set; } = default!;
 
     private PasswordInput _passwordInput = default!;
     private UsernameInput _usernameInput = default!;
@@ -73,14 +70,7 @@
 
             Snackbar.Add("Successfully logged in.", Severity.Success);
 
-            var userListsRes = await ListsClient.GetSelfLists(token, includeGames: true);
-            if (userListsRes.IsFailure)
-            {
-                Snackbar.Add("Failed to fetch user lists.", Severity.Warning);
-            }
-
-            var userLists = userListsRes.Value ?? [];
-            UserListsState.SetState(userLists);
+            await UserListsManager.Refresh();
 
             Navigation.NavigateTo(Paths.User);
         }
@@ -89,6 +79,16 @@
             _loginButtonDisabled = false;
             _loginButtonText = "Log In";
         }
+    }
+
+    private async Task OnTextInputEnterPressed()
+    {
+        if (string.IsNullOrWhiteSpace(_passwordInput.Password) || string.IsNullOrWhiteSpace(_usernameInput.Username))
+        {
+            return;
+        }
+
+        await LoginClick();
     }
 
 }

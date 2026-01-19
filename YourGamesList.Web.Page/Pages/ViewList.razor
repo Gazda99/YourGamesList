@@ -1,4 +1,4 @@
-﻿@page "/viewList/{ListId:guid}"
+﻿@page "/lists/{ListId:guid}"
 @using Microsoft.Extensions.Logging
 @using YourGamesList.Contracts.Dto
 @using YourGamesList.Web.Page.Services
@@ -19,10 +19,10 @@ else
     {
         <MudGrid Justify="Justify.FlexStart" Spacing="3">
             @* TODO: panel with list name and list customize options*@
-            <MudItem xs="12" sm="12" md="12" lg="12" xl="12" xxl="12">
+            <MudItem xs="12">
                 <MudText>Currently selected list: <b>@_selectedList?.Name</b></MudText>
             </MudItem>
-            <MudItem xs="12" sm="12" md="12" lg="12" xl="12" xxl="12">
+            <MudItem xs="12">
                 <MudTextField
                     Immediate="true"
                     @bind-Value="@_filterByGameName"
@@ -33,12 +33,10 @@ else
 
             @if (_selectedList?.Entries.Any() ?? false)
             {
-                @* @foreach (var game in _selectedList?.Entries?.Select(x => x.Game) ?? []) *@
-                @foreach (var gamelistEntry in FilteredGames() ?? [])
+                @foreach (var gameListEntry in FilteredGames())
                 {
                     <MudItem xs="12" sm="12" md="12" lg="6" xl="6" xxl="4">
-                        @* TODO: create new game tile with all required fields, like custom note, score etc*@
-                        <GameListEntryTile GameListEntry="@gamelistEntry" ListId="@ListId"></GameListEntryTile>
+                        <GameListEntryTile GameListEntry="@gameListEntry" ListId="@ListId"></GameListEntryTile>
                     </MudItem>
                 }
             }
@@ -53,7 +51,7 @@ else
 
 @code {
 
-    [Inject] private ILogger<SearchGamesV2> Logger { get; set; } = default!;
+    [Inject] private ILogger<SearchGames> Logger { get; set; } = default!;
 
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     [Inject] private IYglListsClient ListsClient { get; set; } = default!;

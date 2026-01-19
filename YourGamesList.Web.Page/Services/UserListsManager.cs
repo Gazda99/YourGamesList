@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Common;
+using YourGamesList.Common.Caching;
 using YourGamesList.Contracts.Dto;
-using YourGamesList.Web.Page.Services.StaticStorage;
 using YourGamesList.Web.Page.Services.UserLoginStateManager;
 using YourGamesList.Web.Page.Services.Ygl;
 
@@ -12,25 +13,30 @@ namespace YourGamesList.Web.Page.Services;
 public interface IUserListsManager
 {
     Task<ValueResult<List<GamesListDto>>> Refresh();
+    Task Set(List<GamesListDto> userLists);
     Task<ValueResult<List<GamesListDto>>> ReadOrRefresh();
 }
 
 public class UserListsManager : IUserListsManager
 {
+    private const string UserListsCacheKey = "user-lists";
+
     private readonly ILogger<UserListsManager> _logger;
     private readonly IUserLoginStateManager _userLoginStateManager;
-    private readonly IStaticState<List<GamesListDto>> _userListsState;
+    private readonly ICacheProvider _cacheProvider;
     private readonly IYglListsClient _yglListsClient;
 
     public UserListsManager(
         ILogger<UserListsManager> logger,
         IUserLoginStateManager userLoginStateManager,
-        IStaticState<List<GamesListDto>> userListsState,
-        IYglListsClient yglListsClient)
+        [FromKeyedServices(CacheProviders.InMemory)]
+        ICacheProvider cacheProvider,
+        IYglListsClient yglListsClient
+    )
     {
         _logger = logger;
         _userLoginStateManager = userLoginStateManager;
-        _userListsState = userListsState;
+        _cacheProvider = cacheProvider;
         _yglListsClient = yglListsClient;
     }
 
@@ -44,20 +50,25 @@ public class UserListsManager : IUserListsManager
         }
 
         var userLists = userListsRes.Value ?? [];
-        _userListsState.SetState(userLists);
+        await _cacheProvider.Set(UserListsCacheKey, userLists);
         return ValueResult<List<GamesListDto>>.Success(userLists);
+    }
+
+    public async Task Set(List<GamesListDto> userLists)
+    {
+        await _cacheProvider.Set(UserListsCacheKey, userLists);
     }
 
     public async Task<ValueResult<List<GamesListDto>>> ReadOrRefresh()
     {
-        var state = _userListsState.GetState();
-        if (state == null)
+        var userResult = await _cacheProvider.Get<List<GamesListDto>>(UserListsCacheKey);
+        if (!userResult.IsSuccess)
         {
             return await Refresh();
         }
         else
         {
-            return ValueResult<List<GamesListDto>>.Success(state);
+            return ValueResult<List<GamesListDto>>.Success(userResult.Value);
         }
     }
 }

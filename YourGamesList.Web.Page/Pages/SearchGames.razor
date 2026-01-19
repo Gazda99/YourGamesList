@@ -1,0 +1,319 @@
+﻿@page "/searchGames"
+@using Microsoft.Extensions.Logging
+@using YourGamesList.Common.Caching
+@using YourGamesList.Contracts.Dto
+@using YourGamesList.Contracts.Responses.Games
+@using YourGamesList.Web.Page.Services.UserLoginStateManager
+@using YourGamesList.Web.Page.Services.Ygl
+
+@if (!_isPageInitialized)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="mx-auto"/>
+}
+else
+{
+    @if (!_isUserLoggedIn)
+    {
+        <LoginFirst></LoginFirst>
+    }
+    else
+    {
+        <MudGrid Justify="Justify.FlexStart" Spacing="3">
+
+            <MudItem xs="12" sm="12" md="12" lg="12" xl="12" xxl="12">
+                <SearchGamesInputPanel
+                    @ref="@_searchGamesInputPanel"
+                    OnSearchButtonClick="@OnSearchButtonClick"
+                    Themes="@_availableQueryArguments.Themes"
+                    GameTypes="@_availableQueryArguments.GameTypes"
+                    Genres="@_availableQueryArguments.Genres"
+                    OnGameTitleEnterPressedCallback="@OnGameTitleEnterPressed"
+                ></SearchGamesInputPanel>
+            </MudItem>
+
+
+            @if (_searchResults.Any())
+            {
+                <MudItem sm="12" md="12" lg="12" xl="12" xxl="12">
+                    @RenderPaginationControlPanel
+                </MudItem>
+            }
+
+            @if (_isLoading)
+            {
+                @for (var i = 0; i < (_searchResults.Count != 0 ? _searchResults.Count : _showOnPage); i++)
+                {
+                    <MudItem xs="12" lg="6" xxl="4">
+                        <GameTileSkeleton></GameTileSkeleton>
+                    </MudItem>
+                }
+            }
+            else
+            {
+                @foreach (var game in _searchResults)
+                {
+                    <MudItem xs="12" sm="12" md="12" lg="6" xl="6" xxl="4">
+                        <GameTile Game="@game"></GameTile>
+                    </MudItem>
+                }
+            }
+
+
+            @if (_searchResults.Any())
+            {
+                <MudItem sm="12" md="12" lg="12" xl="12" xxl="12">
+                    @RenderPaginationControlPanel
+                </MudItem>
+            }
+
+        </MudGrid>
+    }
+}
+
+
+
+@code {
+
+    #region Renders
+
+    private RenderFragment RenderPaginationControlPanel => __builder =>
+    {
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowLeft"
+                           Color="Color.Secondary"
+                           Size="Size.Medium"
+                           OnClick="@MoveBack"/>
+
+            <MudText Typo="Typo.body1">@_currentPageNumber</MudText>
+
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowRight"
+                           Color="Color.Secondary"
+                           Size="Size.Medium"
+                           OnClick="@MoveForward"/>
+
+            <MudSelect T="int"
+                       Value="@_showOnPage"
+                       ValueChanged="@UpdateShowOnPage"
+                       MultiSelection="false"
+                       Label="Show on page"
+                       Variant="Variant.Outlined"
+                       Clearable="false">
+                @foreach (var showOnPage in ShowOnPageAllowedValues.OrderBy(x => x))
+                {
+                    <MudSelectItem Value="@showOnPage">@showOnPage</MudSelectItem>
+                }
+            </MudSelect>
+        </MudStack>
+    };
+
+    #endregion
+
+
+    private const string AvailableQueryArgumentsStateKey = "available-search-games-query-arguments";
+    private static readonly int[] ShowOnPageAllowedValues = [10, 25];
+
+    [Inject] private ILogger<SearchGames> Logger { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private IYglGamesClient GamesClient { get; set; } = default!;
+    [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
+
+    [Inject(Key = CacheProviders.InMemory)]
+    private ICacheProvider CacheProvider { get; set; } = default!;
+
+    private SearchGamesInputPanel? _searchGamesInputPanel;
+
+    private bool _isUserLoggedIn = false;
+    private bool _isPageInitialized = false;
+    private bool _isLoading = false;
+    private bool _isSearchGamesCallInProgress = false;
+
+    private int _currentSkip = 0;
+    private int _currentPageNumber = 1;
+    private int _showOnPage = ShowOnPageAllowedValues[0];
+
+    private List<GameDto> _searchResults = [];
+
+    private AvailableSearchQueryArgumentsResponse _availableQueryArguments = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _isUserLoggedIn = await UserLoginStateManager.IsUserLoggedIn();
+
+        if (_isUserLoggedIn)
+        {
+            _isPageInitialized = false;
+
+            var availableQueryArgumentsRes = await CacheProvider.Get<AvailableSearchQueryArgumentsResponse>(AvailableQueryArgumentsStateKey);
+
+            if (!availableQueryArgumentsRes.IsSuccess)
+            {
+                var token = await UserLoginStateManager.GetUserToken();
+                _availableQueryArguments = await FetchQueryArguments(token);
+            }
+            else
+            {
+                _availableQueryArguments = availableQueryArgumentsRes.Value;
+            }
+        }
+
+        _isPageInitialized = true;
+    }
+
+    private async Task OnSearchButtonClick(SearchGamesInputPanel.SearchGamesParameters searchParameters)
+    {
+        _currentSkip = 0;
+        UpdateCurrentPageNumber();
+        var searchResults = await Search(searchParameters, 0);
+        _searchResults = searchResults;
+    }
+
+    private async Task<List<GameDto>> Search(SearchGamesInputPanel.SearchGamesParameters searchParameters, int skip, bool loadingEnabled = true)
+    {
+        _isSearchGamesCallInProgress = true;
+
+        if (loadingEnabled)
+        {
+            _isLoading = true;
+        }
+
+        try
+        {
+            var token = await UserLoginStateManager.GetUserToken();
+            var res = await GamesClient.SearchGames(
+                token!,
+                searchParameters.SearchGameName,
+                themes: searchParameters.SelectedThemes,
+                genres: searchParameters.SelectedGenres,
+                gameType: searchParameters.SelectedGameType,
+                releaseYearQuery: searchParameters.SelectedTypeOfDate != TypeOfDateDto.None ? new ValueTuple<TypeOfDateDto, int>(searchParameters.SelectedTypeOfDate, searchParameters.SelectedYear) : null,
+                skip: skip,
+                take: _showOnPage
+            );
+
+            if (res.IsSuccess)
+            {
+                //_searchResults = res.Value!;
+                return res.Value ?? [];
+            }
+            else
+            {
+                Snackbar.Add("Failed to obtain games.", Severity.Warning);
+                return [];
+            }
+        }
+        finally
+        {
+            _isSearchGamesCallInProgress = false;
+            if (loadingEnabled)
+            {
+                _isLoading = false;
+            }
+        }
+    }
+
+    private async Task<AvailableSearchQueryArgumentsResponse> FetchQueryArguments(string? token)
+    {
+        //TODO: "!"
+        var res = await GamesClient.GetAvailableSearchParams(token!);
+        var availableSearchQueryArguments = res.Value;
+        await CacheProvider.Set(AvailableQueryArgumentsStateKey, availableSearchQueryArguments);
+        return availableSearchQueryArguments!;
+    }
+
+    private async Task MoveBack()
+    {
+        if (_isSearchGamesCallInProgress)
+        {
+            return;
+        }
+
+        if (_searchGamesInputPanel == null)
+        {
+            return;
+        }
+
+        if (_currentSkip == 0)
+        {
+            return;
+        }
+
+        _currentSkip -= _showOnPage;
+        if (_currentSkip < 0)
+        {
+            _currentSkip = 0;
+        }
+
+        var searchResults = await Search(_searchGamesInputPanel.SearchParameters, _currentSkip, true);
+        _searchResults = searchResults;
+        UpdateCurrentPageNumber();
+    }
+
+    private async Task MoveForward()
+    {
+        if (_isSearchGamesCallInProgress)
+        {
+            return;
+        }
+
+        if (_searchGamesInputPanel == null)
+        {
+            return;
+        }
+
+        _currentSkip += _showOnPage;
+        var searchResults = await Search(_searchGamesInputPanel.SearchParameters, _currentSkip, true);
+        if (!searchResults.Any())
+        {
+            _currentSkip -= _showOnPage;
+        }
+        else
+        {
+            _searchResults = searchResults;
+            UpdateCurrentPageNumber();
+        }
+    }
+
+    private void UpdateCurrentPageNumber()
+    {
+        _currentPageNumber = (_currentSkip / _showOnPage) + 1;
+    }
+
+    private async Task UpdateShowOnPage(int showOnPage)
+    {
+        _currentSkip = 0;
+        _showOnPage = showOnPage;
+        UpdateCurrentPageNumber();
+
+
+        if (_searchGamesInputPanel != null)
+        {
+            var searchResults = await Search(_searchGamesInputPanel.SearchParameters, 0, false);
+            _searchResults = searchResults;
+        }
+    }
+
+    private async Task OnGameTitleEnterPressed()
+    {
+        if (_isSearchGamesCallInProgress)
+        {
+            return;
+        }
+
+        if (_searchGamesInputPanel == null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_searchGamesInputPanel.SearchParameters.SearchGameName))
+        {
+            return;
+        }
+
+        _currentSkip = 0;
+        UpdateCurrentPageNumber();
+        var searchResults = await Search(_searchGamesInputPanel.SearchParameters, _currentSkip, true);
+        _searchResults = searchResults;
+    }
+
+}

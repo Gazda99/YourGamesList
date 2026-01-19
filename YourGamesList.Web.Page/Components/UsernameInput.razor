@@ -1,14 +1,28 @@
-﻿<MudTextField @bind-Value="@Username" TextChanged="@UserNameTextChanged"
+﻿<MudTextField @bind-Value="@Username" TextChanged="@UserNameTextChanged" Immediate="true"
               Label="Username" Variant="Variant.Outlined" InputType="@InputType.Text"
-              Error="@UsernameTextFieldError"/>
+              Error="@UsernameTextFieldError" OnKeyDown="@OnEnter"/>
 
 @code {
+
+    [Parameter] public EventCallback OnEnterCallback { get; set; }
+
     public string Username { get; set; } = "";
     public bool UsernameTextFieldError { get; set; } = false;
 
     private void UserNameTextChanged(string text)
     {
         UsernameTextFieldError = false;
+    }
+
+    private async Task OnEnter(KeyboardEventArgs e)
+    {
+        if (OnEnterCallback.HasDelegate)
+        {
+            if (e.Key is "Enter" or "NumpadEnter")
+            {
+                await OnEnterCallback.InvokeAsync();
+            }
+        }
     }
 
 }
