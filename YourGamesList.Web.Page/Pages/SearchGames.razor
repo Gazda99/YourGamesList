@@ -31,24 +31,25 @@ else
                 ></SearchGamesInputPanel>
             </MudItem>
 
-            @if (_isLoading)
+
+            @if (_searchResults.Any())
             {
-                <MudItem xs="12" sm="12" md="12" lg="12" xl="12" xxl="12">
-                    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="mx-auto"/>
+                <MudItem sm="12" md="12" lg="12" xl="12" xxl="12">
+                    @RenderPaginationControlPanel
                 </MudItem>
             }
-            else if (!_isLoading && !_searchResults.Any())
+
+            @if (_isLoading)
             {
+                @for (var i = 0; i < (_searchResults.Count != 0 ? _searchResults.Count : _showOnPage); i++)
+                {
+                    <MudItem xs="12" lg="6" xxl="4">
+                        <GameTileSkeleton></GameTileSkeleton>
+                    </MudItem>
+                }
             }
             else
             {
-                @if (_searchResults.Any())
-                {
-                    <MudItem xs="12" sm="12" md="12" lg="12" xl="12" xxl="12">
-                        @RenderPaginationControlPanel
-                    </MudItem>
-                }
-
                 @foreach (var game in _searchResults)
                 {
                     <MudItem xs="12" sm="12" md="12" lg="6" xl="6" xxl="4">
@@ -57,13 +58,15 @@ else
                 }
             }
 
-        </MudGrid>
-        <MudSpacer></MudSpacer>
 
-        @if (_searchResults.Any())
-        {
-            @RenderPaginationControlPanel
-        }
+            @if (_searchResults.Any())
+            {
+                <MudItem sm="12" md="12" lg="12" xl="12" xxl="12">
+                    @RenderPaginationControlPanel
+                </MudItem>
+            }
+
+        </MudGrid>
     }
 }
 
@@ -241,7 +244,7 @@ else
             _currentSkip = 0;
         }
 
-        var searchResults = await Search(_searchGamesInputPanel.SearchParameters, _currentSkip, false);
+        var searchResults = await Search(_searchGamesInputPanel.SearchParameters, _currentSkip, true);
         _searchResults = searchResults;
         UpdateCurrentPageNumber();
     }
@@ -259,7 +262,7 @@ else
         }
 
         _currentSkip += _showOnPage;
-        var searchResults = await Search(_searchGamesInputPanel.SearchParameters, _currentSkip, false);
+        var searchResults = await Search(_searchGamesInputPanel.SearchParameters, _currentSkip, true);
         if (!searchResults.Any())
         {
             _currentSkip -= _showOnPage;
