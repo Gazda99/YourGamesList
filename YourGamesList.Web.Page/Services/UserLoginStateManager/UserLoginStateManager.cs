@@ -19,7 +19,6 @@ public interface IUserLoginStateManager
     Task RemoveUserToken();
 }
 
-//TODO: unit tests
 public class UserLoginStateManager : IUserLoginStateManager
 {
     private const string UserTokenLocalStorageKey = "ygl-user-token";
