@@ -27,6 +27,7 @@ else
                     Themes="@_availableQueryArguments.Themes"
                     GameTypes="@_availableQueryArguments.GameTypes"
                     Genres="@_availableQueryArguments.Genres"
+                    OnGameTitleEnterPressedCallback="@OnGameTitleEnterPressed"
                 ></SearchGamesInputPanel>
             </MudItem>
 
@@ -289,5 +290,27 @@ else
         }
     }
 
+    private async Task OnGameTitleEnterPressed()
+    {
+        if (_isSearchGamesCallInProgress)
+        {
+            return;
+        }
+
+        if (_searchGamesInputPanel == null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_searchGamesInputPanel.SearchParameters.SearchGameName))
+        {
+            return;
+        }
+
+        _currentSkip = 0;
+        UpdateCurrentPageNumber();
+        var searchResults = await Search(_searchGamesInputPanel.SearchParameters, _currentSkip, true);
+        _searchResults = searchResults;
+    }
 
 }

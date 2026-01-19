@@ -7,8 +7,8 @@
 
 <PageTitle>Login</PageTitle>
 
-<UsernameInput @ref="@_usernameInput"></UsernameInput>
-<PasswordInput @ref="@_passwordInput"></PasswordInput>
+<UsernameInput @ref="@_usernameInput" OnEnterCallback="@OnTextInputEnterPressed"></UsernameInput>
+<PasswordInput @ref="@_passwordInput" OnEnterCallback="@OnTextInputEnterPressed"></PasswordInput>
 
 <MudButton OnClick="@LoginClick" Disabled="@_loginButtonDisabled">@_loginButtonText</MudButton>
 
@@ -79,6 +79,16 @@
             _loginButtonDisabled = false;
             _loginButtonText = "Log In";
         }
+    }
+
+    private async Task OnTextInputEnterPressed()
+    {
+        if (string.IsNullOrWhiteSpace(_passwordInput.Password) || string.IsNullOrWhiteSpace(_usernameInput.Username))
+        {
+            return;
+        }
+
+        await LoginClick();
     }
 
 }
