@@ -11,15 +11,14 @@ using YourGamesList.Web.Page.Services.Caching.LocalStorage.Model;
 
 namespace YourGamesList.Web.Page.Services.Caching.LocalStorage;
 
-//TODO: unit tests
-public class LocalStorageCache : ICacheProvider
+public class LocalStorageCacheProvider : ICacheProvider
 {
-    private readonly ILogger<LocalStorageCache> _logger;
+    private readonly ILogger<LocalStorageCacheProvider> _logger;
     private readonly IJSRuntime _jsRuntime;
     private readonly TimeProvider _timeProvider;
 
-    public LocalStorageCache(
-        ILogger<LocalStorageCache> logger,
+    public LocalStorageCacheProvider(
+        ILogger<LocalStorageCacheProvider> logger,
         IJSRuntime jsRuntime,
         TimeProvider timeProvider
     )
@@ -29,6 +28,7 @@ public class LocalStorageCache : ICacheProvider
         _timeProvider = timeProvider;
     }
 
+    [Obsolete]
     public bool TryGet<T>(string key, [NotNullWhen(true)] out T? value, JsonSerializerOptions? options = null, CancellationToken cancellationToken = default)
     {
         var getResult = Get<T>(key, options, cancellationToken).Result;
@@ -83,8 +83,8 @@ public class LocalStorageCache : ICacheProvider
         }
     }
 
-
-    public async Task Set<T>(string key, T value, TimeSpan? expiration = null, JsonSerializerOptions? options = null, CancellationToken cancellationToken = default)
+    public async Task Set<T>(string key, T value, TimeSpan? expiration = null, JsonSerializerOptions? options = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {

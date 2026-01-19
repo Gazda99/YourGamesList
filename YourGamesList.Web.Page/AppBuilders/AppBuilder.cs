@@ -44,7 +44,7 @@ public static partial class AppBuilder
 
         builder.Services.AddMemoryCache();
         builder.Services.AddKeyedSingleton<ICacheProvider, InMemoryCacheProvider>(CacheProviders.InMemory);
-        builder.Services.AddKeyedScoped<ICacheProvider, LocalStorageCache>(WebPageCacheProviders.LocalStorage);
+        builder.Services.AddKeyedScoped<ICacheProvider, LocalStorageCacheProvider>(WebPageCacheProviders.LocalStorage);
 
         builder.Services.AddSingleton<ICountriesService, CountriesService>();
         
