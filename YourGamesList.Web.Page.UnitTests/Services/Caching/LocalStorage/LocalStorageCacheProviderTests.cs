@@ -13,7 +13,7 @@ using YourGamesList.TestsUtils;
 using YourGamesList.Web.Page.Services.Caching.LocalStorage;
 using YourGamesList.Web.Page.Services.Caching.LocalStorage.Model;
 
-namespace YourGamesList.Web.Page.UnitTests.Services.Caching;
+namespace YourGamesList.Web.Page.UnitTests.Services.Caching.LocalStorage;
 
 public class LocalStorageCacheProviderTests
 {
@@ -21,7 +21,6 @@ public class LocalStorageCacheProviderTests
     private ILogger<LocalStorageCacheProvider> _logger;
     private IJSRuntime _jsRuntime;
     private TimeProvider _timeProvider;
-
 
     [SetUp]
     public void Setup()
@@ -128,7 +127,7 @@ public class LocalStorageCacheProviderTests
 
         _logger.ReceivedLog(LogLevel.Information, $"No local storage item found for '{key}'.");
     }
-    
+
     [Test]
     public async Task Get_WhenEntryExpired_ReturnsError()
     {

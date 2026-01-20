@@ -12,7 +12,7 @@ using YourGamesList.Web.Page.Services.UserLoginStateManager.Options;
 
 namespace YourGamesList.Web.Page.UnitTests.Services.UserLoginStateManager;
 
-public class UserLoginManagerTests
+public class UserLoginStateManagerTests
 {
     private const string UserTokenLocalStorageKey = "ygl-user-token";
 

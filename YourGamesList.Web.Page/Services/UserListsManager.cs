@@ -46,16 +46,19 @@ public class UserListsManager : IUserListsManager
         var userListsRes = await _yglListsClient.GetSelfLists(token!, includeGames: true);
         if (userListsRes.IsFailure)
         {
+            _logger.LogWarning("Could not refresh user games lists, due to ygl api call failure.");
             return ValueResult<List<GamesListDto>>.Failure();
         }
 
         var userLists = userListsRes.Value ?? [];
+        _logger.LogInformation("Saving user games lists in cache.");
         await _cacheProvider.Set(UserListsCacheKey, userLists);
         return ValueResult<List<GamesListDto>>.Success(userLists);
     }
 
     public async Task Set(List<GamesListDto> userLists)
     {
+        _logger.LogInformation("Saving user games lists in cache.");
         await _cacheProvider.Set(UserListsCacheKey, userLists);
     }
 
@@ -64,10 +67,12 @@ public class UserListsManager : IUserListsManager
         var userResult = await _cacheProvider.Get<List<GamesListDto>>(UserListsCacheKey);
         if (!userResult.IsSuccess)
         {
+            _logger.LogInformation("User games lists in cache not found. Refreshing...");
             return await Refresh();
         }
         else
         {
+            _logger.LogInformation("Found user games lists in cache.");
             return ValueResult<List<GamesListDto>>.Success(userResult.Value);
         }
     }
