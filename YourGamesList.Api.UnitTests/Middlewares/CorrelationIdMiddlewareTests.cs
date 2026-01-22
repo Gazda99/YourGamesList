@@ -59,7 +59,7 @@ public class CorrelationIdMiddlewareTests
         await middleware.Invoke(ctx);
 
         //THEN
-        var isCorIdPresent = ctx.Response.Headers.TryGetValue(HttpHeaders.CorrelationId, out var actualCorId);
+        var isCorIdPresent = ctx.Response.Headers.TryGetValue(YglHttpHeaders.CorrelationId, out var actualCorId);
         Assert.That(isCorIdPresent, Is.True);
         Assert.That(actualCorId.ToString(), Is.EquivalentTo(corId));
         _logger.Received(1).BeginScope(Arg.Is<Dictionary<string, object>>(x => x.ContainsKey(LogProperties.CorrelationId) && x.ContainsValue(corId)));
@@ -79,7 +79,7 @@ public class CorrelationIdMiddlewareTests
         _options.Value.Returns(options);
 
         HttpContext ctx = new DefaultHttpContext();
-        ctx.Request.Headers.Append(HttpHeaders.CorrelationId, corId);
+        ctx.Request.Headers.Append(YglHttpHeaders.CorrelationId, corId);
 
         RequestDelegate next = async (innerHttpContext) => { await Task.CompletedTask; };
 
@@ -95,7 +95,7 @@ public class CorrelationIdMiddlewareTests
         await middleware.Invoke(ctx);
 
         //THEN
-        var isCorIdPresent = ctx.Response.Headers.TryGetValue(HttpHeaders.CorrelationId, out var actualCorId);
+        var isCorIdPresent = ctx.Response.Headers.TryGetValue(YglHttpHeaders.CorrelationId, out var actualCorId);
         Assert.That(isCorIdPresent, Is.True);
         Assert.That(actualCorId.ToString(), Is.EquivalentTo(corId));
         _logger.Received(1).BeginScope(Arg.Is<Dictionary<string, object>>(x => x.ContainsKey(LogProperties.CorrelationId) && x.ContainsValue(corId)));

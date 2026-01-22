@@ -30,7 +30,7 @@ public class CorrelationIdMiddleware
     {
         string corId;
         if (_options.Value.ReadCorrelationIdFromRequestHeader &&
-            context.Request.Headers.TryGetValue(HttpHeaders.CorrelationId, out var corIdFromHeader) &&
+            context.Request.Headers.TryGetValue(YglHttpHeaders.CorrelationId, out var corIdFromHeader) &&
             _correlationIdProvider.IsValidCorrelationId(corIdFromHeader.ToString())
            )
         {
@@ -46,7 +46,7 @@ public class CorrelationIdMiddleware
             context.Response.OnStarting(state =>
             {
                 var httpContext = (HttpContext) state;
-                httpContext.Response.Headers.Append(HttpHeaders.CorrelationId, corId);
+                httpContext.Response.Headers.Append(YglHttpHeaders.CorrelationId, corId);
 
                 return Task.CompletedTask;
             }, context);

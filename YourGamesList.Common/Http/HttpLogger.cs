@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using Microsoft.Extensions.Http.Logging;
 using Microsoft.Extensions.Logging;
 
@@ -59,7 +60,7 @@ public class HttpLogger : IHttpClientLogger
             $"Request '{request.Method}' towards '{request.RequestUri?.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped)}{request.RequestUri!.PathAndQuery}' failed after {elapsed.TotalMilliseconds:F1}ms");
     }
 
-    private static bool TryGetLogScopesFromHttpHeaders(System.Net.Http.Headers.HttpHeaders? headers, Dictionary<string, string> headersToLog,
+    private static bool TryGetLogScopesFromHttpHeaders(HttpHeaders? headers, Dictionary<string, string> headersToLog,
         out Dictionary<string, object> scopes)
     {
         scopes = [];

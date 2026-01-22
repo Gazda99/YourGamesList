@@ -116,7 +116,7 @@ public static partial class AppBuilder
     {
         return builder.ConfigureLogging(options =>
         {
-            options.CustomResponseHeadersToLog.TryAdd(HttpHeaders.CorrelationId, LogProperties.CorrelationId);
+            options.CustomResponseHeadersToLog.TryAdd(YglHttpHeaders.CorrelationId, LogProperties.CorrelationId);
             configureOptions?.Invoke(options);
         });
     }
