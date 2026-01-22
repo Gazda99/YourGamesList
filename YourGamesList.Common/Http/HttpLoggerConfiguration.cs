@@ -4,5 +4,6 @@ namespace YourGamesList.Common.Http;
 
 public class HttpLoggerConfiguration
 {
+    public Dictionary<string, string> CustomRequestHeadersToLog { get; set; } = [];
     public Dictionary<string, string> CustomResponseHeadersToLog { get; set; } = [];
 }

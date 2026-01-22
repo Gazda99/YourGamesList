@@ -20,6 +20,9 @@ public class HttpLogger : IHttpClientLogger
 
     public object? LogRequestStart(HttpRequestMessage request)
     {
+        using var requestHeaderScope = TryGetLogScopesFromHttpHeaders(request.Headers, Options.CustomRequestHeadersToLog, out var headerData)
+            ? _logger.BeginScope(headerData)
+            : null;
         using (_logger.BeginScope(RequestStartScopes(request)))
         {
             _logger.LogInformation(
@@ -31,8 +34,11 @@ public class HttpLogger : IHttpClientLogger
 
     public void LogRequestStop(object? context, HttpRequestMessage request, HttpResponseMessage response, TimeSpan elapsed)
     {
-        using var headerScope = TryGetLogScopesFromResponseHeaders(response, out var headerData)
-            ? _logger.BeginScope(headerData)
+        using var requestHeaderScope = TryGetLogScopesFromHttpHeaders(request.Headers, Options.CustomRequestHeadersToLog, out var requestHeaderData)
+            ? _logger.BeginScope(requestHeaderData)
+            : null;
+        using var responseHeaderScope = TryGetLogScopesFromHttpHeaders(response.Headers, Options.CustomResponseHeadersToLog, out var responseHeaderData)
+            ? _logger.BeginScope(responseHeaderData)
             : null;
         using var requestStopScopes = _logger.BeginScope(RequestStopScopes(response, elapsed));
 
@@ -41,8 +47,11 @@ public class HttpLogger : IHttpClientLogger
 
     public void LogRequestFailed(object? context, HttpRequestMessage request, HttpResponseMessage? response, Exception exception, TimeSpan elapsed)
     {
-        using var headerScope = TryGetLogScopesFromResponseHeaders(response, out var headerData)
-            ? _logger.BeginScope(headerData)
+        using var requestHeaderScope = TryGetLogScopesFromHttpHeaders(request.Headers, Options.CustomRequestHeadersToLog, out var requestHeaderData)
+            ? _logger.BeginScope(requestHeaderData)
+            : null;
+        using var responseHeaderScope = TryGetLogScopesFromHttpHeaders(response?.Headers, Options.CustomResponseHeadersToLog, out var responseHeaderData)
+            ? _logger.BeginScope(responseHeaderData)
             : null;
         using var requestFailedScopes = _logger.BeginScope(RequestFailedScopes(request, elapsed));
 
@@ -50,18 +59,19 @@ public class HttpLogger : IHttpClientLogger
             $"Request '{request.Method}' towards '{request.RequestUri?.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped)}{request.RequestUri!.PathAndQuery}' failed after {elapsed.TotalMilliseconds:F1}ms");
     }
 
-    private bool TryGetLogScopesFromResponseHeaders(HttpResponseMessage? response, out Dictionary<string, object> scopes)
+    private static bool TryGetLogScopesFromHttpHeaders(System.Net.Http.Headers.HttpHeaders? headers, Dictionary<string, string> headersToLog,
+        out Dictionary<string, object> scopes)
     {
         scopes = [];
 
-        if (response == null)
+        if (headers == null || !headers.Any())
         {
             return false;
         }
 
-        foreach (var (headerValue, logPropName) in Options.CustomResponseHeadersToLog)
+        foreach (var (headerValue, logPropName) in headersToLog)
         {
-            var found = response.Headers.TryGetValues(headerValue, out var headerValues);
+            var found = headers.TryGetValues(headerValue, out var headerValues);
             if (!found || headerValues == null || !headerValues.Any())
             {
                 continue;

@@ -30,11 +30,29 @@ public class HttpLoggerTests
         //ARRANGE
         var requestUri = _fixture.Create<Uri>();
         var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+        var requestHeaderName = _fixture.Create<string>();
+        var requestHeaderValue = _fixture.Create<string>();
+        request.Headers.Add(requestHeaderName, requestHeaderValue);
+        var logPropertyName = _fixture.Create<string>();
+
+        _httpLogger.Options = new HttpLoggerConfiguration()
+        {
+            CustomRequestHeadersToLog = new Dictionary<string, string>
+            {
+                {
+                    requestHeaderName, logPropertyName
+                }
+            }
+        };
 
         //ACT
         _httpLogger.LogRequestStart(request);
 
         //ASSERT
+        _logger.ReceivedBeginScope(new Dictionary<string, object>
+        {
+            [logPropertyName] = requestHeaderValue,
+        });
         _logger.ReceivedBeginScope(new Dictionary<string, object>
         {
             ["Request.Method"] = request.Method,
@@ -53,18 +71,27 @@ public class HttpLoggerTests
         var context = _fixture.Create<object?>();
         var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
         var response = new HttpResponseMessage(HttpStatusCode.OK);
-        var headerName = _fixture.Create<string>();
-        var headerValue = _fixture.Create<string>();
-        response.Headers.Add(headerName, headerValue);
+        var requestHeaderName = _fixture.Create<string>();
+        var requestHeaderValue = _fixture.Create<string>();
+        var responseHeaderName = _fixture.Create<string>();
+        var responseHeaderValue = _fixture.Create<string>();
+        request.Headers.Add(requestHeaderName, requestHeaderValue);
+        response.Headers.Add(responseHeaderName, responseHeaderValue);
         var elapsed = _fixture.Create<TimeSpan>();
         var logPropertyName = _fixture.Create<string>();
 
         _httpLogger.Options = new HttpLoggerConfiguration()
         {
+            CustomRequestHeadersToLog = new Dictionary<string, string>
+            {
+                {
+                    requestHeaderName, logPropertyName
+                }
+            },
             CustomResponseHeadersToLog = new Dictionary<string, string>
             {
                 {
-                    headerName, logPropertyName
+                    responseHeaderName, logPropertyName
                 }
             }
         };
@@ -75,7 +102,11 @@ public class HttpLoggerTests
         //ASSERT
         _logger.ReceivedBeginScope(new Dictionary<string, object>
         {
-            [logPropertyName] = headerValue,
+            [logPropertyName] = requestHeaderValue,
+        });
+        _logger.ReceivedBeginScope(new Dictionary<string, object>
+        {
+            [logPropertyName] = responseHeaderValue,
         });
         _logger.ReceivedBeginScope(new Dictionary<string, object>
         {
@@ -94,19 +125,28 @@ public class HttpLoggerTests
         var context = _fixture.Create<object?>();
         var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
         var response = new HttpResponseMessage(HttpStatusCode.OK);
-        var headerName = _fixture.Create<string>();
-        var headerValue = _fixture.Create<string>();
-        var logPropertyName = _fixture.Create<string>();
-        response.Headers.Add(headerName, headerValue);
+        var requestHeaderName = _fixture.Create<string>();
+        var requestHeaderValue = _fixture.Create<string>();
+        var responseHeaderName = _fixture.Create<string>();
+        var responseHeaderValue = _fixture.Create<string>();
+        request.Headers.Add(requestHeaderName, requestHeaderValue);
+        response.Headers.Add(responseHeaderName, responseHeaderValue);
         var elapsed = _fixture.Create<TimeSpan>();
         var exception = _fixture.Create<Exception>();
+        var logPropertyName = _fixture.Create<string>();
 
         _httpLogger.Options = new HttpLoggerConfiguration()
         {
+            CustomRequestHeadersToLog = new Dictionary<string, string>
+            {
+                {
+                    requestHeaderName, logPropertyName
+                }
+            },
             CustomResponseHeadersToLog = new Dictionary<string, string>
             {
                 {
-                    headerName, logPropertyName
+                    responseHeaderName, logPropertyName
                 }
             }
         };
@@ -117,7 +157,11 @@ public class HttpLoggerTests
         //ASSERT
         _logger.ReceivedBeginScope(new Dictionary<string, object>
         {
-            [logPropertyName] = headerValue,
+            [logPropertyName] = requestHeaderValue,
+        });
+        _logger.ReceivedBeginScope(new Dictionary<string, object>
+        {
+            [logPropertyName] = responseHeaderValue,
         });
         _logger.ReceivedBeginScope(new Dictionary<string, object>
         {
