@@ -53,12 +53,30 @@ public class HttpLoggerTests
         var context = _fixture.Create<object?>();
         var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
         var response = new HttpResponseMessage(HttpStatusCode.OK);
+        var headerName = _fixture.Create<string>();
+        var headerValue = _fixture.Create<string>();
+        response.Headers.Add(headerName, headerValue);
         var elapsed = _fixture.Create<TimeSpan>();
+        var logPropertyName = _fixture.Create<string>();
+
+        _httpLogger.Options = new HttpLoggerConfiguration()
+        {
+            CustomResponseHeadersToLog = new Dictionary<string, string>
+            {
+                {
+                    headerName, logPropertyName
+                }
+            }
+        };
 
         //ACT
         _httpLogger.LogRequestStop(context, request, response, elapsed);
 
         //ASSERT
+        _logger.ReceivedBeginScope(new Dictionary<string, object>
+        {
+            [logPropertyName] = headerValue,
+        });
         _logger.ReceivedBeginScope(new Dictionary<string, object>
         {
             ["Response.StatusCodeInt"] = (int) response.StatusCode,
@@ -76,13 +94,31 @@ public class HttpLoggerTests
         var context = _fixture.Create<object?>();
         var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
         var response = new HttpResponseMessage(HttpStatusCode.OK);
+        var headerName = _fixture.Create<string>();
+        var headerValue = _fixture.Create<string>();
+        var logPropertyName = _fixture.Create<string>();
+        response.Headers.Add(headerName, headerValue);
         var elapsed = _fixture.Create<TimeSpan>();
         var exception = _fixture.Create<Exception>();
+
+        _httpLogger.Options = new HttpLoggerConfiguration()
+        {
+            CustomResponseHeadersToLog = new Dictionary<string, string>
+            {
+                {
+                    headerName, logPropertyName
+                }
+            }
+        };
 
         //ACT
         _httpLogger.LogRequestFailed(context, request, response, exception, elapsed);
 
         //ASSERT
+        _logger.ReceivedBeginScope(new Dictionary<string, object>
+        {
+            [logPropertyName] = headerValue,
+        });
         _logger.ReceivedBeginScope(new Dictionary<string, object>
         {
             ["Request.Method"] = request.Method,

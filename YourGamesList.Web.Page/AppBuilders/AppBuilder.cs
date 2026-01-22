@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -12,6 +13,7 @@ using Serilog;
 using YourGamesList.Common;
 using YourGamesList.Common.Caching;
 using YourGamesList.Common.Http;
+using YourGamesList.Common.Logging;
 using YourGamesList.Common.Options.Validators;
 using YourGamesList.Web.Page.Services;
 using YourGamesList.Web.Page.Services.Caching;
@@ -47,7 +49,7 @@ public static partial class AppBuilder
         builder.Services.AddKeyedScoped<ICacheProvider, LocalStorageCacheProvider>(WebPageCacheProviders.LocalStorage);
 
         builder.Services.AddSingleton<ICountriesService, CountriesService>();
-        
+
         builder.Services.AddOptionsWithFluentValidation<UserLoginStateManagerOptions, UserLoginStateManagerOptionsValidator>(UserLoginStateManagerOptions
             .SectionName);
         builder.Services.AddScoped<IUserLoginStateManager, UserLoginStateManager>();
@@ -78,25 +80,28 @@ public static partial class AppBuilder
                 var options = provider.GetRequiredService<IOptions<YglApiHttpClientOptions>>();
                 client.BaseAddress = new Uri(options.Value.BaseAddress);
             })
-            .ConfigureLogging();
+            .ConfigureYglApiLogging();
+
         services.AddRefitClient<IYglApiUsers>().ConfigureHttpClient((provider, client) =>
             {
                 var options = provider.GetRequiredService<IOptions<YglApiHttpClientOptions>>();
                 client.BaseAddress = new Uri(options.Value.BaseAddress);
             })
-            .ConfigureLogging();
+            .ConfigureYglApiLogging();
+
         services.AddRefitClient<IYglApiSearchGames>().ConfigureHttpClient((provider, client) =>
             {
                 var options = provider.GetRequiredService<IOptions<YglApiHttpClientOptions>>();
                 client.BaseAddress = new Uri(options.Value.BaseAddress);
             })
-            .ConfigureLogging();
+            .ConfigureYglApiLogging();
+
         services.AddRefitClient<IYglApiLists>().ConfigureHttpClient((provider, client) =>
             {
                 var options = provider.GetRequiredService<IOptions<YglApiHttpClientOptions>>();
                 client.BaseAddress = new Uri(options.Value.BaseAddress);
             })
-            .ConfigureLogging();
+            .ConfigureYglApiLogging();
 
         services.AddScoped<IYglApi, YglApi>();
         services.AddScoped<IYglAuthClient, YglAuthAuthClient>();
@@ -105,6 +110,15 @@ public static partial class AppBuilder
         services.AddScoped<IYglListsClient, YglListsClient>();
 
         return services;
+    }
+
+    private static IHttpClientBuilder ConfigureYglApiLogging(this IHttpClientBuilder builder, Action<HttpLoggerConfiguration>? configureOptions = null)
+    {
+        return builder.ConfigureLogging(options =>
+        {
+            options.CustomResponseHeadersToLog.TryAdd(HttpHeaders.CorrelationId, LogProperties.CorrelationId);
+            configureOptions?.Invoke(options);
+        });
     }
 
     private static IServiceCollection AddMudBlazorServices(this IServiceCollection services)
