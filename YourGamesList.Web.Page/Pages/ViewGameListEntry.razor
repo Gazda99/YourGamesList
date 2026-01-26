@@ -1,0 +1,198 @@
+﻿@page "/lists/{ListId:guid}/{GameListEntryId:guid}"
+@using YourGamesList.Contracts.Dto
+@using YourGamesList.Contracts.Requests.Lists
+@using YourGamesList.Web.Page.Services
+@using YourGamesList.Web.Page.Services.UserLoginStateManager
+@using YourGamesList.Web.Page.Services.Ygl
+
+
+@* TODO: finish this page*@
+<PageTitle>Edit entry</PageTitle>
+
+
+@if (!_isPageInitialized)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="mx-auto"/>
+}
+else
+{
+    @if (!_isUserLoggedIn)
+    {
+        <LoginFirst></LoginFirst>
+    }
+    else
+    {
+        <MudButton OnClick="@GoBackToList">GO BACK</MudButton>
+
+
+        <MudStack Row="true">
+            <MudImage_GameImage ImageId="@Game.ImageId" Width="176" Height="235"></MudImage_GameImage>
+            <MudStack Style="width: 100%;">
+                <MudStack>
+                    <MudText>@Game.Name</MudText>
+                    <MudText_GameReleaseDate Date="@Game.FirstReleaseDate"></MudText_GameReleaseDate>
+                    <MudText_Truncated Text="@Game.Summary" MaxLength="150"></MudText_Truncated>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="4">
+                        <MudRating SelectedValue="@Rating()" SelectedValueChanged="@OnSelectedRatingChange"/>
+                        <MudCheckBox T="bool"
+                                     Value="@IsStarred()"
+                                     Color="Color.Secondary"
+                                     CheckedIcon="@Icons.Material.Filled.Favorite"
+                                     UncheckedIcon="@Icons.Material.Filled.FavoriteBorder"
+                                     ValueChanged="@OnIsStarredChange"/>
+                    </MudStack>
+                </MudStack>
+            </MudStack>
+        </MudStack>
+    }
+}
+
+
+
+@code{
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private IUserListsManager UserListsManager { get; set; } = default!;
+    [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
+    [Inject] private IUserListsManager IUserListsManager { get; set; } = default!;
+    [Inject] private IYglListsClient ListsClient { get; set; } = default!;
+
+    private byte? _rating = null;
+
+    private byte Rating()
+    {
+        if (_rating == null)
+        {
+            _rating = _gameListEntry.Rating ?? 0;
+        }
+
+        return _rating.Value;
+    }
+
+    private bool? _isStarred = null;
+
+    private bool IsStarred()
+    {
+        if (_isStarred == null)
+        {
+            _isStarred = _gameListEntry.IsStarred;
+        }
+
+        return _isStarred.Value;
+    }
+
+    private bool _isUserLoggedIn = false;
+    private bool _isPageInitialized = false;
+
+    [Parameter] public Guid ListId { get; set; }
+    [Parameter] public Guid GameListEntryId { get; set; }
+
+    private GameListEntryDto _gameListEntry = default!;
+    private GameDto Game => _gameListEntry!.Game!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _isUserLoggedIn = await UserLoginStateManager.IsUserLoggedIn();
+        if (_isUserLoggedIn)
+        {
+            _isPageInitialized = false;
+        }
+
+        var userLists = await UserListsManager.ReadOrRefresh();
+        if (userLists.IsFailure)
+        {
+            CouldNotLoadGameSnackbar();
+            return;
+        }
+
+        var selectedList = userLists.Value.FirstOrDefault(x => x.Id == ListId);
+        if (selectedList == null)
+        {
+            CouldNotLoadGameSnackbar();
+            return;
+        }
+
+        var selectedGameListEntry = selectedList.Entries.FirstOrDefault(x => x.Id == GameListEntryId);
+        if (selectedGameListEntry == null)
+        {
+            CouldNotLoadGameSnackbar();
+            return;
+        }
+
+        _gameListEntry = selectedGameListEntry;
+
+        _isPageInitialized = true;
+    }
+
+    private void GoBackToList()
+    {
+        Navigation.NavigateTo(Paths.ViewList(ListId));
+    }
+
+    private void CouldNotLoadGameSnackbar()
+    {
+        Snackbar.Add("Could not load selected game. Please try to refresh page.", Severity.Warning);
+    }
+
+    private async Task OnIsStarredChange(bool selectedIsStarred)
+    {
+        _isStarred = selectedIsStarred;
+
+        var userToken = await UserLoginStateManager.GetUserToken();
+        if (string.IsNullOrWhiteSpace(userToken))
+        {
+            //TODO:
+            _isStarred = _gameListEntry.IsStarred;
+            return;
+        }
+
+        var entryToUpdate = new EntryToUpdateRequestPart()
+        {
+            EntryId = _gameListEntry.Id,
+            IsStarred = selectedIsStarred
+        };
+
+        var res = await ListsClient.UpdateListEntries(userToken, ListId, [entryToUpdate]);
+        if (res.IsFailure)
+        {
+            _isStarred = _gameListEntry.IsStarred;
+        }
+        else
+        {
+            // Fire and forget
+            _ = IUserListsManager.Refresh();
+        }
+    }
+
+    private async Task OnSelectedRatingChange(int selectedRating)
+    {
+        _rating = (byte) selectedRating;
+
+        var userToken = await UserLoginStateManager.GetUserToken();
+        if (string.IsNullOrWhiteSpace(userToken))
+        {
+            //TODO:
+            _rating = _gameListEntry.Rating ?? 0;
+            return;
+        }
+
+        var entryToUpdate = new EntryToUpdateRequestPart()
+        {
+            EntryId = _gameListEntry.Id,
+            Rating = (byte) selectedRating
+        };
+
+        var res = await ListsClient.UpdateListEntries(userToken, ListId, [entryToUpdate]);
+        if (res.IsFailure)
+        {
+            _rating = _gameListEntry.Rating ?? 0;
+        }
+        else
+        {
+            // Fire and forget
+            _ = IUserListsManager.Refresh();
+        }
+    }
+
+}

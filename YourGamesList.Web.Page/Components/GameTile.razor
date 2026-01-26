@@ -31,12 +31,12 @@
 
 <MudCard Outlined="true" Style="position: relative;" Class="game-tile-card">
     <MudStack Row="true">
-        <MudImage Src="@ImageUrl()" Width="176" Height="235"></MudImage>
+        <MudImage_GameImage ImageId="@Game.ImageId" Width="176" Height="235"></MudImage_GameImage>
         <MudStack Style="width: 100%;">
             <MudStack>
                 <MudText>@Game.Name</MudText>
-                <MudText>@FormatReleaseDate()</MudText>
-                <MudText>@TruncateText(Game.Summary, 150)</MudText>
+                <MudText_GameReleaseDate Date="@Game.FirstReleaseDate"></MudText_GameReleaseDate>
+                <MudText_Truncated Text="@Game.Summary" MaxLength="150"></MudText_Truncated>
             </MudStack>
         </MudStack>
     </MudStack>
@@ -53,31 +53,7 @@
     [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
     [Inject] private ILogger<GameTile> Logger { get; set; } = default!;
     [Inject] private IUserListsManager IUserListsManager { get; set; } = default!;
-
-
-    private const string GameReleaseDateFormat = "yyyy MMMM dd";
-
     [Parameter] public required GameDto Game { get; set; }
-
-    private string ImageUrl()
-    {
-        return !string.IsNullOrWhiteSpace(Game.ImageId) ? $"https://images.igdb.com/igdb/image/upload/t_cover_big/{Game.ImageId}.jpg" : "";
-    }
-
-    private string FormatReleaseDate()
-    {
-        return Game.FirstReleaseDate != 0 ? DateTimeOffset.FromUnixTimeSeconds(Game.FirstReleaseDate).ToString(GameReleaseDateFormat) : string.Empty;
-    }
-
-    private static string TruncateText(string text, int maxLength)
-    {
-        if (maxLength <= 10)
-        {
-            maxLength = 10;
-        }
-
-        return text.Length >= maxLength ? $"{text[0..(maxLength - 3)]}..." : text;
-    }
 
     private async Task AddToList()
     {

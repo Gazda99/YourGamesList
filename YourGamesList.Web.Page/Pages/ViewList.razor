@@ -5,6 +5,8 @@
 @using YourGamesList.Web.Page.Services.UserLoginStateManager
 @using YourGamesList.Web.Page.Services.Ygl
 
+<PageTitle>@PageName()</PageTitle>
+
 @if (!_isPageInitialized)
 {
     <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="mx-auto"/>
@@ -114,6 +116,11 @@ else
         }
 
         return filteredGames.ToList();
+    }
+
+    private string PageName()
+    {
+        return _selectedList?.Name ?? "Loading...";
     }
 
 }

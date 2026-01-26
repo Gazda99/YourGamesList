@@ -5,6 +5,8 @@
 @using YourGamesList.Web.Page.Services.UserLoginStateManager
 @using YourGamesList.Web.Page.Services.Ygl
 
+<PageTitle>Lists</PageTitle>
+
 @if (!_isPageInitialized)
 {
     <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="mx-auto"/>
@@ -77,7 +79,7 @@ else
 
     private void OnTileClick(Guid selectedListId)
     {
-        Navigation.NavigateTo(Paths.ViewList(selectedListId.ToString()));
+        Navigation.NavigateTo(Paths.ViewList(selectedListId));
     }
 
     private List<GamesListDto> FilteredLists()
