@@ -147,7 +147,7 @@ public class UsersServiceTests
 
         var userInDb = _yglDbContextBuilder.Get().Users.FirstOrDefault(u => u.Id == parameters.UserInformation.UserId);
         Assert.That(userInDb, Is.Not.Null);
-        Assert.That(userInDb!.Country, Is.EqualTo(parameters.Country));
+        Assert.That(userInDb!.Country, Is.EqualTo(parameters.Country.ToUpper()));
         Assert.That(userInDb.Description, Is.EqualTo(parameters.Description));
         Assert.That(userInDb.DateOfBirth, Is.EqualTo(parameters.DateOfBirth));
         Assert.That(userInDb.LastModifiedDate, Is.EqualTo(time));

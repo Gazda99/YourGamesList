@@ -15,6 +15,7 @@ public class YglDbContext : DbContext
     public DbSet<Game> Games { get; set; }
     public DbSet<GameListEntry> GameListEntries { get; set; }
     public DbSet<GamesList> Lists { get; set; }
+    public DbSet<OwnershipInfo> OwnershipInfos { get; set; }
 
     public YglDbContext(IOptions<YourGamesListDatabaseOptions> options)
     {
@@ -43,22 +44,10 @@ public class YglDbContext : DbContext
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasIndex(x => x.Username);
+            entity.HasIndex(x => x.Username).IsUnique();
         });
 
-        modelBuilder.Entity<Game>(entity =>
-        {
-            entity.HasKey(x => x.Id);
-            // entity.HasIndex(x => x.IgdbGameId);
-        });
-
-        modelBuilder.Entity<GameListEntry>(entity =>
-        {
-            entity.HasKey(x => x.Id);
-            entity.HasOne(x => x.Game)
-                .WithMany(x => x.GameListEntries)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
+        modelBuilder.Entity<Game>(entity => { entity.HasKey(x => x.Id); });
 
         modelBuilder.Entity<GamesList>(entity =>
         {
@@ -68,5 +57,22 @@ public class YglDbContext : DbContext
                 .HasForeignKey(x => x.GamesListId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+
+        modelBuilder.Entity<GameListEntry>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasOne(x => x.Game)
+                .WithMany(x => x.GameListEntries)
+                .HasForeignKey(x => x.GameId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(x => x.OwnershipInfo)
+                .WithOne(x => x.GameListEntry)
+                .HasForeignKey(x => x.GameListEntryId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<OwnershipInfo>(entity => { entity.HasKey(x => x.Id); });
     }
 }

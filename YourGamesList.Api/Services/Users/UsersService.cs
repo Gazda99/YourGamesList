@@ -64,7 +64,7 @@ public class UsersService : IUsersService
             return CombinedResult<Guid, UsersError>.Failure(UsersError.UserNotFound);
         }
 
-        user.Country = parameters.Country ?? string.Empty;
+        user.Country = parameters.Country?.ToUpper() ?? string.Empty;
         user.Description = parameters.Description ?? string.Empty;
         user.DateOfBirth = parameters.DateOfBirth;
         user.LastModifiedDate = _timeProvider.GetUtcNow();

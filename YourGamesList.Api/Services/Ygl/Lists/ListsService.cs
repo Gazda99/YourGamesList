@@ -18,7 +18,7 @@ public interface IListsService
 {
     #region List
 
-    Task<CombinedResult<Guid, ListsError>> CreateList(JwtUserInformation userInfo, string listName, string? description);
+    Task<CombinedResult<Guid, ListsError>> CreateList(CreateListParameters parameters);
     Task<CombinedResult<GamesListDto, ListsError>> GetList(JwtUserInformation userInfo, Guid listId, bool includeGames);
     Task<CombinedResult<List<GamesListDto>, ListsError>> SearchLists(SearchListsParameters parameters);
     Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelfLists(JwtUserInformation userInfo, bool includeGames);
@@ -32,6 +32,13 @@ public interface IListsService
     Task<CombinedResult<List<Guid>, ListsError>> AddListEntries(AddEntriesToListParameter parameters);
     Task<CombinedResult<List<Guid>, ListsError>> DeleteListEntries(DeleteListEntriesParameter parameters);
     Task<CombinedResult<List<Guid>, ListsError>> UpdateListEntries(UpdateListEntriesParameter parameters);
+
+    #endregion
+
+    #region OwnershipInfo
+
+    Task<CombinedResult<List<Guid>, ListsError>> AddOwnershipInfo(AddOwnershipInfoToEntryParameters parameters);
+    Task<CombinedResult<List<Guid>, ListsError>> DeleteOwnershipInfo(DeleteOwnershipInfoToEntryParameters parameters);
 
     #endregion
 }
@@ -58,21 +65,22 @@ public class ListsService : IListsService
 
     #region List
 
-    public async Task<CombinedResult<Guid, ListsError>> CreateList(JwtUserInformation userInfo, string listName, string? description = null)
+    public async Task<CombinedResult<Guid, ListsError>> CreateList(CreateListParameters parameters)
     {
-        var listsQuery = await _yglDbContext.Lists.FirstOrDefaultAsync(x => x.UserId == userInfo.UserId && x.Name.ToLower() == listName.ToLower());
+        var userInfo = parameters.UserInformation;
+        var listsQuery = await _yglDbContext.Lists.FirstOrDefaultAsync(x => x.UserId == userInfo.UserId && x.Name.ToLower() == parameters.ListName.ToLower());
         if (listsQuery != null)
         {
-            _logger.LogInformation($"'{listName}' already exists.");
+            _logger.LogInformation($"'{parameters.ListName}' already exists.");
             return CombinedResult<Guid, ListsError>.Failure(ListsError.ListAlreadyExists);
         }
 
         var list = new GamesList()
         {
-            Name = listName,
+            Name = parameters.ListName,
             UserId = userInfo.UserId,
-            Desc = string.IsNullOrEmpty(description) ? string.Empty : description,
-            IsPublic = true,
+            Description = string.IsNullOrEmpty(parameters.Description) ? string.Empty : parameters.Description,
+            IsPublic = parameters.IsPublic ?? false,
             CanBeDeleted = true,
             CreatedDate = _timeProvider.GetUtcNow()
         };
@@ -86,14 +94,12 @@ public class ListsService : IListsService
     public async Task<CombinedResult<GamesListDto, ListsError>> GetList(JwtUserInformation userInfo, Guid listId, bool includeGames)
     {
         var listsQuery = _yglDbContext.Lists.AsNoTracking();
+        listsQuery.Include(x => x.Entries).ThenInclude(x => x.OwnershipInfo);
 
         if (includeGames)
         {
             listsQuery = listsQuery.Include(x => x.Entries).ThenInclude(x => x.Game);
-        }
-        else
-        {
-            listsQuery = listsQuery.Include(x => x.Entries);
+            listsQuery = listsQuery.Include(x => x.Entries).ThenInclude(x => x.OwnershipInfo);
         }
 
         var list = await listsQuery.FirstOrDefaultAsync(x => x.Id == listId);
@@ -178,14 +184,12 @@ public class ListsService : IListsService
     public async Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelfLists(JwtUserInformation userInfo, bool includeGames)
     {
         var listsQuery = _yglDbContext.Lists.AsNoTracking();
+        listsQuery.Include(x => x.Entries).ThenInclude(x => x.OwnershipInfo);
 
         if (includeGames)
         {
             listsQuery = listsQuery.Include(x => x.Entries).ThenInclude(x => x.Game);
-        }
-        else
-        {
-            listsQuery = listsQuery.Include(x => x.Entries);
+            listsQuery = listsQuery.Include(x => x.Entries).ThenInclude(x => x.OwnershipInfo);
         }
 
         listsQuery = listsQuery.Where(x => x.UserId == userInfo.UserId);
@@ -226,9 +230,9 @@ public class ListsService : IListsService
             list.Name = parameters.Name;
         }
 
-        if (!string.IsNullOrWhiteSpace(parameters.Desc))
+        if (!string.IsNullOrWhiteSpace(parameters.Description))
         {
-            list.Desc = parameters.Desc;
+            list.Description = parameters.Description;
         }
 
         if (parameters.IsPublic != null)
@@ -306,7 +310,7 @@ public class ListsService : IListsService
             {
                 GamesListId = list.Id,
                 GameId = entryToAdd.GameId,
-                Desc = entryToAdd.Desc ?? string.Empty,
+                Description = entryToAdd.Description ?? string.Empty,
                 IsStarred = entryToAdd.IsStarred ?? false,
                 Rating = entryToAdd.Rating ?? null,
                 CompletionStatus = entryToAdd.CompletionStatus == null
@@ -314,16 +318,6 @@ public class ListsService : IListsService
                     : _yglDatabaseAndDtoMapper.Map(entryToAdd.CompletionStatus.Value),
                 CreatedDate = _timeProvider.GetUtcNow()
             };
-
-            if (entryToAdd.Platforms != null)
-            {
-                listEntry.Platforms = entryToAdd.Platforms.Select(x => _yglDatabaseAndDtoMapper.Map(x)).ToArray();
-            }
-
-            if (entryToAdd.GameDistributions != null)
-            {
-                listEntry.GameDistributions = entryToAdd.GameDistributions.Select(x => _yglDatabaseAndDtoMapper.Map(x)).ToArray();
-            }
 
             listEntries.Add(listEntry);
         }
@@ -382,22 +376,29 @@ public class ListsService : IListsService
         }
 
         var updatedEntryIds = new List<Guid>();
+
+        var notFounds = 0;
         foreach (var entryToUpdateParameter in parameters.EntriesToUpdate)
         {
             var entry = list.Entries.FirstOrDefault(x => x.Id == entryToUpdateParameter.EntryId);
             if (entry == null)
             {
+                notFounds++;
                 _logger.LogInformation($"Entry to update '{entryToUpdateParameter.EntryId}' not found in the list '{list.Id}'.");
                 continue;
             }
 
-            entry.Desc = entryToUpdateParameter.Desc ?? entry.Desc;
-            entry.Platforms = entryToUpdateParameter.Platforms != null
-                ? entryToUpdateParameter.Platforms.Select(x => _yglDatabaseAndDtoMapper.Map(x)).ToArray()
-                : entry.Platforms;
-            entry.GameDistributions = entryToUpdateParameter.GameDistributions != null
-                ? entryToUpdateParameter.GameDistributions.Select(x => _yglDatabaseAndDtoMapper.Map(x)).ToArray()
-                : entry.GameDistributions;
+            entry.Description = entryToUpdateParameter.Description ?? entry.Description;
+
+
+            // entry.Platforms = entryToUpdateParameter.Platforms != null
+            //     ? entryToUpdateParameter.Platforms.Select(x => _yglDatabaseAndDtoMapper.Map(x)).ToArray()
+            //     : entry.Platforms;
+            // entry.GameDistributions = entryToUpdateParameter.GameDistributions != null
+            //     ? entryToUpdateParameter.GameDistributions.Select(x => _yglDatabaseAndDtoMapper.Map(x)).ToArray()
+            //     : entry.GameDistributions;
+
+
             entry.IsStarred = entryToUpdateParameter.IsStarred ?? entry.IsStarred;
             entry.Rating = entryToUpdateParameter.Rating ?? entry.Rating;
             entry.CompletionStatus = entryToUpdateParameter.CompletionStatus != null
@@ -408,10 +409,113 @@ public class ListsService : IListsService
             updatedEntryIds.Add(entry.Id);
         }
 
+        if (parameters.EntriesToUpdate.Length == notFounds)
+        {
+            _logger.LogInformation($"All entries to update were not found in the list '{list.Id}'.");
+            return CombinedResult<List<Guid>, ListsError>.Failure(ListsError.ListNotFound);
+        }
+
         list.LastModifiedDate = _timeProvider.GetUtcNow();
         await _yglDbContext.SaveChangesAsync();
         _logger.LogInformation($"Updated '{updatedEntryIds.Count}' entries [{string.Join(',', updatedEntryIds)}] from list '{list.Id}'.");
         return CombinedResult<List<Guid>, ListsError>.Success(updatedEntryIds);
+    }
+
+    #endregion
+
+    #region OwnershipInfo
+
+    public async Task<CombinedResult<List<Guid>, ListsError>> AddOwnershipInfo(AddOwnershipInfoToEntryParameters parameters)
+    {
+        var listEntry = await _yglDbContext.GameListEntries
+            .Include(x => x.OwnershipInfo)
+            .Include(gameListEntry => gameListEntry.GamesList)
+            .FirstOrDefaultAsync(x => x.Id == parameters.ListEntryId);
+
+        if (listEntry == null)
+        {
+            _logger.LogInformation($"No list entries found for id '{parameters.ListEntryId}' and user '{parameters.UserInformation.UserId}'.");
+            return CombinedResult<List<Guid>, ListsError>.Failure(ListsError.ListNotFound);
+        }
+
+        var ownerOfList = listEntry.GamesList.UserId;
+        if (parameters.UserInformation.UserId != ownerOfList)
+        {
+            _logger.LogInformation($"User '{parameters.UserInformation.UserId}' is not the owner of the list entry '{listEntry.Id}'.");
+            return CombinedResult<List<Guid>, ListsError>.Failure(ListsError.ListNotFound);
+        }
+
+        var ownerships = new List<OwnershipInfo>();
+
+        foreach (var ownershipToAdd in parameters.OwnershipsToAdd)
+        {
+            var ownership = new OwnershipInfo()
+            {
+                GameListEntry = listEntry,
+                IsLegit = ownershipToAdd.IsLegit ?? null,
+                Platform = ownershipToAdd.Platform == null
+                    ? Platform.Unspecified
+                    : _yglDatabaseAndDtoMapper.Map(ownershipToAdd.Platform.Value),
+                GameDistribution = ownershipToAdd.GameDistribution == null
+                    ? GameDistribution.Unspecified
+                    : _yglDatabaseAndDtoMapper.Map(ownershipToAdd.GameDistribution.Value),
+                WasEmulated = ownershipToAdd.WasEmulated ?? false,
+                EmulatedOn = ownershipToAdd.EmulatedOn == null
+                    ? Emulator.Unspecified
+                    : _yglDatabaseAndDtoMapper.Map(ownershipToAdd.EmulatedOn.Value),
+                CreatedDate = _timeProvider.GetUtcNow()
+            };
+
+            ownerships.Add(ownership);
+        }
+
+        listEntry.LastModifiedDate = _timeProvider.GetUtcNow();
+        await _yglDbContext.OwnershipInfos.AddRangeAsync(ownerships);
+        await _yglDbContext.SaveChangesAsync();
+
+        var ownershipsIds = ownerships.Select(x => x.Id).ToList();
+        _logger.LogInformation($"Successfully added '{ownershipsIds.Count}' ownerships [{string.Join(',', ownershipsIds)}] to list entry '{listEntry.Id}'.");
+        return CombinedResult<List<Guid>, ListsError>.Success(ownershipsIds);
+    }
+
+    public async Task<CombinedResult<List<Guid>, ListsError>> DeleteOwnershipInfo(DeleteOwnershipInfoToEntryParameters parameters)
+    {
+        var listEntry = await _yglDbContext.GameListEntries
+            .Include(x => x.OwnershipInfo)
+            .Include(gameListEntry => gameListEntry.GamesList)
+            .FirstOrDefaultAsync(x => x.Id == parameters.ListEntryId);
+
+        if (listEntry == null)
+        {
+            _logger.LogInformation($"No list entries found for id '{parameters.ListEntryId}' and user '{parameters.UserInformation.UserId}'.");
+            return CombinedResult<List<Guid>, ListsError>.Failure(ListsError.ListNotFound);
+        }
+
+        var ownerOfList = listEntry.GamesList.UserId;
+        if (parameters.UserInformation.UserId != ownerOfList)
+        {
+            _logger.LogInformation($"User '{parameters.UserInformation.UserId}' is not the owner of the list entry '{listEntry.Id}'.");
+            return CombinedResult<List<Guid>, ListsError>.Failure(ListsError.ListNotFound);
+        }
+
+        var ownershipsToDelete = await _yglDbContext.OwnershipInfos
+            .Where(e => ((IEnumerable<Guid>) parameters.OwnershipsToRemove).Contains(e.Id))
+            .ToListAsync();
+
+        if (ownershipsToDelete.Count == 0)
+        {
+            _logger.LogInformation($"No ownerships found to delete from the list entry {parameters.ListEntryId}'.");
+            return CombinedResult<List<Guid>, ListsError>.Success([]);
+        }
+
+        var ownershipIds = ownershipsToDelete.Select(x => x.Id).ToList();
+
+        _yglDbContext.OwnershipInfos.RemoveRange(ownershipsToDelete);
+        await _yglDbContext.SaveChangesAsync();
+
+        _logger.LogInformation($"Deleted '{ownershipIds.Count}' ownerships [{string.Join(',', ownershipIds)}] from list entry '{listEntry.Id}'.");
+
+        return CombinedResult<List<Guid>, ListsError>.Success(ownershipIds);
     }
 
     #endregion

@@ -25,7 +25,6 @@ public class UsersControllerTests
     private ILogger<UsersController> _logger;
     private IRequestToParametersMapper _requestToParametersMapper;
     private IUsersService _usersService;
-    private ICountriesService _countriesService;
 
 
     [SetUp]
@@ -35,7 +34,6 @@ public class UsersControllerTests
         _logger = Substitute.For<ILogger<UsersController>>();
         _requestToParametersMapper = Substitute.For<IRequestToParametersMapper>();
         _usersService = Substitute.For<IUsersService>();
-        _countriesService = Substitute.For<ICountriesService>();
     }
 
     #region GetSelf
@@ -50,7 +48,7 @@ public class UsersControllerTests
         _requestToParametersMapper.Map(request).Returns(parameters);
         _usersService.GetSelfUser(parameters).Returns(CombinedResult<UserDto, UsersError>.Success(expectedResValue));
 
-        var controller = new UsersController(_logger, _requestToParametersMapper, _usersService, _countriesService);
+        var controller = new UsersController(_logger, _requestToParametersMapper, _usersService);
 
         //ACT
         var res = await controller.GetSelf(request);
@@ -74,7 +72,7 @@ public class UsersControllerTests
         _requestToParametersMapper.Map(request).Returns(parameters);
         _usersService.GetSelfUser(parameters).Returns(CombinedResult<UserDto, UsersError>.Failure(UsersError.UserNotFound));
 
-        var controller = new UsersController(_logger, _requestToParametersMapper, _usersService, _countriesService);
+        var controller = new UsersController(_logger, _requestToParametersMapper, _usersService);
 
         //ACT
         var res = await controller.GetSelf(request);
@@ -101,7 +99,7 @@ public class UsersControllerTests
         _requestToParametersMapper.Map(request).Returns(parameters);
         _usersService.UpdateUser(parameters).Returns(CombinedResult<Guid, UsersError>.Success(expectedResValue));
 
-        var controller = new UsersController(_logger, _requestToParametersMapper, _usersService, _countriesService);
+        var controller = new UsersController(_logger, _requestToParametersMapper, _usersService);
 
         //ACT
         var res = await controller.UpdateUser(request);
@@ -125,7 +123,7 @@ public class UsersControllerTests
         _requestToParametersMapper.Map(request).Returns(parameters);
         _usersService.UpdateUser(parameters).Returns(CombinedResult<Guid, UsersError>.Failure(UsersError.UserNotFound));
 
-        var controller = new UsersController(_logger, _requestToParametersMapper, _usersService, _countriesService);
+        var controller = new UsersController(_logger, _requestToParametersMapper, _usersService);
 
         //ACT
         var res = await controller.UpdateUser(request);

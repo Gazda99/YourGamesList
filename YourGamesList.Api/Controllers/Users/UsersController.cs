@@ -3,15 +3,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Attributes;
 using YourGamesList.Api.Model.Requests.Users;
-using YourGamesList.Api.OutputCachePolicies;
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Users;
 using YourGamesList.Api.Services.Users.Model;
-using YourGamesList.Common;
 using YourGamesList.Contracts.Dto;
 
 namespace YourGamesList.Api.Controllers.Users;
@@ -23,15 +20,12 @@ public class UsersController : YourGamesListBaseController
     private readonly ILogger<UsersController> _logger;
     private readonly IRequestToParametersMapper _requestToParametersMapper;
     private readonly IUsersService _usersService;
-    private readonly ICountriesService _countriesService;
 
-    public UsersController(ILogger<UsersController> logger, IRequestToParametersMapper requestToParametersMapper, IUsersService usersService,
-        ICountriesService countriesService)
+    public UsersController(ILogger<UsersController> logger, IRequestToParametersMapper requestToParametersMapper, IUsersService usersService)
     {
         _logger = logger;
         _requestToParametersMapper = requestToParametersMapper;
         _usersService = usersService;
-        _countriesService = countriesService;
     }
 
 

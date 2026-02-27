@@ -14,6 +14,7 @@ using YourGamesList.Contracts.Dto;
 
 namespace YourGamesList.Api.Controllers.Lists;
 
+//TODO: use diffferent methods on same url to modify lists instead of using /create /update /delete etc
 [ApiController]
 [Route("lists")]
 public class ListsController : YourGamesListBaseController
@@ -40,7 +41,9 @@ public class ListsController : YourGamesListBaseController
     {
         _logger.LogInformation($"Requested to create list '{createListRequest.Body.ListName}' for user '{createListRequest.UserInformation.UserId}'");
 
-        var res = await _listsService.CreateList(createListRequest.UserInformation, createListRequest.Body.ListName, createListRequest.Body.Description);
+        var parameters = _requestToParametersMapper.Map(createListRequest);
+        
+        var res = await _listsService.CreateList(parameters);
         if (res.IsSuccess)
         {
             return Result(StatusCodes.Status200OK, res.Value);
@@ -284,5 +287,65 @@ public class ListsController : YourGamesListBaseController
         }
     }
 
+    #endregion
+    
+    #region OwnerhsipInfo
+
+    [HttpPost("entries/ownershipInfo/add")]
+    [Authorize]
+    [ProducesResponseType(typeof(List<Guid>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+    [TypeFilter(typeof(RequestValidatorAttribute<AddOwnershipInfoToEntryRequest>), Arguments = ["addOwnershipInfoToEntryRequest"])]
+    public async Task<IActionResult> AddOwnershipInfo(AddOwnershipInfoToEntryRequest addOwnershipInfoToEntryRequest)
+    {
+        _logger.LogInformation(
+            $"Requested to add ownership info to entry '{addOwnershipInfoToEntryRequest.Body.ListEntryId}' for user '{addOwnershipInfoToEntryRequest.UserInformation.UserId}'");
+
+        var parameters = _requestToParametersMapper.Map(addOwnershipInfoToEntryRequest);
+
+        var res = await _listsService.AddOwnershipInfo(parameters);
+        if (res.IsSuccess)
+        {
+            return Result(StatusCodes.Status200OK, res.Value);
+        }
+        else if (res.Error == ListsError.ListNotFound)
+        {
+            return Result(StatusCodes.Status404NotFound);
+        }
+        else
+        {
+            return Result(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    
+    [HttpDelete("entries/ownershipInfo/delete")]
+    [Authorize]
+    [ProducesResponseType(typeof(List<Guid>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+    [TypeFilter(typeof(RequestValidatorAttribute<DeleteOwnershipInfoToEntryRequest>), Arguments = ["deleteOwnershipInfoToEntryRequest"])]
+    public async Task<IActionResult> DeleteOwnershipInfo(DeleteOwnershipInfoToEntryRequest deleteOwnershipInfoToEntryRequest)
+    {
+        _logger.LogInformation(
+            $"Requested to delete ownership info from entry '{deleteOwnershipInfoToEntryRequest.Body.ListEntryId}' for user '{deleteOwnershipInfoToEntryRequest.UserInformation.UserId}'");
+
+        var parameters = _requestToParametersMapper.Map(deleteOwnershipInfoToEntryRequest);
+
+        var res = await _listsService.DeleteOwnershipInfo(parameters);
+        if (res.IsSuccess)
+        {
+            return Result(StatusCodes.Status200OK, res.Value);
+        }
+        else if (res.Error == ListsError.ListNotFound)
+        {
+            return Result(StatusCodes.Status404NotFound);
+        }
+        else
+        {
+            return Result(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    //TODO: Update ownershipinfo
     #endregion
 }

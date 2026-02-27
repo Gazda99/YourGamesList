@@ -91,7 +91,8 @@ public class UserManagerService : IUserManagerService
             User = newUser,
             //We set can be deleted to false, as this is the main list that always should exists for each user
             CanBeDeleted = false,
-            IsPublic = false
+            IsPublic = false,
+            CreatedDate = now
         };
 
         _yglDbContext.Lists.Add(defaultList);

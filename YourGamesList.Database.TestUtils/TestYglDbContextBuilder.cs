@@ -80,6 +80,17 @@ public class TestYglDbContextBuilder
     }
 
     /// <summary>
+    /// Seeds the OwnershipInfos DbSet with the provided list of ownership infos
+    /// </summary>
+    public TestYglDbContextBuilder WithOwnershipInfoDbSet(List<OwnershipInfo> ownershipInfos)
+    {
+        _yglDbContext.OwnershipInfos.AddRange(ownershipInfos);
+        _yglDbContext.SaveChanges();
+        _yglDbContext.ChangeTracker.Clear();
+        return this;
+    }
+
+    /// <summary>
     /// Returns the underlying YglDbContext instance.
     /// </summary>
     public YglDbContext Get()
