@@ -63,14 +63,7 @@ public class ListsServiceTests
             .Create();
         var users = new List<User>()
         {
-            new User()
-            {
-                Id = userInformation.UserId,
-                Username = userInformation.Username,
-                PasswordHash = _fixture.Create<string>(),
-                CreatedDate = DateTime.UtcNow,
-                Salt = _fixture.Create<byte[]>()
-            }
+            TestYglDbContextBuilder.CreateUser(id: userInformation.UserId, username: userInformation.Username)
         };
         _yglDbContextBuilder.WithUserDbSet(users);
 
@@ -102,14 +95,7 @@ public class ListsServiceTests
             .Create();
         var users = new List<User>()
         {
-            new User()
-            {
-                Id = userInformation.UserId,
-                Username = userInformation.Username,
-                PasswordHash = _fixture.Create<string>(),
-                CreatedDate = DateTime.UtcNow,
-                Salt = _fixture.Create<byte[]>()
-            }
+            TestYglDbContextBuilder.CreateUser(id: userInformation.UserId, username: userInformation.Username)
         };
         var gamesLists = new List<GamesList>()
         {
@@ -151,14 +137,7 @@ public class ListsServiceTests
 
         var users = new List<User>()
         {
-            new User()
-            {
-                Id = userInformation.UserId,
-                Username = userInformation.Username,
-                PasswordHash = _fixture.Create<string>(),
-                CreatedDate = DateTime.UtcNow,
-                Salt = _fixture.Create<byte[]>()
-            }
+            TestYglDbContextBuilder.CreateUser(id: userInformation.UserId, username: userInformation.Username)
         };
         var gl1 = new GamesList()
         {
@@ -228,14 +207,7 @@ public class ListsServiceTests
             .Create();
         var users = new List<User>()
         {
-            new User()
-            {
-                Id = userId,
-                Username = _fixture.Create<string>(),
-                PasswordHash = _fixture.Create<string>(),
-                CreatedDate = DateTime.UtcNow,
-                Salt = _fixture.Create<byte[]>()
-            }
+            TestYglDbContextBuilder.CreateUser(id: userId)
         };
         var gl1 = new GamesList()
         {
@@ -295,14 +267,7 @@ public class ListsServiceTests
             .Create();
         var users = new List<User>()
         {
-            new User()
-            {
-                Id = userId,
-                Username = username,
-                PasswordHash = _fixture.Create<string>(),
-                CreatedDate = DateTime.UtcNow,
-                Salt = _fixture.Create<byte[]>()
-            }
+            TestYglDbContextBuilder.CreateUser(id: userId, username: username)
         };
         var gl1 = new GamesList()
         {
@@ -398,14 +363,7 @@ public class ListsServiceTests
 
         var users = new List<User>()
         {
-            new User()
-            {
-                Id = userInformation.UserId,
-                Username = userInformation.Username,
-                PasswordHash = _fixture.Create<string>(),
-                CreatedDate = DateTime.UtcNow,
-                Salt = _fixture.Create<byte[]>()
-            }
+            TestYglDbContextBuilder.CreateUser(id: userInformation.UserId, username: userInformation.Username)
         };
         var gl1 = new GamesList()
         {
@@ -476,14 +434,7 @@ public class ListsServiceTests
         _timeProvider.GetUtcNow().Returns(time);
         var users = new List<User>()
         {
-            new User()
-            {
-                Id = parameters.UserInformation.UserId,
-                Username = parameters.UserInformation.Username,
-                PasswordHash = _fixture.Create<string>(),
-                CreatedDate = DateTime.UtcNow,
-                Salt = _fixture.Create<byte[]>()
-            }
+            TestYglDbContextBuilder.CreateUser(id: parameters.UserInformation.UserId, username: parameters.UserInformation.Username)
         };
         var gamesLists = new List<GamesList>()
         {
@@ -542,14 +493,7 @@ public class ListsServiceTests
             .Create();
         var users = new List<User>()
         {
-            new User()
-            {
-                Id = parameters.UserInformation.UserId,
-                Username = parameters.UserInformation.Username,
-                PasswordHash = _fixture.Create<string>(),
-                CreatedDate = DateTime.UtcNow,
-                Salt = _fixture.Create<byte[]>()
-            }
+            TestYglDbContextBuilder.CreateUser(id: parameters.UserInformation.UserId, username: parameters.UserInformation.Username)
         };
         var gamesLists = new List<GamesList>()
         {
@@ -598,14 +542,7 @@ public class ListsServiceTests
 
         var users = new List<User>()
         {
-            new User()
-            {
-                Id = userInformation.UserId,
-                Username = userInformation.Username,
-                PasswordHash = _fixture.Create<string>(),
-                CreatedDate = DateTime.UtcNow,
-                Salt = _fixture.Create<byte[]>()
-            }
+            TestYglDbContextBuilder.CreateUser(id: userInformation.UserId, username: userInformation.Username)
         };
         var gamesLists = new List<GamesList>()
         {
@@ -661,14 +598,7 @@ public class ListsServiceTests
 
         var users = new List<User>()
         {
-            new User()
-            {
-                Id = userInformation.UserId,
-                Username = userInformation.Username,
-                PasswordHash = _fixture.Create<string>(),
-                CreatedDate = DateTime.UtcNow,
-                Salt = _fixture.Create<byte[]>()
-            }
+            TestYglDbContextBuilder.CreateUser(id: userInformation.UserId, username: userInformation.Username)
         };
         var gamesLists = new List<GamesList>()
         {
@@ -724,14 +654,7 @@ public class ListsServiceTests
         };
         var users = new List<User>()
         {
-            new User()
-            {
-                Id = parameters.UserInformation.UserId,
-                Username = parameters.UserInformation.Username,
-                PasswordHash = _fixture.Create<string>(),
-                CreatedDate = DateTime.UtcNow,
-                Salt = _fixture.Create<byte[]>()
-            }
+            TestYglDbContextBuilder.CreateUser(id: parameters.UserInformation.UserId, username: parameters.UserInformation.Username)
         };
         var gamesLists = new List<GamesList>()
         {
@@ -807,14 +730,7 @@ public class ListsServiceTests
         };
         var users = new List<User>()
         {
-            new User()
-            {
-                Id = parameters.UserInformation.UserId,
-                Username = parameters.UserInformation.Username,
-                PasswordHash = _fixture.Create<string>(),
-                CreatedDate = DateTime.UtcNow,
-                Salt = _fixture.Create<byte[]>()
-            }
+            TestYglDbContextBuilder.CreateUser(id: parameters.UserInformation.UserId, username: parameters.UserInformation.Username)
         };
         var gameListEntries = new List<GameListEntry>()
         {
@@ -880,14 +796,7 @@ public class ListsServiceTests
         };
         var users = new List<User>()
         {
-            new User()
-            {
-                Id = parameters.UserInformation.UserId,
-                Username = parameters.UserInformation.Username,
-                PasswordHash = _fixture.Create<string>(),
-                CreatedDate = DateTime.UtcNow,
-                Salt = _fixture.Create<byte[]>()
-            }
+            TestYglDbContextBuilder.CreateUser(id: parameters.UserInformation.UserId, username: parameters.UserInformation.Username)
         };
         var gameListEntries = new List<GameListEntry>()
         {
@@ -967,14 +876,7 @@ public class ListsServiceTests
 
         var users = new List<User>()
         {
-            new User()
-            {
-                Id = parameters.UserInformation.UserId,
-                Username = parameters.UserInformation.Username,
-                PasswordHash = _fixture.Create<string>(),
-                CreatedDate = DateTime.UtcNow,
-                Salt = _fixture.Create<byte[]>()
-            }
+            TestYglDbContextBuilder.CreateUser(id: parameters.UserInformation.UserId, username: parameters.UserInformation.Username)
         };
         var gamesLists = new List<GamesList>()
         {
@@ -1048,14 +950,7 @@ public class ListsServiceTests
         };
         var users = new List<User>()
         {
-            new User()
-            {
-                Id = parameters.UserInformation.UserId,
-                Username = parameters.UserInformation.Username,
-                PasswordHash = _fixture.Create<string>(),
-                CreatedDate = DateTime.UtcNow,
-                Salt = _fixture.Create<byte[]>()
-            }
+            TestYglDbContextBuilder.CreateUser(id: parameters.UserInformation.UserId, username: parameters.UserInformation.Username)
         };
         var gameListEntries = new List<GameListEntry>()
         {
@@ -1163,14 +1058,7 @@ public class ListsServiceTests
         };
         var users = new List<User>()
         {
-            new User()
-            {
-                Id = parameters.UserInformation.UserId,
-                Username = parameters.UserInformation.Username,
-                PasswordHash = _fixture.Create<string>(),
-                CreatedDate = DateTime.UtcNow,
-                Salt = _fixture.Create<byte[]>()
-            }
+            TestYglDbContextBuilder.CreateUser(id: parameters.UserInformation.UserId, username: parameters.UserInformation.Username)
         };
         var gamesLists = new List<GamesList>()
         {
@@ -1266,14 +1154,7 @@ public class ListsServiceTests
         };
         var users = new List<User>()
         {
-            new User()
-            {
-                Id = parameters.UserInformation.UserId,
-                Username = parameters.UserInformation.Username,
-                PasswordHash = _fixture.Create<string>(),
-                CreatedDate = DateTime.UtcNow,
-                Salt = _fixture.Create<byte[]>()
-            }
+            TestYglDbContextBuilder.CreateUser(id: parameters.UserInformation.UserId, username: parameters.UserInformation.Username)
         };
         var gameListEntries = new List<GameListEntry>()
         {
@@ -1326,7 +1207,7 @@ public class ListsServiceTests
         Assert.That(result.IsSuccess, Is.True);
         Assert.That(result.Value.Count, Is.EqualTo(1));
         Assert.That(result.Value, Contains.Item(ownershipToRemoveId));
-        _logger.ReceivedLog(LogLevel.Information, [$"Deleted '1' ownerships", $"from list entry '{listEntryId}'."]);
+        _logger.ReceivedLog(LogLevel.Information, ["Deleted '1' ownerships", $"from list entry '{listEntryId}'."]);
         var gameListEntry = _yglDbContextBuilder.Get().GameListEntries.Include(x => x.OwnershipInfo).FirstOrDefault(u => u.Id == listEntryId);
         Assert.That(gameListEntry, Is.Not.Null);
         //Only non deleted item should remain in the list
