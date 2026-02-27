@@ -2,5 +2,7 @@
 
 public enum YglUserClientError
 {
-    General
+    General,
+    UserNotFound,
+    BadRequest,
 }

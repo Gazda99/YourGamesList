@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Threading.Tasks;
 using AutoFixture;
 using Microsoft.Extensions.Caching.Memory;
 using NSubstitute;
@@ -16,6 +17,31 @@ public class InMemoryCacheProviderTests
     {
         _fixture = new Fixture();
         _cache = Substitute.For<IMemoryCache>();
+    }
+
+    [Test]
+    public async Task Get_WhenEntryFound_ReturnsEntry()
+    {
+        //ARRANGE
+        var testEntry = _fixture.Create<TestEntry>();
+        var serializedValue = JsonSerializer.Serialize(testEntry);
+        var key = _fixture.Create<string>();
+        _cache.TryGetValue(key, out Arg.Any<object?>()).Returns(x =>
+        {
+            x[1] = serializedValue;
+            return true;
+        });
+
+        var inMemoryCacheProvider = new InMemoryCacheProvider(_cache);
+
+        //ACT
+        var res = await inMemoryCacheProvider.Get<TestEntry>(key);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.True);
+        Assert.That(res.Value, Is.Not.Null);
+        Assert.That(res.Value!.X, Is.EqualTo(testEntry.X));
+        _cache.Received(1).TryGetValue(key, out Arg.Any<object?>());
     }
 
     [Test]
@@ -65,7 +91,7 @@ public class InMemoryCacheProviderTests
     }
 
     [Test]
-    public void Set_SetsCacheEntry()
+    public async Task Set_SetsCacheEntry()
     {
         //ARRANGE
 
@@ -76,7 +102,7 @@ public class InMemoryCacheProviderTests
         var inMemoryCacheProvider = new InMemoryCacheProvider(_cache);
 
         //ACT
-        inMemoryCacheProvider.Set(key, testEntry);
+        await inMemoryCacheProvider.Set(key, testEntry);
 
         //ASSERT
         _cache.Received(1).CreateEntry(key);
@@ -84,14 +110,14 @@ public class InMemoryCacheProviderTests
     }
 
     [Test]
-    public void Remove_CallsUnderlyingRemove()
+    public async Task Remove_CallsUnderlyingRemove()
     {
         //ARRANGE
         var key = _fixture.Create<string>();
         var inMemoryCacheProvider = new InMemoryCacheProvider(_cache);
 
         //ACT
-        inMemoryCacheProvider.Remove(key);
+        await inMemoryCacheProvider.Remove(key);
 
         //ASSERT
         _cache.Received(1).Remove(key);

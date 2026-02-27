@@ -38,7 +38,7 @@ public class ApiKeyAuthFilterAttribute : Attribute, IAsyncActionFilter
     {
         _logger.LogDebug($"Looking for API key '{_requiredApiKeyName}'");
 
-        if (!context.HttpContext.Request.Headers.TryGetValue(HttpHeaders.ApiKeyHeader, out var apiKey))
+        if (!context.HttpContext.Request.Headers.TryGetValue(YglHttpHeaders.ApiKeyHeader, out var apiKey))
         {
             const string apiKeyMissingMessage = "Missing Api Key";
             _logger.LogWarning(apiKeyMissingMessage);

@@ -1,0 +1,16 @@
+﻿<MudText @attributes="UserAttributes">
+    @FinalText
+</MudText>
+
+@code {
+    [Parameter] public required string Text { get; set; }
+    [Parameter] public int MaxLength { get; set; } = 150;
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? UserAttributes { get; set; }
+
+    private string FinalText => string.IsNullOrEmpty(Text) || Text.Length <= MaxLength
+        ? Text
+        : Text[..MaxLength] + "...";
+
+}

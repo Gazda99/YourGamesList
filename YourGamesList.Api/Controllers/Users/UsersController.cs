@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -27,7 +28,9 @@ public class UsersController : YourGamesListBaseController
         _usersService = usersService;
     }
 
+
     [HttpGet("getSelf")]
+    [Authorize]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [TypeFilter(typeof(RequestValidatorAttribute<UserGetSelfRequest>), Arguments = ["userGetSelfRequest"])]
@@ -54,7 +57,9 @@ public class UsersController : YourGamesListBaseController
 
 
     [HttpPatch("update")]
+    [Authorize]
     [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [TypeFilter(typeof(RequestValidatorAttribute<UserUpdateRequest>), Arguments = ["userUpdateRequest"])]
     public async Task<IActionResult> UpdateUser(UserUpdateRequest userUpdateRequest)
@@ -71,6 +76,10 @@ public class UsersController : YourGamesListBaseController
         else if (res.Error == UsersError.UserNotFound)
         {
             return Result(StatusCodes.Status404NotFound);
+        }
+        else if (res.Error == UsersError.UserUpdateWrongInputData)
+        {
+            return Result(StatusCodes.Status400BadRequest);
         }
         else
         {

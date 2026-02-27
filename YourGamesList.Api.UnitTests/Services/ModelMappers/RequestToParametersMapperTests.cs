@@ -16,6 +16,24 @@ public class RequestToParametersMapperTests
     }
 
     [Test]
+    public void Map_From_CreateListRequest_To_CreateListParameters()
+    {
+        //ARRANGE
+        var request = _fixture.Create<CreateListRequest>();
+        var mapper = new RequestToParametersMapper();
+
+        //ACT
+        var parameter = mapper.Map(request);
+
+        //ASSERT
+        Assert.That(parameter.UserInformation.UserId, Is.EqualTo(request.UserInformation.UserId));
+        Assert.That(parameter.UserInformation.Username, Is.EqualTo(request.UserInformation.Username));
+        Assert.That(parameter.ListName, Is.EquivalentTo(request.Body.ListName));
+        Assert.That(parameter.Description, Is.EqualTo(request.Body.Description));
+        Assert.That(parameter.IsPublic, Is.EqualTo(request.Body.IsPublic));
+    }
+
+    [Test]
     public void Map_From_UpdateListRequest_To_UpdateListParameters()
     {
         //ARRANGE
@@ -29,7 +47,7 @@ public class RequestToParametersMapperTests
         Assert.That(parameter.UserInformation.UserId, Is.EqualTo(request.UserInformation.UserId));
         Assert.That(parameter.UserInformation.Username, Is.EqualTo(request.UserInformation.Username));
         Assert.That(parameter.ListId, Is.EqualTo(request.Body.ListId));
-        Assert.That(parameter.Desc, Is.EqualTo(request.Body.Desc));
+        Assert.That(parameter.Description, Is.EqualTo(request.Body.Description));
         Assert.That(parameter.IsPublic, Is.EqualTo(request.Body.IsPublic));
         Assert.That(parameter.Name, Is.EqualTo(request.Body.Name));
     }
@@ -71,9 +89,7 @@ public class RequestToParametersMapperTests
         foreach (var entryToAddRequestPart in request.Body.EntriesToAdd)
         {
             Assert.That(parameter.EntriesToAdd[i].GameId, Is.EqualTo(entryToAddRequestPart.GameId));
-            Assert.That(parameter.EntriesToAdd[i].Desc, Is.EqualTo(entryToAddRequestPart.Desc));
-            Assert.That(parameter.EntriesToAdd[i].Platforms, Is.EquivalentTo(entryToAddRequestPart.Platforms));
-            Assert.That(parameter.EntriesToAdd[i].GameDistributions, Is.EquivalentTo(entryToAddRequestPart.GameDistributions));
+            Assert.That(parameter.EntriesToAdd[i].Description, Is.EqualTo(entryToAddRequestPart.Description));
             Assert.That(parameter.EntriesToAdd[i].IsStarred, Is.EqualTo(entryToAddRequestPart.IsStarred));
             Assert.That(parameter.EntriesToAdd[i].Rating, Is.EqualTo(entryToAddRequestPart.Rating));
             Assert.That(parameter.EntriesToAdd[i].CompletionStatus, Is.EqualTo(entryToAddRequestPart.CompletionStatus));
@@ -116,9 +132,7 @@ public class RequestToParametersMapperTests
         foreach (var entryToAddRequestPart in request.Body.EntriesToUpdate)
         {
             Assert.That(parameter.EntriesToUpdate[i].EntryId, Is.EqualTo(entryToAddRequestPart.EntryId));
-            Assert.That(parameter.EntriesToUpdate[i].Desc, Is.EqualTo(entryToAddRequestPart.Desc));
-            Assert.That(parameter.EntriesToUpdate[i].Platforms, Is.EquivalentTo(entryToAddRequestPart.Platforms));
-            Assert.That(parameter.EntriesToUpdate[i].GameDistributions, Is.EquivalentTo(entryToAddRequestPart.GameDistributions));
+            Assert.That(parameter.EntriesToUpdate[i].Description, Is.EqualTo(entryToAddRequestPart.Description));
             Assert.That(parameter.EntriesToUpdate[i].IsStarred, Is.EqualTo(entryToAddRequestPart.IsStarred));
             Assert.That(parameter.EntriesToUpdate[i].Rating, Is.EqualTo(entryToAddRequestPart.Rating));
             Assert.That(parameter.EntriesToUpdate[i].CompletionStatus, Is.EqualTo(entryToAddRequestPart.CompletionStatus));
@@ -141,5 +155,47 @@ public class RequestToParametersMapperTests
         Assert.That(parameter.Country, Is.EqualTo(request.Body.Country));
         Assert.That(parameter.Description, Is.EqualTo(request.Body.Description));
         Assert.That(parameter.DateOfBirth, Is.EqualTo(request.Body.DateOfBirth));
+    }
+
+    [Test]
+    public void Map_From_AddOwnershipInfoToEntryRequest_To_AddOwnershipInfoToEntryParameters()
+    {
+        //ARRANGE
+        var request = _fixture.Create<AddOwnershipInfoToEntryRequest>();
+        var mapper = new RequestToParametersMapper();
+
+        //ACT
+        var parameter = mapper.Map(request);
+
+        //ASSERT
+        Assert.That(parameter.UserInformation, Is.EqualTo(request.UserInformation));
+        Assert.That(parameter.ListEntryId, Is.EqualTo(request.Body.ListEntryId));
+        var i = 0;
+        foreach (var ownershipsToAdd in parameter.OwnershipsToAdd)
+        {
+            Assert.That(parameter.OwnershipsToAdd[i].EmulatedOn, Is.EqualTo(ownershipsToAdd.EmulatedOn));
+            Assert.That(parameter.OwnershipsToAdd[i].GameDistribution, Is.EqualTo(ownershipsToAdd.GameDistribution));
+            Assert.That(parameter.OwnershipsToAdd[i].IsLegit, Is.EqualTo(ownershipsToAdd.IsLegit));
+            Assert.That(parameter.OwnershipsToAdd[i].Platform, Is.EqualTo(ownershipsToAdd.Platform));
+            Assert.That(parameter.OwnershipsToAdd[i].WasEmulated, Is.EqualTo(ownershipsToAdd.WasEmulated));
+            i++;
+        }
+    }
+    
+    [Test]
+    public void Map_From_DeleteOwnershipInfoToEntryRequest_To_DeleteOwnershipInfoToEntryParameters()
+    {
+        //ARRANGE
+        var request = _fixture.Create<DeleteOwnershipInfoToEntryRequest>();
+        var mapper = new RequestToParametersMapper();
+
+        //ACT
+        var parameter = mapper.Map(request);
+
+        //ASSERT
+        Assert.That(parameter.UserInformation.UserId, Is.EqualTo(request.UserInformation.UserId));
+        Assert.That(parameter.UserInformation.Username, Is.EqualTo(request.UserInformation.Username));
+        Assert.That(parameter.ListEntryId, Is.EqualTo(request.Body.ListEntryId));
+        Assert.That(parameter.OwnershipsToRemove, Is.EquivalentTo(request.Body.OwnershipsToRemove));
     }
 }

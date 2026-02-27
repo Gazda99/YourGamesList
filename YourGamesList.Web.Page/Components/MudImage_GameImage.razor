@@ -1,0 +1,14 @@
+﻿<MudImage Src="@ImageUrl()" Width="176" Height="235"></MudImage>
+
+@code {
+    [Parameter] public required string ImageId { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? UserAttributes { get; set; }
+
+    private string ImageUrl()
+    {
+        return !string.IsNullOrWhiteSpace(ImageId) ? $"https://images.igdb.com/igdb/image/upload/t_cover_big/{ImageId}.jpg" : "";
+    }
+
+}

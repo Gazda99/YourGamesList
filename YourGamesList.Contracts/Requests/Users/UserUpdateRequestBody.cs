@@ -4,7 +4,7 @@ namespace YourGamesList.Contracts.Requests.Users;
 
 public class UserUpdateRequestBody
 {
-    public string? Description { get; set; }
-    public DateTimeOffset? DateOfBirth { get; set; }
-    public string? Country { get; set; }
+    public string? Description { get; set; } = null;
+    public DateTimeOffset? DateOfBirth { get; set; } = null;
+    public string? Country { get; set; } = null;
 }

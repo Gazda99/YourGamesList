@@ -54,7 +54,7 @@ public class YglGamesService : IYglGamesService
             gamesQuery = gamesQuery.Where(x => x.GameType.ToLower().Contains(parameters.GameType.ToLower()));
         }
 
-        if (parameters.Year != null && parameters.TypeOfDate != null)
+        if (parameters.Year != null && parameters.TypeOfDate != null && parameters.TypeOfDate != TypeOfDateDto.None)
         {
             var startOfTargetYear = GetStartOfYearTimestamp(parameters.Year.Value);
             var startOfNextYear = GetStartOfYearTimestamp(parameters.Year.Value + 1);

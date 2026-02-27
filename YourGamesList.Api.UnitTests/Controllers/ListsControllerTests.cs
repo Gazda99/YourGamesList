@@ -43,8 +43,9 @@ public class ListsControllerTests
         //ARRANGE
         var expectedResValue = _fixture.Create<Guid>();
         var request = _fixture.Create<CreateListRequest>();
-        _listsService.CreateList(request.UserInformation, request.Body.ListName, request.Body.Description)
-            .Returns(CombinedResult<Guid, ListsError>.Success(expectedResValue));
+        var parameters = _fixture.Create<CreateListParameters>();
+        _requestToParametersMapper.Map(request).Returns(parameters);
+        _listsService.CreateList(parameters).Returns(CombinedResult<Guid, ListsError>.Success(expectedResValue));
 
         var controller = new ListsController(_logger, _requestToParametersMapper, _listsService);
 
@@ -56,7 +57,7 @@ public class ListsControllerTests
         var objectResult = (ObjectResult) res;
         Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
         Assert.That(objectResult.Value, Is.EqualTo(expectedResValue));
-        await _listsService.Received(1).CreateList(request.UserInformation, request.Body.ListName, request.Body.Description);
+        await _listsService.Received(1).CreateList(parameters);
         _logger.ReceivedLog(LogLevel.Information, $"Requested to create list '{request.Body.ListName}' for user '{request.UserInformation.UserId}'");
     }
 
@@ -66,8 +67,9 @@ public class ListsControllerTests
         //ARRANGE
         var expectedError = ListsError.ListAlreadyExists;
         var request = _fixture.Create<CreateListRequest>();
-        _listsService.CreateList(request.UserInformation, request.Body.ListName, request.Body.Description)
-            .Returns(CombinedResult<Guid, ListsError>.Failure(expectedError));
+        var parameters = _fixture.Create<CreateListParameters>();
+        _requestToParametersMapper.Map(request).Returns(parameters);
+        _listsService.CreateList(parameters).Returns(CombinedResult<Guid, ListsError>.Failure(expectedError));
 
         var controller = new ListsController(_logger, _requestToParametersMapper, _listsService);
 
@@ -78,7 +80,7 @@ public class ListsControllerTests
         Assert.That(res, Is.TypeOf<ObjectResult>());
         var objectResult = (ObjectResult) res;
         Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status409Conflict));
-        await _listsService.Received(1).CreateList(request.UserInformation, request.Body.ListName, request.Body.Description);
+        await _listsService.Received(1).CreateList(parameters);
         _logger.ReceivedLog(LogLevel.Information, $"Requested to create list '{request.Body.ListName}' for user '{request.UserInformation.UserId}'");
     }
 
@@ -524,6 +526,112 @@ public class ListsControllerTests
         Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status404NotFound));
         await _listsService.Received(1).UpdateListEntries(parameters);
         _logger.ReceivedLog(LogLevel.Information, $"Requested to update entries in list '{request.Body.ListId}' for user '{request.UserInformation.UserId}'");
+    }
+
+    #endregion
+
+    #region AddOwnershipInfo
+
+    [Test]
+    public async Task AddOwnershipInfo_SuccessScenario()
+    {
+        //ARRANGE
+        var expectedResValue = _fixture.CreateMany<Guid>().ToList();
+        var request = _fixture.Create<AddOwnershipInfoToEntryRequest>();
+        var parameters = _fixture.Create<AddOwnershipInfoToEntryParameters>();
+        _requestToParametersMapper.Map(request).Returns(parameters);
+        _listsService.AddOwnershipInfo(parameters).Returns(CombinedResult<List<Guid>, ListsError>.Success(expectedResValue));
+
+        var controller = new ListsController(_logger, _requestToParametersMapper, _listsService);
+
+        //ACT
+        var res = await controller.AddOwnershipInfo(request);
+
+        //ASSERT
+        Assert.That(res, Is.TypeOf<ObjectResult>());
+        var objectResult = (ObjectResult) res;
+        Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
+        Assert.That(objectResult.Value, Is.EqualTo(expectedResValue));
+        await _listsService.Received(1).AddOwnershipInfo(parameters);
+        _logger.ReceivedLog(LogLevel.Information,
+            $"Requested to add ownership info to entry '{request.Body.ListEntryId}' for user '{request.UserInformation.UserId}'");
+    }
+
+    [Test]
+    public async Task AddOwnershipInfo_OnErrorListNotFound_ReturnsStatus404NotFound()
+    {
+        //ARRANGE
+        var expectedError = ListsError.ListNotFound;
+        var request = _fixture.Create<AddOwnershipInfoToEntryRequest>();
+        var parameters = _fixture.Create<AddOwnershipInfoToEntryParameters>();
+        _requestToParametersMapper.Map(request).Returns(parameters);
+        _listsService.AddOwnershipInfo(parameters).Returns(CombinedResult<List<Guid>, ListsError>.Failure(expectedError));
+
+        var controller = new ListsController(_logger, _requestToParametersMapper, _listsService);
+
+        //ACT
+        var res = await controller.AddOwnershipInfo(request);
+
+        //ASSERT
+        Assert.That(res, Is.TypeOf<ObjectResult>());
+        var objectResult = (ObjectResult) res;
+        Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status404NotFound));
+        await _listsService.Received(1).AddOwnershipInfo(parameters);
+        _logger.ReceivedLog(LogLevel.Information,
+            $"Requested to add ownership info to entry '{request.Body.ListEntryId}' for user '{request.UserInformation.UserId}'");
+    }
+
+    #endregion
+
+    #region DeleteOwnershipInfo
+
+    [Test]
+    public async Task DeleteOwnershipInfo_SuccessScenario()
+    {
+        //ARRANGE
+        var expectedResValue = _fixture.CreateMany<Guid>().ToList();
+        var request = _fixture.Create<DeleteOwnershipInfoToEntryRequest>();
+        var parameters = _fixture.Create<DeleteOwnershipInfoToEntryParameters>();
+        _requestToParametersMapper.Map(request).Returns(parameters);
+        _listsService.DeleteOwnershipInfo(parameters).Returns(CombinedResult<List<Guid>, ListsError>.Success(expectedResValue));
+
+        var controller = new ListsController(_logger, _requestToParametersMapper, _listsService);
+
+        //ACT
+        var res = await controller.DeleteOwnershipInfo(request);
+
+        //ASSERT
+        Assert.That(res, Is.TypeOf<ObjectResult>());
+        var objectResult = (ObjectResult) res;
+        Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
+        Assert.That(objectResult.Value, Is.EqualTo(expectedResValue));
+        await _listsService.Received(1).DeleteOwnershipInfo(parameters);
+        _logger.ReceivedLog(LogLevel.Information,
+            $"Requested to delete ownership info from entry '{request.Body.ListEntryId}' for user '{request.UserInformation.UserId}'");
+    }
+
+    [Test]
+    public async Task DeleteOwnershipInfo_OnErrorListNotFound_ReturnsStatus404NotFound()
+    {
+        //ARRANGE
+        var expectedError = ListsError.ListNotFound;
+        var request = _fixture.Create<DeleteOwnershipInfoToEntryRequest>();
+        var parameters = _fixture.Create<DeleteOwnershipInfoToEntryParameters>();
+        _requestToParametersMapper.Map(request).Returns(parameters);
+        _listsService.DeleteOwnershipInfo(parameters).Returns(CombinedResult<List<Guid>, ListsError>.Failure(expectedError));
+
+        var controller = new ListsController(_logger, _requestToParametersMapper, _listsService);
+
+        //ACT
+        var res = await controller.DeleteOwnershipInfo(request);
+
+        //ASSERT
+        Assert.That(res, Is.TypeOf<ObjectResult>());
+        var objectResult = (ObjectResult) res;
+        Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status404NotFound));
+        await _listsService.Received(1).DeleteOwnershipInfo(parameters);
+        _logger.ReceivedLog(LogLevel.Information,
+            $"Requested to delete ownership info from entry '{request.Body.ListEntryId}' for user '{request.UserInformation.UserId}'");
     }
 
     #endregion

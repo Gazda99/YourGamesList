@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoFixture;
 using Microsoft.AspNetCore.Http;
@@ -8,6 +9,7 @@ using NSubstitute;
 using YourGamesList.Api.Controllers;
 using YourGamesList.Api.Controllers.Users;
 using YourGamesList.Api.Model.Requests.Users;
+using YourGamesList.Api.Services;
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Users;
 using YourGamesList.Api.Services.Users.Model;

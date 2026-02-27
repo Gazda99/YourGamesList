@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using YourGamesList.Web.Page.Services.LocalStorage;
-using YourGamesList.Web.Page.Services.LocalStorage.Model;
+using YourGamesList.Common.Caching;
+using YourGamesList.Web.Page.Services.Caching;
 using YourGamesList.Web.Page.Services.UserLoginStateManager.Options;
 
 namespace YourGamesList.Web.Page.Services.UserLoginStateManager;
@@ -17,24 +19,29 @@ public interface IUserLoginStateManager
     Task RemoveUserToken();
 }
 
-//TODO: unit tests
 public class UserLoginStateManager : IUserLoginStateManager
 {
     private const string UserTokenLocalStorageKey = "ygl-user-token";
 
+    private readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    };
+
     private readonly ILogger<UserLoginStateManager> _logger;
     private readonly IOptions<UserLoginStateManagerOptions> _options;
-    private readonly ILocalStorageService _localStorageService;
+    private readonly ICacheProvider _cacheProvider;
 
     public UserLoginStateManager(
         ILogger<UserLoginStateManager> logger,
         IOptions<UserLoginStateManagerOptions> options,
-        ILocalStorageService localStorageService
+        [FromKeyedServices(WebPageCacheProviders.LocalStorage)]
+        ICacheProvider cacheProvider
     )
     {
         _logger = logger;
         _options = options;
-        _localStorageService = localStorageService;
+        _cacheProvider = cacheProvider;
     }
 
     public event Action? OnLoginStateChanged;
@@ -42,26 +49,26 @@ public class UserLoginStateManager : IUserLoginStateManager
     public async Task SaveUserToken(string token)
     {
         var ttl = TimeSpan.FromMinutes(_options.Value.TokenTtlInMinutes);
-        await _localStorageService.SetItem(UserTokenLocalStorageKey, token, ttl);
+        await _cacheProvider.Set(UserTokenLocalStorageKey, token, ttl, _jsonSerializerOptions);
         OnLoginStateChanged?.Invoke();
     }
 
     public async Task<bool> IsUserLoggedIn()
     {
-        var tokenRes = await _localStorageService.GetItem<string>(UserTokenLocalStorageKey);
+        var tokenRes = await _cacheProvider.Get<string>(UserTokenLocalStorageKey, _jsonSerializerOptions);
         return tokenRes.IsSuccess;
     }
 
     public async Task<string?> GetUserToken()
     {
-        var tokenRes = await _localStorageService.GetItem<string>(UserTokenLocalStorageKey);
+        var tokenRes = await _cacheProvider.Get<string>(UserTokenLocalStorageKey, _jsonSerializerOptions);
         if (tokenRes.IsSuccess)
         {
             return tokenRes.Value;
         }
         else
         {
-            if (tokenRes.Error == LocalStorageError.Expired)
+            if (tokenRes.Error == CacheProviderError.Expired)
             {
                 await RemoveUserToken();
             }
@@ -72,7 +79,7 @@ public class UserLoginStateManager : IUserLoginStateManager
 
     public async Task RemoveUserToken()
     {
-        await _localStorageService.RemoveItem(UserTokenLocalStorageKey);
+        await _cacheProvider.Remove(UserTokenLocalStorageKey);
         OnLoginStateChanged?.Invoke();
     }
 }

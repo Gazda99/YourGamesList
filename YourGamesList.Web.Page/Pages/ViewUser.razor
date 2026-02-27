@@ -1,0 +1,179 @@
+﻿@page "/user"
+@using Microsoft.Extensions.Logging
+@using YourGamesList.Common
+@using YourGamesList.Common.Caching
+@using YourGamesList.Contracts.Dto
+@using YourGamesList.Contracts.Requests.Users
+@using YourGamesList.Web.Page.Services
+@using YourGamesList.Web.Page.Services.UserLoginStateManager
+@using YourGamesList.Web.Page.Services.Ygl
+
+
+<PageTitle>User</PageTitle>
+
+@if (!_isPageInitialized)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="mx-auto"/>
+}
+else
+{
+    @if (!_isUserLoggedIn)
+    {
+        <LoginFirst></LoginFirst>
+    }
+    else
+    {
+        @if (_userData != null)
+        {
+            <MudGrid>
+
+                <MudItem xs="12" sm="6">
+                    <MudPaper Class="pa-4">
+                        <MudText>Username</MudText>
+                        <MudText>@_userData.Username</MudText>
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudPaper Class="pa-4">
+                        <MudText>Country</MudText>
+                        <MudSelect @bind-Value="_selectedCountry">
+                            @foreach (var country in _countries)
+                            {
+                                <MudSelectItem Value="country">@DisplayCountry(country)</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudPaper Class="pa-4">
+                        <MudText>Date of Birth</MudText>
+                        <MudDatePicker @bind-Date="_selectedDateOfBirth"/>
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudPaper Class="pa-4">
+                        <MudText>Description</MudText>
+                        <MudTextField @bind-Value="@_selectedDescription" Variant="Variant.Outlined" InputType="InputType.Text"></MudTextField>
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" Class="d-flex justify-end mt-4">
+                    <MudIconButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Icon="@Icons.Material.Filled.Save"
+                                   OnClick="@SaveUserChanges">
+                    </MudIconButton>
+                </MudItem>
+            </MudGrid>
+        }
+        else
+        {
+            <MudText>User Data failed to load!</MudText>
+        }
+    }
+}
+
+
+@code {
+    [Inject] private ILogger<ViewUser> Logger { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
+    [Inject] private IUserManager UserManager { get; set; } = default!;
+    [Inject] private IYglUsersClient YglUsersClient { get; set; } = default!;
+    [Inject] private ICountriesService CountriesService { get; set; } = default!;
+
+    [Inject(Key = CacheProviders.InMemory)]
+    private ICacheProvider CacheProvider { get; set; } = default!;
+
+    private UserDto? _userData = null;
+
+    private bool _isUserLoggedIn = false;
+    private bool _isPageInitialized = false;
+
+    private string[] _countries = [];
+
+    private string _selectedCountry = string.Empty;
+    private string _selectedDescription = string.Empty;
+    private DateTime? _selectedDateOfBirth = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _isUserLoggedIn = await UserLoginStateManager.IsUserLoggedIn();
+
+        if (_isUserLoggedIn)
+        {
+            _isPageInitialized = false;
+
+            var user = await UserManager.ReadOrRefresh();
+            if (user.IsFailure)
+            {
+                Snackbar.Add("Could not load user page. Please try to refresh page.", Severity.Warning);
+
+                return;
+            }
+
+            _userData = user.Value;
+            _selectedCountry = _userData.Country;
+            _selectedDescription = _userData.Description;
+            _selectedDateOfBirth = _userData.DateOfBirth?.UtcDateTime;
+
+            _countries = CountriesService.GetAllIsoCodes();
+        }
+
+        _isPageInitialized = true;
+    }
+
+    private string DisplayCountry(string isoCode)
+    {
+        if (string.IsNullOrWhiteSpace(isoCode))
+        {
+            return "Not provided";
+        }
+        else
+        {
+            var parseResult = CountriesService.TryParseThreeLetterIsoRegionName(isoCode, out var fullEnglishName);
+            if (parseResult)
+            {
+                return fullEnglishName!;
+            }
+            else
+            {
+                return "Not provided";
+            }
+        }
+    }
+
+    private async Task SaveUserChanges()
+    {
+        var userToken = await UserLoginStateManager.GetUserToken();
+        if (string.IsNullOrWhiteSpace(userToken))
+        {
+            //TODO: error handling
+            return;
+        }
+
+        var requestBody = new UserUpdateRequestBody()
+        {
+            Country = _selectedCountry,
+            Description = _selectedDescription,
+            DateOfBirth = _selectedDateOfBirth != null ? new DateTimeOffset(DateTime.SpecifyKind(_selectedDateOfBirth!.Value, DateTimeKind.Utc)) : _selectedDateOfBirth
+        };
+
+        var res = await YglUsersClient.UpdateUser(userToken, requestBody);
+
+        if (res.IsSuccess)
+        {
+            Snackbar.Add("Successfully updated the user.", Severity.Info);
+            _ = UserManager.Refresh();
+        }
+        else
+        {
+            Snackbar.Add("Could not update the user.", Severity.Error);
+        }
+    }
+
+}

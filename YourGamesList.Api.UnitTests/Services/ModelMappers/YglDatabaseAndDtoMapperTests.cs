@@ -30,7 +30,7 @@ public class YglDatabaseAndDtoMapperTests
 
         //ASSERT
         Assert.That(dto.Id, Is.EqualTo(entity.Id));
-        Assert.That(dto.Desc, Is.EquivalentTo(entity.Desc));
+        Assert.That(dto.Description, Is.EquivalentTo(entity.Description));
         Assert.That(dto.Name, Is.EquivalentTo(entity.Name));
         Assert.That(dto.IsPublic, Is.EqualTo(entity.IsPublic));
         Assert.That(dto.CanBeDeleted, Is.EqualTo(entity.CanBeDeleted));
@@ -55,9 +55,7 @@ public class YglDatabaseAndDtoMapperTests
 
         //ASSERT
         Assert.That(dto.Id, Is.EqualTo(entity.Id));
-        Assert.That(dto.Desc, Is.EquivalentTo(entity.Desc));
-        //Platforms
-        //GameDistributions
+        Assert.That(dto.Description, Is.EquivalentTo(entity.Description));
         Assert.That(dto.IsStarred, Is.EqualTo(entity.IsStarred));
         Assert.That(dto.Rating, Is.EqualTo(entity.Rating));
         Assert.That(dto.CreatedDate, Is.EqualTo(entity.CreatedDate));
@@ -90,6 +88,31 @@ public class YglDatabaseAndDtoMapperTests
         Assert.That(dto.Summary, Is.EquivalentTo(entity.Summary));
         Assert.That(dto.Themes, Is.EquivalentTo(entity.Themes));
         Assert.That(dto.RatingCount, Is.EqualTo(entity.RatingCount));
+    }
+
+    [Test]
+    public void Map_OwnershipInfo__To_OwnershipInfoDto()
+    {
+        //ARRANGE
+        var entity = _fixture.Build<OwnershipInfo>()
+            .With(x => x.GameListEntry, (GameListEntry) null!)
+            .WithAutoProperties()
+            .Create();
+
+        var mapper = new YglDatabaseAndDtoMapper();
+
+        //ACT
+        var dto = mapper.Map(entity);
+
+        //ASSERT
+        Assert.That(dto.Id, Is.EqualTo(entity.Id));
+        Assert.That(dto.CreatedDate, Is.EqualTo(entity.CreatedDate));
+        Assert.That(dto.LastModifiedDate, Is.EqualTo(entity.LastModifiedDate));
+        Assert.That(dto.WasEmulated, Is.EqualTo(entity.WasEmulated));
+        //emulator
+        //platform
+        //game distribution
+        Assert.That(dto.IsLegit, Is.EqualTo(entity.IsLegit));
     }
 
     [Test]
@@ -157,6 +180,20 @@ public class YglDatabaseAndDtoMapperTests
     }
 
     [Test]
+    [TestCaseSource(nameof(Emulator_To_EmulatorDto_TestCases))]
+    public void Map_Emulator_To_EmulatorDto(Emulator completionStatus, EmulatorDto expectedDto)
+    {
+        //ARRANGE
+        var mapper = new YglDatabaseAndDtoMapper();
+
+        //ACT
+        var dto = mapper.Map(completionStatus);
+
+        //ASSERT
+        Assert.That(dto, Is.EqualTo(expectedDto));
+    }
+
+    [Test]
     [TestCaseSource(nameof(CompletionStatus_To_CompletionStatusDto_TestCases))]
     public void Map_CompletionStatusDto_To_CompletionStatus(CompletionStatus expectedEntity, CompletionStatusDto completionStatusDto)
     {
@@ -193,6 +230,21 @@ public class YglDatabaseAndDtoMapperTests
 
         //ACT
         var entity = mapper.Map(platformDto);
+
+        //ASSERT
+        Assert.That(entity, Is.EqualTo(expectedEntity));
+    }
+
+
+    [Test]
+    [TestCaseSource(nameof(Emulator_To_EmulatorDto_TestCases))]
+    public void Map_EmulatorDto_To_Emulator(Emulator expectedEntity, EmulatorDto emulatorDto)
+    {
+        //ARRANGE
+        var mapper = new YglDatabaseAndDtoMapper();
+
+        //ACT
+        var entity = mapper.Map(emulatorDto);
 
         //ASSERT
         Assert.That(entity, Is.EqualTo(expectedEntity));
@@ -239,5 +291,14 @@ public class YglDatabaseAndDtoMapperTests
         new TestCaseData(Platform.NintendoSwitch, PlatformDto.NintendoSwitch),
         new TestCaseData(Platform.AndroidMobileDevice, PlatformDto.AndroidMobileDevice),
         new TestCaseData(Platform.IOSMobileDevice, PlatformDto.IOSMobileDevice),
+    ];
+
+    private static TestCaseData[] Emulator_To_EmulatorDto_TestCases =
+    [
+        new TestCaseData(Emulator.Unspecified, EmulatorDto.Unspecified),
+        new TestCaseData(Emulator.Xenia, EmulatorDto.Xenia),
+        new TestCaseData(Emulator.PPSSPP, EmulatorDto.PPSSPP),
+        new TestCaseData(Emulator.RPCS3, EmulatorDto.RPCS3),
+        new TestCaseData(Emulator.CEMU, EmulatorDto.CEMU),
     ];
 }

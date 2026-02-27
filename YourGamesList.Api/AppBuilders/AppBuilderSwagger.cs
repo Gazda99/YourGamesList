@@ -18,9 +18,9 @@ public static partial class AppBuilder
             //API KEY
             c.AddSecurityDefinition("YglApiKey", new OpenApiSecurityScheme
             {
-                Description = $"API Key authorization. Enter the key in the '{HttpHeaders.ApiKeyHeader}' header.",
+                Description = $"API Key authorization. Enter the key in the '{YglHttpHeaders.ApiKeyHeader}' header.",
                 Type = SecuritySchemeType.ApiKey,
-                Name = HttpHeaders.ApiKeyHeader,
+                Name = YglHttpHeaders.ApiKeyHeader,
                 In = ParameterLocation.Header,
                 Scheme = "YglApiKey"
             });
@@ -51,7 +51,7 @@ public static partial class AppBuilder
             {
                 In = ParameterLocation.Header,
                 Description = "Please enter a valid token",
-                Name = HttpHeaders.Authorization,
+                Name = YglHttpHeaders.Authorization,
                 Type = SecuritySchemeType.Http,
                 BearerFormat = "JWT",
                 Scheme = "bearer"

@@ -89,6 +89,7 @@ public class UserManagerServiceTests
         Assert.That(createdList.UserId, Is.EqualTo(createdUser.Id));
         Assert.That(createdList.CanBeDeleted, Is.False);
         Assert.That(createdList.IsPublic, Is.False);
+        Assert.That(createdList.CreatedDate, Is.EqualTo((DateTimeOffset) now));
     }
 
     [Test]

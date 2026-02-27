@@ -15,9 +15,7 @@ public class UpdateListEntriesParameter
 public class EntryToUpdateParameter
 {
     public required Guid EntryId { get; init; }
-    public string? Desc { get; set; }
-    public PlatformDto[]? Platforms { get; set; }
-    public GameDistributionDto[]? GameDistributions { get; set; }
+    public string? Description { get; set; }
     public bool? IsStarred { get; set; }
     public byte? Rating { get; set; }
     public CompletionStatusDto? CompletionStatus { get; set; }

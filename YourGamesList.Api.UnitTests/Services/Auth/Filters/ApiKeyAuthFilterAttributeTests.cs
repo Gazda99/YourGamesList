@@ -50,7 +50,7 @@ public class ApiKeyAuthFilterAttributeTests
         _apiKeyOptions.Value.Returns(options);
 
         var httpContext = new DefaultHttpContext();
-        httpContext.Request.Headers[HttpHeaders.ApiKeyHeader] = apiKey;
+        httpContext.Request.Headers[YglHttpHeaders.ApiKeyHeader] = apiKey;
         var (context, next) = GetContextAndNext(httpContext);
 
         var filterAttribute = new ApiKeyAuthFilterAttribute(_requiredApiKeyName, _logger, _apiKeyOptions);
@@ -110,7 +110,7 @@ public class ApiKeyAuthFilterAttributeTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Response.Body = new MemoryStream();
-        httpContext.Request.Headers[HttpHeaders.ApiKeyHeader] = wrongApiKey;
+        httpContext.Request.Headers[YglHttpHeaders.ApiKeyHeader] = wrongApiKey;
         var (context, next) = GetContextAndNext(httpContext);
 
         var filterAttribute = new ApiKeyAuthFilterAttribute(_requiredApiKeyName, _logger, _apiKeyOptions);

@@ -10,15 +10,18 @@ public interface IYglDatabaseAndDtoMapper
     GamesListDto Map(GamesList gamesList);
     GameListEntryDto Map(GameListEntry gameListEntry);
     GameDto Map(Game game);
+    OwnershipInfoDto Map(OwnershipInfo ownershipInfo);
     UserDto Map(User user);
     CompletionStatusDto Map(CompletionStatus completionStatus);
     GameDistributionDto Map(GameDistribution gameDistribution);
     PlatformDto Map(Platform platform);
+    EmulatorDto Map(Emulator emulator);
 
 
     CompletionStatus Map(CompletionStatusDto completionStatus);
     GameDistribution Map(GameDistributionDto gameDistribution);
     Platform Map(PlatformDto platform);
+    Emulator Map(EmulatorDto emulator);
 }
 
 public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
@@ -28,7 +31,7 @@ public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
         return new GamesListDto()
         {
             Id = gamesList.Id,
-            Desc = gamesList.Desc,
+            Description = gamesList.Description,
             Name = gamesList.Name,
             IsPublic = gamesList.IsPublic,
             CanBeDeleted = gamesList.CanBeDeleted,
@@ -45,9 +48,10 @@ public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
         {
             Id = gameListEntry.Id,
             Game = gameListEntry.Game != null ? Map(gameListEntry.Game) : null,
-            Desc = gameListEntry.Desc,
-            Platforms = gameListEntry.Platforms.Select(Map).ToArray(),
-            GameDistributions = gameListEntry.GameDistributions.Select(Map).ToArray(),
+            Description = gameListEntry.Description,
+            // Platforms = gameListEntry.Platforms.Select(Map).ToArray(),
+            // GameDistributions = gameListEntry.GameDistributions.Select(Map).ToArray(),
+            OwnershipInfo = gameListEntry.OwnershipInfo.Select(Map).ToList(),
             IsStarred = gameListEntry.IsStarred,
             Rating = gameListEntry.Rating,
             CompletionStatus = Map(gameListEntry.CompletionStatus),
@@ -55,7 +59,6 @@ public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
             LastModifiedDate = gameListEntry.LastModifiedDate
         };
     }
-
 
     public GameDto Map(Game game)
     {
@@ -71,6 +74,21 @@ public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
             Summary = game.Summary,
             Themes = game.Themes.ToList(),
             RatingCount = game.RatingCount
+        };
+    }
+
+    public OwnershipInfoDto Map(OwnershipInfo ownershipInfo)
+    {
+        return new OwnershipInfoDto()
+        {
+            Id = ownershipInfo.Id,
+            CreatedDate = ownershipInfo.CreatedDate,
+            LastModifiedDate = ownershipInfo.LastModifiedDate,
+            IsLegit = ownershipInfo.IsLegit,
+            GameDistribution = MapEnums<GameDistribution, GameDistributionDto>(ownershipInfo.GameDistribution),
+            Platform = MapEnums<Platform, PlatformDto>(ownershipInfo.Platform),
+            WasEmulated = ownershipInfo.WasEmulated,
+            EmulatedOn = ownershipInfo.EmulatedOn == null ? null : MapEnums<Emulator, EmulatorDto>(ownershipInfo.EmulatedOn.Value),
         };
     }
 
@@ -103,6 +121,11 @@ public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
         return MapEnums<Platform, PlatformDto>(platform);
     }
 
+    public EmulatorDto Map(Emulator emulator)
+    {
+        return MapEnums<Emulator, EmulatorDto>(emulator);
+    }
+
     public CompletionStatus Map(CompletionStatusDto completionStatus)
     {
         return MapEnums<CompletionStatusDto, CompletionStatus>(completionStatus);
@@ -116,6 +139,11 @@ public class YglDatabaseAndDtoMapper : IYglDatabaseAndDtoMapper
     public Platform Map(PlatformDto platform)
     {
         return MapEnums<PlatformDto, Platform>(platform);
+    }
+
+    public Emulator Map(EmulatorDto emulator)
+    {
+        return MapEnums<EmulatorDto, Emulator>(emulator);
     }
 
     private static TDestination MapEnums<TSource, TDestination>(TSource source)
