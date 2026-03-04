@@ -7,13 +7,13 @@ namespace YourGamesList.Api.Model.Requests.Lists;
 
 public class AddEntriesToListRequest
 {
-    [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
+    [FromAuthorizeHeader] public required UserInformationToken UserInformation { get; init; }
     [FromBody] public required AddEntriesToListRequestBody Body { get; init; }
 }
 
 internal sealed class AddEntriesToListRequestValidator : AbstractValidator<AddEntriesToListRequest>
 {
-    public AddEntriesToListRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
+    public AddEntriesToListRequestValidator(IValidator<UserInformationToken> jwtUserInformationValidator)
     {
         RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
 

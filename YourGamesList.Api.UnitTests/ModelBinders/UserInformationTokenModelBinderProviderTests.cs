@@ -8,16 +8,16 @@ using YourGamesList.Api.ModelBinders;
 
 namespace YourGamesList.Api.UnitTests.ModelBinders;
 
-public class JwtUserInformationModelBinderProviderTests
+public class UserInformationTokenModelBinderProviderTests
 {
     [Test]
     public void GetBinder_OnCorrectModel_ReturnsCorrectBinder()
     {
         //ARRANGE
         var context = Substitute.For<ModelBinderProviderContext>();
-        var modelMetadata = Substitute.For<ModelMetadata>(ModelMetadataIdentity.ForType(typeof(JwtUserInformation)));
+        var modelMetadata = Substitute.For<ModelMetadata>(ModelMetadataIdentity.ForType(typeof(UserInformationToken)));
         context.Metadata.Returns(modelMetadata);
-        var modelBinderProvider = new JwtUserInformationModelBinderProvider();
+        var modelBinderProvider = new UserInformationTokenModelBinderProvider();
 
         //ACT
         var binder = modelBinderProvider.GetBinder(context);
@@ -32,7 +32,7 @@ public class JwtUserInformationModelBinderProviderTests
     {
         //ARRANGE
         ModelBinderProviderContext? context = null;
-        var modelBinderProvider = new JwtUserInformationModelBinderProvider();
+        var modelBinderProvider = new UserInformationTokenModelBinderProvider();
 
         //ACT - ASSERT
         Assert.Throws<ArgumentNullException>(() => modelBinderProvider.GetBinder(context));

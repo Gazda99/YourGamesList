@@ -20,10 +20,10 @@ public static partial class AppBuilder
             .AddScoped<IValidationFailedResultFactory, ValidationFailedResultFactory>()
             ;
 
-        //Common
-        services
-            .AddScoped<IValidator<JwtUserInformation>, JwtUserInformationValidator>()
-            ;
+        // //Common
+        // services
+        //     .AddScoped<IValidator<UserInformationToken>, UserInformationTokenValidator>()
+        //     ;
 
         //Auth controller validators
         services

@@ -31,9 +31,9 @@ public class ExceptionMiddleware
                 $"Exception during model binding of '{exception.ModelName}' of type '{exception.ModelType}'. Detailed error message: '{exception.ErrorDescription}'.");
             var response = context.Response;
 
-            if (exception.ModelType == typeof(JwtUserInformation))
+            if (exception.ModelType == typeof(UserInformationToken))
             {
-                _logger.LogInformation($"'{typeof(JwtUserInformation)}' binding exception. Will return '{(int) HttpStatusCode.Unauthorized}' status code.");
+                _logger.LogInformation($"'{typeof(UserInformationToken)}' binding exception. Will return '{(int) HttpStatusCode.Unauthorized}' status code.");
                 response.StatusCode = (int) HttpStatusCode.Unauthorized;
             }
             else

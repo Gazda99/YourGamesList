@@ -18,9 +18,8 @@ using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.Services.Ygl.Lists;
 
-public class ListsServiceTests
+public class ListsServiceTests : BaseTest
 {
-    private IFixture _fixture;
     private ILogger<ListsService> _logger;
     private IYglDatabaseAndDtoMapper _yglDatabaseAndDtoMapper;
     private TimeProvider _timeProvider;
@@ -33,7 +32,6 @@ public class ListsServiceTests
     [SetUp]
     public void SetUp()
     {
-        _fixture = new Fixture();
         _logger = Substitute.For<ILogger<ListsService>>();
         _yglDatabaseAndDtoMapper = Substitute.For<IYglDatabaseAndDtoMapper>();
 
@@ -49,7 +47,7 @@ public class ListsServiceTests
     public async Task CreateList_SuccessfulScenario()
     {
         //ARRANGE
-        var userInformation = _fixture.Create<JwtUserInformation>();
+        var userInformation = _fixture.Create<UserInformationToken>();
         var listName = _fixture.Create<string>();
         var desc = _fixture.Create<string>();
         var time = _fixture.Create<DateTimeOffset>();
@@ -87,7 +85,7 @@ public class ListsServiceTests
     public async Task CreateList_UserHasAlreadyListWithSameName_ReturnsListAlreadyExistsError()
     {
         //ARRANGE
-        var userInformation = _fixture.Create<JwtUserInformation>();
+        var userInformation = _fixture.Create<UserInformationToken>();
         var listName = _fixture.Create<string>();
         var parameters = _fixture.Build<CreateListParameters>()
             .With(x => x.UserInformation, userInformation)
@@ -130,7 +128,7 @@ public class ListsServiceTests
     public async Task GetList_SuccessfulScenario()
     {
         //ARRANGE
-        var userInformation = _fixture.Create<JwtUserInformation>();
+        var userInformation = _fixture.Create<UserInformationToken>();
         var listName = _fixture.Create<string>();
         var listId = Guid.NewGuid();
         var dto1 = _fixture.Create<GamesListDto>();
@@ -169,7 +167,7 @@ public class ListsServiceTests
     public async Task GetList_ListDoesNotExists_ReturnsListNotFoundError()
     {
         //ARRANGE
-        var userInformation = _fixture.Create<JwtUserInformation>();
+        var userInformation = _fixture.Create<UserInformationToken>();
         var listId = Guid.NewGuid();
 
         var listService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
@@ -353,7 +351,7 @@ public class ListsServiceTests
     public async Task GetSelfLists_SuccessfulScenario()
     {
         //ARRANGE
-        var userInformation = _fixture.Create<JwtUserInformation>();
+        var userInformation = _fixture.Create<UserInformationToken>();
         var listName = _fixture.Create<string>();
         var listName2 = _fixture.Create<string>();
         var listId = Guid.NewGuid();
@@ -406,7 +404,7 @@ public class ListsServiceTests
     public async Task GetSelfLists_ListDoesNotExists_ReturnsListNotFoundError()
     {
         //ARRANGE
-        var userInformation = _fixture.Create<JwtUserInformation>();
+        var userInformation = _fixture.Create<UserInformationToken>();
         var listService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
 
         //ACT
@@ -536,7 +534,7 @@ public class ListsServiceTests
     public async Task DeleteList_SuccessfulScenario()
     {
         //ARRANGE
-        var userInformation = _fixture.Create<JwtUserInformation>();
+        var userInformation = _fixture.Create<UserInformationToken>();
         var listName = _fixture.Create<string>();
         var listId = Guid.NewGuid();
 
@@ -574,7 +572,7 @@ public class ListsServiceTests
     public async Task DeleteList_ListDoesNotExists_ReturnsListNotFoundError()
     {
         //ARRANGE
-        var userInformation = _fixture.Create<JwtUserInformation>();
+        var userInformation = _fixture.Create<UserInformationToken>();
         var listId = Guid.NewGuid();
 
         var listService = new ListsService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _timeProvider);
@@ -592,7 +590,7 @@ public class ListsServiceTests
     public async Task DeleteList_ListHardLocked_ReturnsListHardLockedError()
     {
         //ARRANGE
-        var userInformation = _fixture.Create<JwtUserInformation>();
+        var userInformation = _fixture.Create<UserInformationToken>();
         var listName = _fixture.Create<string>();
         var listId = Guid.NewGuid();
 

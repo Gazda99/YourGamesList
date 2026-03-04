@@ -5,11 +5,11 @@ using YourGamesList.Api.Model;
 
 namespace YourGamesList.Api.ModelBinders;
 
-public class JwtUserInformationModelBinder : IModelBinder
+public class UserInformationTokenModelBinder : IModelBinder
 {
-    private readonly ILogger<JwtUserInformationModelBinder> _logger;
+    private readonly ILogger<UserInformationTokenModelBinder> _logger;
 
-    public JwtUserInformationModelBinder(ILogger<JwtUserInformationModelBinder> logger)
+    public UserInformationTokenModelBinder(ILogger<UserInformationTokenModelBinder> logger)
     {
         _logger = logger;
     }
@@ -26,17 +26,17 @@ public class JwtUserInformationModelBinder : IModelBinder
             };
         }
 
-        if (bindingContext.ModelType != typeof(JwtUserInformation))
+        if (bindingContext.ModelType != typeof(UserInformationToken))
         {
             _logger.LogWarning(
-                $"Attempted to bind model of type '{bindingContext.ModelType.Name}' with '{nameof(JwtUserInformationModelBinder)}'. This binder is only for '{nameof(JwtUserInformation)}'.");
+                $"Attempted to bind model of type '{bindingContext.ModelType.Name}' with '{nameof(UserInformationTokenModelBinder)}'. This binder is only for '{nameof(UserInformationToken)}'.");
             return Task.CompletedTask;
         }
 
-        if (bindingContext.HttpContext.Items.TryGetValue(nameof(JwtUserInformation), out var item) && item is JwtUserInformation cachedUserInformation)
+        if (bindingContext.HttpContext.Items.TryGetValue(nameof(UserInformationToken), out var item) && item is UserInformationToken cachedUserInformation)
         {
             bindingContext.Result = ModelBindingResult.Success(cachedUserInformation);
-            _logger.LogInformation($"Successfully bound '{nameof(JwtUserInformation)}' in '{bindingContext.OriginalModelName}'.");
+            _logger.LogInformation($"Successfully bound '{nameof(UserInformationToken)}' in '{bindingContext.OriginalModelName}'.");
             return Task.CompletedTask;
         }
 

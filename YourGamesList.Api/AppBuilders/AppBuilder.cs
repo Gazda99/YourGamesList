@@ -49,7 +49,7 @@ public static partial class AppBuilder
         builder.Logging.ClearProviders();
         builder.Host.AddLogger(builder.Configuration);
 
-        builder.Services.AddControllers(options => { options.ModelBinderProviders.Insert(0, new JwtUserInformationModelBinderProvider()); });
+        builder.Services.AddControllers(options => { options.ModelBinderProviders.Insert(0, new UserInformationTokenModelBinderProvider()); });
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
         {
             o.RequireHttpsMetadata = false;

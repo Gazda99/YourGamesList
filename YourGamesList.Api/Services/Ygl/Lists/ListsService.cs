@@ -19,11 +19,11 @@ public interface IListsService
     #region List
 
     Task<CombinedResult<Guid, ListsError>> CreateList(CreateListParameters parameters);
-    Task<CombinedResult<GamesListDto, ListsError>> GetList(JwtUserInformation userInfo, Guid listId, bool includeGames);
+    Task<CombinedResult<GamesListDto, ListsError>> GetList(UserInformationToken userInfo, Guid listId, bool includeGames);
     Task<CombinedResult<List<GamesListDto>, ListsError>> SearchLists(SearchListsParameters parameters);
-    Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelfLists(JwtUserInformation userInfo, bool includeGames);
+    Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelfLists(UserInformationToken userInfo, bool includeGames);
     Task<CombinedResult<Guid, ListsError>> UpdateList(UpdateListParameters parameters);
-    Task<CombinedResult<Guid, ListsError>> DeleteList(JwtUserInformation userInfo, Guid listId);
+    Task<CombinedResult<Guid, ListsError>> DeleteList(UserInformationToken userInfo, Guid listId);
 
     #endregion
 
@@ -91,7 +91,7 @@ public class ListsService : IListsService
         return CombinedResult<Guid, ListsError>.Success(list.Id);
     }
 
-    public async Task<CombinedResult<GamesListDto, ListsError>> GetList(JwtUserInformation userInfo, Guid listId, bool includeGames)
+    public async Task<CombinedResult<GamesListDto, ListsError>> GetList(UserInformationToken userInfo, Guid listId, bool includeGames)
     {
         var listsQuery = _yglDbContext.Lists.AsNoTracking();
         listsQuery.Include(x => x.Entries).ThenInclude(x => x.OwnershipInfo);
@@ -181,7 +181,7 @@ public class ListsService : IListsService
         return CombinedResult<List<GamesListDto>, ListsError>.Success(listDtos);
     }
 
-    public async Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelfLists(JwtUserInformation userInfo, bool includeGames)
+    public async Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelfLists(UserInformationToken userInfo, bool includeGames)
     {
         var listsQuery = _yglDbContext.Lists.AsNoTracking();
         listsQuery.Include(x => x.Entries).ThenInclude(x => x.OwnershipInfo);
@@ -247,7 +247,7 @@ public class ListsService : IListsService
         return CombinedResult<Guid, ListsError>.Success(list.Id);
     }
 
-    public async Task<CombinedResult<Guid, ListsError>> DeleteList(JwtUserInformation userInfo, Guid listId)
+    public async Task<CombinedResult<Guid, ListsError>> DeleteList(UserInformationToken userInfo, Guid listId)
     {
         _logger.LogInformation($"Search for list '{listId}' which belongs to user '{userInfo.Username}'.");
         var list = await _yglDbContext.Lists.FirstOrDefaultAsync(x =>

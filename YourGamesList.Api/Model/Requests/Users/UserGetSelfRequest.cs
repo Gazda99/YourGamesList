@@ -5,12 +5,12 @@ namespace YourGamesList.Api.Model.Requests.Users;
 
 public class UserGetSelfRequest
 {
-    [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
+    [FromAuthorizeHeader] public required UserInformationToken UserInformation { get; init; }
 }
 
 internal sealed class UserGetSelfRequestValidator : AbstractValidator<UserGetSelfRequest>
 {
-    public UserGetSelfRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
+    public UserGetSelfRequestValidator(IValidator<UserInformationToken> jwtUserInformationValidator)
     {
         RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
     }

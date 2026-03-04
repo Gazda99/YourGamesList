@@ -7,13 +7,13 @@ namespace YourGamesList.Api.Model.Requests.Lists;
 
 public class DeleteOwnershipInfoToEntryRequest
 {
-    [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
+    [FromAuthorizeHeader] public required UserInformationToken UserInformation { get; init; }
     [FromBody] public required DeleteOwnershipInfoToEntryRequestBody Body { get; init; }
 }
 
 internal sealed class DeleteOwnershipInfoToEntryRequestValidator : AbstractValidator<DeleteOwnershipInfoToEntryRequest>
 {
-    public DeleteOwnershipInfoToEntryRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
+    public DeleteOwnershipInfoToEntryRequestValidator(IValidator<UserInformationToken> jwtUserInformationValidator)
     {
         RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
         RuleFor(x => x.Body)

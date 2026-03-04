@@ -5,16 +5,8 @@ using YourGamesList.Api.Services.ModelMappers;
 
 namespace YourGamesList.Api.UnitTests.Services.ModelMappers;
 
-public class RequestToParametersMapperTests
+public class RequestToParametersMapperTests : BaseTest
 {
-    private IFixture _fixture;
-
-    [SetUp]
-    public void SetUp()
-    {
-        _fixture = new Fixture();
-    }
-
     [Test]
     public void Map_From_CreateListRequest_To_CreateListParameters()
     {

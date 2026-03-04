@@ -7,13 +7,13 @@ namespace YourGamesList.Api.Model.Requests.Lists;
 
 public class UpdateListEntriesRequest
 {
-    [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
+    [FromAuthorizeHeader] public required UserInformationToken UserInformation { get; init; }
     [FromBody] public required UpdateListEntriesRequestBody Body { get; init; }
 }
 
 internal sealed class UpdateListEntriesRequestValidator : AbstractValidator<UpdateListEntriesRequest>
 {
-    public UpdateListEntriesRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
+    public UpdateListEntriesRequestValidator(IValidator<UserInformationToken> jwtUserInformationValidator)
     {
         RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
 
