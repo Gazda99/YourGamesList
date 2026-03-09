@@ -21,9 +21,9 @@ public static partial class AppBuilder
             ;
 
         // //Common
-        // services
-        //     .AddScoped<IValidator<UserInformationToken>, UserInformationTokenValidator>()
-        //     ;
+        services
+            .AddScoped<IValidator<UserInformationToken>, UserInformationTokenValidator>()
+            ;
 
         //Auth controller validators
         services
