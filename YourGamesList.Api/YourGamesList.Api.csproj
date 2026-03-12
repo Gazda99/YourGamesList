@@ -17,6 +17,7 @@
         <ProjectReference Include="..\YourGamesList.Common\YourGamesList.Common.csproj" />
         <ProjectReference Include="..\YourGamesList.Contracts\YourGamesList.Contracts.csproj" />
         <ProjectReference Include="..\YourGamesList.Database\YourGamesList.Database.csproj" />
+        <ProjectReference Include="..\YourGamesList.Serilog.Sink.OpenObserve\YourGamesList.Serilog.Sink.OpenObserve.csproj" />
     </ItemGroup>
 
     <ItemGroup>
