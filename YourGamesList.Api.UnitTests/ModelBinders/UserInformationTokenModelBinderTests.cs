@@ -11,16 +11,14 @@ using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.ModelBinders;
 
-public class JwtUserInformationModelBinderTests
+public class UserInformationTokenModelBinderTests : BaseTest
 {
-    private IFixture _fixture;
-    private ILogger<JwtUserInformationModelBinder> _logger;
+    private ILogger<UserInformationTokenModelBinder> _logger;
 
     [SetUp]
     public void Setup()
     {
-        _fixture = new Fixture();
-        _logger = Substitute.For<ILogger<JwtUserInformationModelBinder>>();
+        _logger = Substitute.For<ILogger<UserInformationTokenModelBinder>>();
     }
 
     [Test]
@@ -30,17 +28,17 @@ public class JwtUserInformationModelBinderTests
         var context = Substitute.For<ModelBindingContext>();
         var httpContext = new DefaultHttpContext();
         context.HttpContext.Returns(httpContext);
-        var userInformation = _fixture.Create<JwtUserInformation>();
-        context.HttpContext.Items[nameof(JwtUserInformation)] = userInformation;
-        context.ModelType.Returns(typeof(JwtUserInformation));
-        var binder = new JwtUserInformationModelBinder(_logger);
+        var userInformation = _fixture.Create<UserInformationToken>();
+        context.HttpContext.Items[nameof(UserInformationToken)] = userInformation;
+        context.ModelType.Returns(typeof(UserInformationToken));
+        var binder = new UserInformationTokenModelBinder(_logger);
 
         //ACT
         await binder.BindModelAsync(context);
 
         //ASSERT
         Assert.That(context.Result.IsModelSet, Is.True);
-        _logger.ReceivedLog(LogLevel.Information, [$"Successfully bound '{nameof(JwtUserInformation)}'"]);
+        _logger.ReceivedLog(LogLevel.Information, [$"Successfully bound '{nameof(UserInformationToken)}'"]);
     }
 
     [Test]
@@ -52,8 +50,8 @@ public class JwtUserInformationModelBinderTests
         var httpContext = new DefaultHttpContext();
         context.HttpContext.Returns(httpContext);
         context.HttpContext.Items = new Dictionary<object, object?>(); // Empty dict
-        context.ModelType.Returns(typeof(JwtUserInformation));
-        var binder = new JwtUserInformationModelBinder(_logger);
+        context.ModelType.Returns(typeof(UserInformationToken));
+        var binder = new UserInformationTokenModelBinder(_logger);
 
         //ACT
         var ex = Assert.ThrowsAsync<ModelBindingException>(async () => await binder.BindModelAsync(context));
@@ -68,7 +66,7 @@ public class JwtUserInformationModelBinderTests
     {
         //ARRANGE
         ModelBindingContext? context = null;
-        var binder = new JwtUserInformationModelBinder(_logger);
+        var binder = new UserInformationTokenModelBinder(_logger);
 
         //ACT
         var ex = Assert.ThrowsAsync<ModelBindingException>(async () => await binder.BindModelAsync(context));
@@ -83,13 +81,13 @@ public class JwtUserInformationModelBinderTests
         //ARRANGE
         var context = Substitute.For<ModelBindingContext>();
         context.ModelType.Returns(typeof(object));
-        var binder = new JwtUserInformationModelBinder(_logger);
+        var binder = new UserInformationTokenModelBinder(_logger);
 
         //ACT
         await binder.BindModelAsync(context);
 
         //ASSERT
         _logger.ReceivedLog(LogLevel.Warning,
-            $"Attempted to bind model of type '{typeof(object).Name}' with '{nameof(JwtUserInformationModelBinder)}'. This binder is only for '{nameof(JwtUserInformation)}'.");
+            $"Attempted to bind model of type '{typeof(object).Name}' with '{nameof(UserInformationTokenModelBinder)}'. This binder is only for '{nameof(UserInformationToken)}'.");
     }
 }

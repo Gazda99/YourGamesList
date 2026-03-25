@@ -6,17 +6,14 @@ using YourGamesList.Api.Model.Requests.Lists;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Lists;
 
-public class GetSelfListsRequestTests
+public class GetSelfListsRequestTests : BaseTest
 {
-    private IFixture _fixture;
-    private InlineValidator<JwtUserInformation> _jwtUserInformationValidator;
-
-
+    private InlineValidator<UserInformationToken> _jwtUserInformationValidator;
+    
     [SetUp]
     public void Setup()
     {
-        _fixture = new Fixture();
-        _jwtUserInformationValidator = new InlineValidator<JwtUserInformation>();
+        _jwtUserInformationValidator = new InlineValidator<UserInformationToken>();
     }
 
     [Test]

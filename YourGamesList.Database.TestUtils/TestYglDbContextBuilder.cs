@@ -11,6 +11,7 @@ namespace YourGamesList.Database.TestUtils;
 /// </summary>
 public class TestYglDbContextBuilder
 {
+    private static readonly Fixture Fixture = new Fixture();
     private readonly YglDbContext _yglDbContext;
 
     private TestYglDbContextBuilder(IOptions<YourGamesListDatabaseOptions>? iOptions = null)
@@ -18,7 +19,7 @@ public class TestYglDbContextBuilder
         if (iOptions == null)
         {
             iOptions = Substitute.For<IOptions<YourGamesListDatabaseOptions>>();
-            var options = new Fixture()
+            var options = Fixture
                 .Build<YourGamesListDatabaseOptions>()
                 .With(x => x.ConnectionString, "DataSource=file::memory:?cache=shared")
                 .With(x => x.MigrationAssembly, (string?) null)
@@ -97,4 +98,27 @@ public class TestYglDbContextBuilder
     {
         return _yglDbContext;
     }
+
+
+    # region Create Entity Helpers
+
+    public static User CreateUser(
+        Guid? id = null,
+        string? username = null,
+        string? passwordHash = null,
+        byte[]? salt = null,
+        DateTimeOffset? createdDate = null
+    )
+    {
+        return new User()
+        {
+            Id = id ?? Fixture.Create<Guid>(),
+            Username = username ?? Fixture.Create<string>(),
+            PasswordHash = passwordHash ?? Fixture.Create<string>(),
+            CreatedDate = createdDate ?? Fixture.Create<DateTimeOffset>(),
+            Salt = salt ?? Fixture.Create<byte[]>(),
+        };
+    }
+
+    #endregion
 }

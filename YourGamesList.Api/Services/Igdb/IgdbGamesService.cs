@@ -47,7 +47,7 @@ public class IgdbGamesService : IIgdbGamesService
             .WithFields(RequestGameFields)
             .CreateQuery();
 
-        _logger.LogInformation($"Searching for '{gameIds.Length}' games with ids: '{ids}'");
+        _logger.LogInformation($"Searching for '{gameIds.Length}' games with ids: '[{ids}]'");
 
         return await _igdbService.CallIgdb<IgdbGame[]>(IgdbEndpoints.Game, query);
     }

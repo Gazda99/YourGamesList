@@ -8,16 +8,14 @@ using YourGamesList.Contracts.Requests.Lists;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Lists;
 
-public class DeleteListEntriesRequestTests
+public class DeleteListEntriesRequestTests : BaseTest
 {
-    private IFixture _fixture;
-    private InlineValidator<JwtUserInformation> _jwtUserInformationValidator;
+    private InlineValidator<UserInformationToken> _jwtUserInformationValidator;
 
     [SetUp]
     public void Setup()
     {
-        _fixture = new Fixture();
-        _jwtUserInformationValidator = new InlineValidator<JwtUserInformation>();
+        _jwtUserInformationValidator = new InlineValidator<UserInformationToken>();
     }
 
 

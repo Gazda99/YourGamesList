@@ -7,13 +7,13 @@ namespace YourGamesList.Api.Model.Requests.Lists;
 
 public class SearchListsRequest
 {
-    [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
+    [FromAuthorizeHeader] public required UserInformationToken UserInformation { get; init; }
     [FromBody] public required SearchListsRequestBody Body { get; init; }
 }
 
 internal sealed class SearchListsRequestValidator : AbstractValidator<SearchListsRequest>
 {
-    public SearchListsRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
+    public SearchListsRequestValidator(IValidator<UserInformationToken> jwtUserInformationValidator)
     {
         RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
 

@@ -19,9 +19,8 @@ using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.Controllers;
 
-public class ListsControllerTests
+public class ListsControllerTests : BaseTest
 {
-    private IFixture _fixture;
     private ILogger<ListsController> _logger;
     private IRequestToParametersMapper _requestToParametersMapper;
     private IListsService _listsService;
@@ -29,7 +28,6 @@ public class ListsControllerTests
     [SetUp]
     public void Setup()
     {
-        _fixture = new Fixture();
         _logger = Substitute.For<ILogger<ListsController>>();
         _requestToParametersMapper = Substitute.For<IRequestToParametersMapper>();
         _listsService = Substitute.For<IListsService>();

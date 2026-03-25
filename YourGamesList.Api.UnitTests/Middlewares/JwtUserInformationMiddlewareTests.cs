@@ -60,11 +60,11 @@ public class JwtUserInformationMiddlewareTests
         await jwtUserInformationMiddleware.InvokeAsync(ctx);
 
         //ASSERT
-        Assert.That(ctx.Items.ContainsKey(nameof(JwtUserInformation)));
-        var storedJwtUserInformationEntry = ctx.Items[nameof(JwtUserInformation)];
+        Assert.That(ctx.Items.ContainsKey(nameof(UserInformationToken)));
+        var storedJwtUserInformationEntry = ctx.Items[nameof(UserInformationToken)];
         Assert.That(storedJwtUserInformationEntry, Is.Not.Null);
-        Assert.That(storedJwtUserInformationEntry, Is.TypeOf<JwtUserInformation>());
-        var storedJwtUserInformation = (JwtUserInformation) storedJwtUserInformationEntry;
+        Assert.That(storedJwtUserInformationEntry, Is.TypeOf<UserInformationToken>());
+        var storedJwtUserInformation = (UserInformationToken) storedJwtUserInformationEntry;
         Assert.That(storedJwtUserInformation.UserId, Is.EqualTo(userId));
         Assert.That(storedJwtUserInformation.Username, Is.EqualTo(username));
         _logger.Received(1)
@@ -90,7 +90,7 @@ public class JwtUserInformationMiddlewareTests
         await jwtUserInformationMiddleware.InvokeAsync(ctx);
 
         //ASSERT
-        Assert.That(!ctx.Items.ContainsKey(nameof(JwtUserInformation)));
+        Assert.That(!ctx.Items.ContainsKey(nameof(UserInformationToken)));
         _logger.Received(0).BeginScope(Arg.Is<Dictionary<string, object>>(x => x.ContainsKey(LogProperties.UserId)));
     }
 

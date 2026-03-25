@@ -5,7 +5,7 @@ using YourGamesList.Api.Model;
 
 namespace YourGamesList.Api.ModelBinders;
 
-public class JwtUserInformationModelBinderProvider : IModelBinderProvider
+public class UserInformationTokenModelBinderProvider : IModelBinderProvider
 {
     public IModelBinder GetBinder(ModelBinderProviderContext context)
     {
@@ -14,9 +14,9 @@ public class JwtUserInformationModelBinderProvider : IModelBinderProvider
             throw new ArgumentNullException(nameof(context));
         }
 
-        if (context.Metadata.ModelType == typeof(JwtUserInformation))
+        if (context.Metadata.ModelType == typeof(UserInformationToken))
         {
-            return new BinderTypeModelBinder(typeof(JwtUserInformationModelBinder));
+            return new BinderTypeModelBinder(typeof(UserInformationTokenModelBinder));
         }
 
 #nullable disable

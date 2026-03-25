@@ -19,9 +19,8 @@ using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.Services.Users;
 
-public class UsersServiceTests
+public class UsersServiceTests : BaseTest
 {
-    private IFixture _fixture;
     private ILogger<UsersService> _logger;
     private IYglDatabaseAndDtoMapper _yglDatabaseAndDtoMapper;
     private TimeProvider _timeProvider;
@@ -35,7 +34,6 @@ public class UsersServiceTests
     [SetUp]
     public void SetUp()
     {
-        _fixture = new Fixture();
         _logger = Substitute.For<ILogger<UsersService>>();
         _yglDatabaseAndDtoMapper = Substitute.For<IYglDatabaseAndDtoMapper>();
         _timeProvider = Substitute.For<TimeProvider>();
@@ -52,14 +50,8 @@ public class UsersServiceTests
     public async Task GetSelfUser_SuccessfulScenario_ReturnsUserDto()
     {
         //ARRANGE
-        var userId = Guid.NewGuid();
-        var parameters = _fixture.Build<UserGetSelfParameters>()
-            .With(x => x.UserInformation, _fixture.Build<JwtUserInformation>()
-                .With(x => x.UserId, userId)
-                .WithAutoProperties()
-                .Create())
-            .WithAutoProperties()
-            .Create();
+        var parameters = _fixture.Create<UserGetSelfParameters>();
+        var userId = parameters.UserInformation.UserId;
         var user = new User()
         {
             Id = userId,
@@ -109,16 +101,12 @@ public class UsersServiceTests
     public async Task UpdateUser_SuccessfulScenario_UpdatesUserAndReturnsId()
     {
         //ARRANGE
-        var userId = Guid.NewGuid();
         var parameters = _fixture.Build<UserUpdateParameters>()
-            .With(x => x.UserInformation, _fixture.Build<JwtUserInformation>()
-                .With(x => x.UserId, userId)
-                .WithAutoProperties()
-                .Create())
             .With(x => x.Description, "ebebe")
             .With(x => x.DateOfBirth, (DateTimeOffset?) null)
             .WithAutoProperties()
             .Create();
+        var userId = parameters.UserInformation.UserId;
         var time = _fixture.Create<DateTimeOffset>();
         _timeProvider.GetUtcNow().Returns(time);
         var user = new User()
@@ -157,12 +145,7 @@ public class UsersServiceTests
     public async Task UpdateUser_OnValidationError_WrongCountry_ReturnsUserUpdateWrongInputDataError()
     {
         //ARRANGE
-        var userId = Guid.NewGuid();
         var parameters = _fixture.Build<UserUpdateParameters>()
-            .With(x => x.UserInformation, _fixture.Build<JwtUserInformation>()
-                .With(x => x.UserId, userId)
-                .WithAutoProperties()
-                .Create())
             .With(x => x.Description, "ebebe")
             .With(x => x.DateOfBirth, (DateTimeOffset?) null)
             .WithAutoProperties()
@@ -187,12 +170,7 @@ public class UsersServiceTests
     public async Task UpdateUser_OnValidationError_WrongDescription_ReturnsUserUpdateWrongInputDataError()
     {
         //ARRANGE
-        var userId = Guid.NewGuid();
         var parameters = _fixture.Build<UserUpdateParameters>()
-            .With(x => x.UserInformation, _fixture.Build<JwtUserInformation>()
-                .With(x => x.UserId, userId)
-                .WithAutoProperties()
-                .Create())
             .With(x => x.Description, new string(_fixture.CreateMany<char>(1000).ToArray()))
             .With(x => x.DateOfBirth, (DateTimeOffset?) null)
             .WithAutoProperties()
@@ -217,12 +195,7 @@ public class UsersServiceTests
     public async Task UpdateUser_OnValidationError_WrongDateOfBirth_ReturnsUserUpdateWrongInputDataError()
     {
         //ARRANGE
-        var userId = Guid.NewGuid();
         var parameters = _fixture.Build<UserUpdateParameters>()
-            .With(x => x.UserInformation, _fixture.Build<JwtUserInformation>()
-                .With(x => x.UserId, userId)
-                .WithAutoProperties()
-                .Create())
             .With(x => x.Description, "ebebe")
             .With(x => x.DateOfBirth, DateTime.UtcNow)
             .WithAutoProperties()
@@ -247,12 +220,7 @@ public class UsersServiceTests
     public async Task UpdateUser_UserDoesNotExists_ReturnsUserNotFoundError()
     {
         //ARRANGE
-        var userId = Guid.NewGuid();
         var parameters = _fixture.Build<UserUpdateParameters>()
-            .With(x => x.UserInformation, _fixture.Build<JwtUserInformation>()
-                .With(x => x.UserId, userId)
-                .WithAutoProperties()
-                .Create())
             .With(x => x.Description, "ebebe")
             .With(x => x.DateOfBirth, (DateTimeOffset?) null)
             .WithAutoProperties()

@@ -7,14 +7,14 @@ namespace YourGamesList.Api.Model.Requests.Lists;
 
 public class DeleteListEntriesRequest
 {
-    [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
+    [FromAuthorizeHeader] public required UserInformationToken UserInformation { get; init; }
 
     [FromBody] public required DeleteListEntriesRequestBody Body { get; init; }
 }
 
 internal sealed class DeleteListEntriesRequestValidator : AbstractValidator<DeleteListEntriesRequest>
 {
-    public DeleteListEntriesRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
+    public DeleteListEntriesRequestValidator(IValidator<UserInformationToken> jwtUserInformationValidator)
     {
         RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
         RuleFor(x => x.Body)

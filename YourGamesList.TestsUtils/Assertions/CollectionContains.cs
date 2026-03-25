@@ -5,5 +5,6 @@ namespace YourGamesList.TestsUtils.Assertions;
 
 public abstract class CollectionContains : Contains
 {
-    public static SomeItemsConstraint AnySubstring(string expected) => new(new SubstringConstraint(expected));
+    public static ContainsAllSubstringsConstraint ContainsAll(params string[] expected) => new ContainsAllSubstringsConstraint(expected);
+    public static ContainsNoneSubstringsConstraint ContainsNone(params string[] forbidden) => new ContainsNoneSubstringsConstraint(forbidden);
 }

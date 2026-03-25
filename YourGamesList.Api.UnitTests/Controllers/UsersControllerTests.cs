@@ -19,9 +19,8 @@ using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.Controllers;
 
-public class UsersControllerTests
+public class UsersControllerTests : BaseTest
 {
-    private IFixture _fixture;
     private ILogger<UsersController> _logger;
     private IRequestToParametersMapper _requestToParametersMapper;
     private IUsersService _usersService;
@@ -30,7 +29,6 @@ public class UsersControllerTests
     [SetUp]
     public void Setup()
     {
-        _fixture = new Fixture();
         _logger = Substitute.For<ILogger<UsersController>>();
         _requestToParametersMapper = Substitute.For<IRequestToParametersMapper>();
         _usersService = Substitute.For<IUsersService>();

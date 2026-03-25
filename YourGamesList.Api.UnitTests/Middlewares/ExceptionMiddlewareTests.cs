@@ -45,7 +45,7 @@ public class ExceptionMiddlewareTests
         //ARANGE
         var ex = new ModelBindingException()
         {
-            ModelType = typeof(JwtUserInformation)
+            ModelType = typeof(UserInformationToken)
         };
         RequestDelegate next = _ => throw ex;
 
@@ -58,7 +58,7 @@ public class ExceptionMiddlewareTests
         //ASSERT
         Assert.That(context.Response.StatusCode, Is.EqualTo((int) HttpStatusCode.Unauthorized));
         _logger.ReceivedLog(LogLevel.Information,
-            $"'{typeof(JwtUserInformation)}' binding exception. Will return '{(int) HttpStatusCode.Unauthorized}' status code.");
+            $"'{typeof(UserInformationToken)}' binding exception. Will return '{(int) HttpStatusCode.Unauthorized}' status code.");
     }
 
     [Test]

@@ -12,7 +12,6 @@ using Refit;
 using Serilog;
 using YourGamesList.Api.ModelBinders;
 using YourGamesList.Api.OutputCachePolicies;
-using YourGamesList.Api.Services;
 using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Options;
 using YourGamesList.Api.Services.CorrelationId;
@@ -49,7 +48,10 @@ public static partial class AppBuilder
         builder.Logging.ClearProviders();
         builder.Host.AddLogger(builder.Configuration);
 
-        builder.Services.AddControllers(options => { options.ModelBinderProviders.Insert(0, new JwtUserInformationModelBinderProvider()); });
+        //Telemetry
+        builder.Services.AddTelemetry(builder.Configuration);
+
+        builder.Services.AddControllers(options => { options.ModelBinderProviders.Insert(0, new UserInformationTokenModelBinderProvider()); });
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
         {
             o.RequireHttpsMetadata = false;

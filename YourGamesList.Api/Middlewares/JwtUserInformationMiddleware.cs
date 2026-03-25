@@ -12,6 +12,7 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using YourGamesList.Api.Model;
 using YourGamesList.Api.Services.Auth;
 using YourGamesList.Common.Logging;
+using YourGamesList.Database.Entities;
 
 namespace YourGamesList.Api.Middlewares;
 
@@ -64,42 +65,24 @@ public class JwtUserInformationMiddleware
 
         var jwtToken = _tokenParser.ReadJsonWebToken(token);
 
-        if (!TryReadClaim(jwtToken.Claims, JwtCustomClaimNames.UserId, out var rawUserId) || !Guid.TryParse(rawUserId, out var userId))
+        UserInformationToken userInformationToken;
+        try
         {
+            userInformationToken = UserInformationToken.FromJwt(jwtToken);
+        }
+        catch (BaseTokenCreationException ex)
+        {
+            _logger.LogError(ex, "Cannot read JWT from authorization header.");
             await ReturnUnauthorized(context.Response);
             return;
         }
 
-        if (!TryReadClaim(jwtToken.Claims, JwtRegisteredClaimNames.Sub, out var username))
-        {
-            await ReturnUnauthorized(context.Response);
-            return;
-        }
+        context.Items[nameof(UserInformationToken)] = userInformationToken;
 
-        var userInformation = new JwtUserInformation
-        {
-            Username = username,
-            UserId = userId
-        };
-
-        context.Items[nameof(JwtUserInformation)] = userInformation;
-
-        using (_logger.BeginScope(new Dictionary<string, object> { [LogProperties.UserId] = userInformation.UserId.ToString() }))
+        using (_logger.BeginScope(new Dictionary<string, object> { [LogProperties.UserId] = userInformationToken.UserId.ToString() }))
         {
             await _next(context);
         }
-    }
-
-    private bool TryReadClaim(IEnumerable<Claim> claims, string claimType, [NotNullWhen(true)] out string? claimValue)
-    {
-        claimValue = claims.FirstOrDefault(c => c.Type == claimType)?.Value;
-        if (claimValue == null)
-        {
-            _logger.LogInformation($"Cannot read JWT '{claimType}' claim.");
-            return false;
-        }
-
-        return true;
     }
 
     private static async Task ReturnUnauthorized(HttpResponse response)

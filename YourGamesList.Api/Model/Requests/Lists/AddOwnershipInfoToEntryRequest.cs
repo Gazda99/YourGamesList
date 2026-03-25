@@ -7,13 +7,13 @@ namespace YourGamesList.Api.Model.Requests.Lists;
 
 public class AddOwnershipInfoToEntryRequest
 {
-    [FromAuthorizeHeader] public required JwtUserInformation UserInformation { get; init; }
+    [FromAuthorizeHeader] public required UserInformationToken UserInformation { get; init; }
     [FromBody] public required AddOwnershipInfoToEntryRequestBody Body { get; init; }
 }
 
 internal sealed class AddOwnershipInfoToEntryRequestValidator : AbstractValidator<AddOwnershipInfoToEntryRequest>
 {
-    public AddOwnershipInfoToEntryRequestValidator(IValidator<JwtUserInformation> jwtUserInformationValidator)
+    public AddOwnershipInfoToEntryRequestValidator(IValidator<UserInformationToken> jwtUserInformationValidator)
     {
         RuleFor(x => x.UserInformation).SetValidator(jwtUserInformationValidator);
 
