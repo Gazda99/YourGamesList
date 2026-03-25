@@ -1,0 +1,101 @@
+{
+  "pipeline_id": "7438268865731100672",
+  "version": 0,
+  "enabled": true,
+  "org": "ygl",
+  "name": "ygl-api_logs-pipeline",
+  "description": "",
+  "source": {
+    "source_type": "realtime",
+    "org_id": "ygl",
+    "stream_name": "ygl_api",
+    "stream_type": "logs"
+  },
+  "nodes": [
+    {
+      "id": "1f6df372-4a20-4d38-b639-521f26733e12",
+      "data": {
+        "node_type": "stream",
+        "org_id": "ygl",
+        "stream_name": "ygl_api",
+        "stream_type": "logs"
+      },
+      "position": {
+        "x": 220.75,
+        "y": 127.5
+      },
+      "io_type": "input"
+    },
+    {
+      "id": "d7f7c784-436a-4b85-964a-e0e64bf4f57b",
+      "data": {
+        "node_type": "stream",
+        "org_id": "ygl",
+        "stream_name": "ygl_api",
+        "stream_type": "logs"
+      },
+      "position": {
+        "x": 223.75,
+        "y": 386.25
+      },
+      "io_type": "output"
+    },
+    {
+      "id": "f688ab7c-22a1-4f77-9429-a28403292d0b",
+      "data": {
+        "node_type": "function",
+        "name": "logs_rename_otel_fields",
+        "after_flatten": true,
+        "num_args": 0
+      },
+      "position": {
+        "x": 409,
+        "y": 255
+      },
+      "io_type": "default"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1f6df372-4a20-4d38-b639-521f26733e12-f688ab7c-22a1-4f77-9429-a28403292d0b",
+      "source": "1f6df372-4a20-4d38-b639-521f26733e12",
+      "target": "f688ab7c-22a1-4f77-9429-a28403292d0b",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "width": 20,
+        "height": 20
+      },
+      "type": "custom",
+      "style": {
+        "strokeWidth": 2
+      },
+      "animated": true,
+      "updatable": true
+    },
+    {
+      "id": "ef688ab7c-22a1-4f77-9429-a28403292d0b-d7f7c784-436a-4b85-964a-e0e64bf4f57b",
+      "source": "f688ab7c-22a1-4f77-9429-a28403292d0b",
+      "target": "d7f7c784-436a-4b85-964a-e0e64bf4f57b",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "width": 20,
+        "height": 20
+      },
+      "type": "custom",
+      "style": {
+        "strokeWidth": 2
+      },
+      "animated": true,
+      "updatable": true
+    }
+  ],
+  "paused_at": null,
+  "type": "realtime",
+  "stream_name": "ygl_api",
+  "stream_type": "logs",
+  "frequency": "--",
+  "period": "--",
+  "cron": "--",
+  "sql_query": "--",
+  "#": 1
+}

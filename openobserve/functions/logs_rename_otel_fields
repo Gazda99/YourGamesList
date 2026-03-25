@@ -1,0 +1,6 @@
+﻿.msg = .body
+.level = .severity
+# Optional: remove the originals to keep it clean
+del(.body)
+del(.severity) 
+ .
