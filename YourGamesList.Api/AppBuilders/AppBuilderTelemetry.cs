@@ -37,6 +37,7 @@ public static partial class AppBuilder
                     options.EnrichWithHttpRequestMessage += TelemetryConfigurator.HttpClientInstrumentationTracingEnrichWithRefitMethodInfo;
                 })
                 .AddAspNetCoreInstrumentation()
+                .AddEntityFrameworkCoreInstrumentation(options => { options.EnrichWithIDbCommand = TelemetryConfigurator.EnrichWithIDbCommand; })
                 .AddOtlpExporter(o =>
                 {
                     o.Protocol = OtlpExportProtocol.HttpProtobuf;
