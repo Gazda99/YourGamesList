@@ -82,7 +82,7 @@ public class UsersService : IUsersService
 
     private bool ValidateUserUpdateParameters(UserUpdateParameters parameters)
     {
-        if (!_countriesService.ValidateThreeLetterIsoCode(parameters.Country))
+        if (!string.IsNullOrWhiteSpace(parameters.Country) && !_countriesService.ValidateThreeLetterIsoCode(parameters.Country))
         {
             LogValidationError("wrong country name");
             return false;
