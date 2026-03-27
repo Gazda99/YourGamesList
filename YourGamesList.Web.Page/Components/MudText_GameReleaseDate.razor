@@ -1,0 +1,18 @@
+﻿<MudText @attributes="UserAttributes">
+    @FormattedDate()
+</MudText>
+
+@code {
+    [Parameter] public string GameReleaseDateFormat { get; set; } = "yyyy MMMM dd";
+    [Parameter] public required long Date { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? UserAttributes { get; set; }
+
+
+    private string FormattedDate()
+    {
+        return Date != 0 ? DateTimeOffset.FromUnixTimeSeconds(Date).ToString(GameReleaseDateFormat) : string.Empty;
+    }
+
+}

@@ -1,0 +1,49 @@
+﻿{
+  "Serilog": {
+    "Using": [
+      "Serilog.Sinks.Console",
+      "Serilog.Sinks.OpenTelemetry"
+    ],
+    "MinimumLevel": {
+      "Default": "Debug",
+      "Override": {
+        "Microsoft": "Information",
+        "Microsoft.AspNetCore": "Information",
+        "Microsoft.Extensions.Http.DefaultHttpClientFactory": "Warning",
+        "Microsoft.Extensions.Hosting": "Warning",
+        "Microsoft.AspNetCore.Hosting.Diagnostics": "Warning",
+        "Microsoft.Hosting.Lifetime": "Warning",
+        "System": "Warning",
+        "System.Net.Http.HttpClient": "Warning"
+      }
+    },
+    "WriteTo": [
+      {
+        "Name": "Console",
+        "Args": {
+          "outputTemplate": "[{Timestamp:u}][{Level:u3}] {Message}{NewLine}{Properties}{NewLine}{Exception}"
+        }
+      },
+      {
+        "Name": "OpenTelemetry",
+        "Args": {
+          "Endpoint": "<REPLACE_ME>",
+          "Protocol": "HttpProtobuf",
+          "Headers": {
+            "Authorization": "Basic <REPLACE_ME>",
+            "stream-name": "ygl_api"
+          },
+          "ResourceAttributes": {
+            "service.name": "ygl_api"
+          }
+        }
+      }
+    ],
+    "Enrich": [
+      "FromLogContext"
+    ],
+    "Properties": {
+      "AppName": "ygl-api"
+    }
+  }
+}

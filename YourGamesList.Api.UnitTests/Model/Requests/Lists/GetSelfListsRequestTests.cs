@@ -1,0 +1,55 @@
+﻿using AutoFixture;
+using FluentValidation;
+using FluentValidation.TestHelper;
+using YourGamesList.Api.Model;
+using YourGamesList.Api.Model.Requests.Lists;
+
+namespace YourGamesList.Api.UnitTests.Model.Requests.Lists;
+
+public class GetSelfListsRequestTests : BaseTest
+{
+    private InlineValidator<UserInformationToken> _jwtUserInformationValidator;
+    
+    [SetUp]
+    public void Setup()
+    {
+        _jwtUserInformationValidator = new InlineValidator<UserInformationToken>();
+    }
+
+    [Test]
+    public void Validate_ValidOptions_ReturnsTrue()
+    {
+        //ARRANGE
+        _jwtUserInformationValidator.RuleFor(x => x).Must(_ => true);
+        var request = _fixture.Build<GetSelfListsRequest>()
+            .WithAutoProperties()
+            .Create();
+
+        var validator = new GetSelfListsRequestValidator(_jwtUserInformationValidator);
+
+        //ACT
+        var res = validator.TestValidate(request);
+
+        //ASSERT
+        Assert.That(res.IsValid, Is.True);
+    }
+
+    [Test]
+    public void Validate_WrongJwtUserInformation_ReturnsFalse()
+    {
+        //ARRANGE
+        _jwtUserInformationValidator.RuleFor(x => x.UserId).Must(_ => false);
+        var request = _fixture.Build<GetSelfListsRequest>()
+            .WithAutoProperties()
+            .Create();
+
+        var validator = new GetSelfListsRequestValidator(_jwtUserInformationValidator);
+
+        //ACT
+        var res = validator.TestValidate(request);
+
+        //ASSERT
+        Assert.That(res.IsValid, Is.False);
+        res.ShouldHaveValidationErrors();
+    }
+}

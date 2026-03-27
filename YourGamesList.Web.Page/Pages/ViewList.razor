@@ -1,0 +1,126 @@
+﻿@page "/lists/{ListId:guid}"
+@using Microsoft.Extensions.Logging
+@using YourGamesList.Contracts.Dto
+@using YourGamesList.Web.Page.Services
+@using YourGamesList.Web.Page.Services.UserLoginStateManager
+@using YourGamesList.Web.Page.Services.Ygl
+
+<PageTitle>@PageName()</PageTitle>
+
+@if (!_isPageInitialized)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="mx-auto"/>
+}
+else
+{
+    @if (!_isUserLoggedIn)
+    {
+        <LoginFirst></LoginFirst>
+    }
+    else
+    {
+        <MudGrid Justify="Justify.FlexStart" Spacing="3">
+            @* TODO: panel with list name and list customize options*@
+            <MudItem xs="12">
+                <MudText>Currently selected list: <b>@_selectedList?.Name</b></MudText>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField
+                    Immediate="true"
+                    @bind-Value="@_filterByGameName"
+                    Label="Filter by game title" Variant="Variant.Outlined" InputType="InputType.Text"
+                ></MudTextField>
+            </MudItem>
+
+
+            @if (_selectedList?.Entries.Any() ?? false)
+            {
+                @foreach (var gameListEntry in FilteredGames())
+                {
+                    <MudItem xs="12" sm="12" md="12" lg="6" xl="6" xxl="4">
+                        <GameListEntryTile GameListEntry="@gameListEntry" ListId="@ListId"></GameListEntryTile>
+                    </MudItem>
+                }
+            }
+            else
+            {
+                <MudText>Hey this list is empty it is time to add new games to it!</MudText>
+            }
+
+        </MudGrid>
+    }
+}
+
+@code {
+
+    [Inject] private ILogger<SearchGames> Logger { get; set; } = default!;
+
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private IYglListsClient ListsClient { get; set; } = default!;
+    [Inject] private IUserLoginStateManager UserLoginStateManager { get; set; } = default!;
+    [Inject] private IUserListsManager UserListsManager { get; set; } = default!;
+
+    private bool _isUserLoggedIn = false;
+    private bool _isPageInitialized = false;
+    private bool _isLoading = false;
+
+    private string _filterByGameName = string.Empty;
+
+
+    private GamesListDto? _selectedList;
+
+    [Parameter] public Guid ListId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _isUserLoggedIn = await UserLoginStateManager.IsUserLoggedIn();
+
+        if (_isUserLoggedIn)
+        {
+            _isPageInitialized = false;
+
+            var userLists = await UserListsManager.ReadOrRefresh();
+            if (userLists.IsFailure)
+            {
+                CouldNotLoadListSnackbar();
+                return;
+            }
+
+            var selectedList = userLists.Value.FirstOrDefault(x => x.Id == ListId);
+            if (selectedList == null)
+            {
+                CouldNotLoadListSnackbar();
+                return;
+            }
+
+            _selectedList = selectedList;
+        }
+
+        _isPageInitialized = true;
+    }
+
+    private void CouldNotLoadListSnackbar()
+    {
+        Snackbar.Add("Could not load selected list. Please try to refresh page.", Severity.Warning);
+    }
+
+    private List<GameListEntryDto> FilteredGames()
+    {
+        var filteredGames = _selectedList?.Entries
+            .Where(x => x.Game != null) ?? [];
+
+        if (!string.IsNullOrWhiteSpace(_filterByGameName))
+        {
+            filteredGames = filteredGames.Where(x => x.Game?.Name.Contains(_filterByGameName, StringComparison.InvariantCultureIgnoreCase) ?? false);
+        }
+
+        return filteredGames.ToList();
+    }
+
+    private string PageName()
+    {
+        return _selectedList?.Name ?? "Loading...";
+    }
+
+}
