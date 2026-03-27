@@ -142,6 +142,45 @@ public class UsersServiceTests : BaseTest
     }
 
     [Test]
+    [TestCase("")]
+    [TestCase(null)]
+    public async Task UpdateUser_SuccessfulScenario_WithCountrySetToEmptyOrNull_UpdatesUserAndReturnsId_QUICK(string? country)
+    {
+        //ARRANGE
+        var parameters = _fixture.Build<UserUpdateParameters>()
+            .With(x => x.Country, country)
+            .With(x => x.Description, "ebebe")
+            .With(x => x.DateOfBirth, (DateTimeOffset?) null)
+            .WithAutoProperties()
+            .Create();
+        var userId = parameters.UserInformation.UserId;
+        var time = _fixture.Create<DateTimeOffset>();
+        _timeProvider.GetUtcNow().Returns(time);
+        var user = new User()
+        {
+            Id = userId,
+            Username = parameters.UserInformation.Username,
+            PasswordHash = _fixture.Create<string>(),
+            CreatedDate = DateTime.UtcNow,
+            Salt = _fixture.Create<byte[]>()
+        };
+        var users = new List<User>() { user };
+        _yglDbContextBuilder.WithUserDbSet(users);
+        var userDto = _fixture.Create<UserDto>();
+        _yglDatabaseAndDtoMapper.Map(Arg.Is<User>(u => u.Id == userId)).Returns(userDto);
+        _countriesService.ValidateThreeLetterIsoCode(parameters.Country).Returns(false);
+
+        var usersService = new UsersService(_logger, _dbContextFactory, _yglDatabaseAndDtoMapper, _countriesService, _timeProvider);
+
+        //ACT
+        var result = await usersService.UpdateUser(parameters);
+
+        //ASSERT
+        //QUICK - just check if there is no error
+        Assert.That(result.IsSuccess, Is.True);
+    }
+
+    [Test]
     public async Task UpdateUser_OnValidationError_WrongCountry_ReturnsUserUpdateWrongInputDataError()
     {
         //ARRANGE
