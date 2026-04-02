@@ -73,7 +73,7 @@ public class HealthCheckService : IHealthCheckService
             var token = cts.Token;
 
             var tasks = _healthChecks.Select(x => x.CheckHealth(token)).ToArray();
-            var taskNames = string.Join(", ", _healthChecks.Select(x => x.ServiceName).ToArray());
+            var taskNames = string.Join(", ", _healthChecks.Select(x => $"'{x.ServiceName}'").ToArray());
 
             _logger.LogInformation($"Starting health check with a timeout of {timeout.TotalSeconds} seconds for {tasks.Length} tasks: {taskNames}.");
 

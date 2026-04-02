@@ -38,6 +38,7 @@ public static partial class AppBuilder
                 })
                 .AddAspNetCoreInstrumentation()
                 .AddEntityFrameworkCoreInstrumentation(options => { options.EnrichWithIDbCommand = TelemetryConfigurator.EnrichWithIDbCommand; })
+                .AddYourGamesListActivitySources()
                 .AddOtlpExporter(o =>
                 {
                     o.Protocol = OtlpExportProtocol.HttpProtobuf;

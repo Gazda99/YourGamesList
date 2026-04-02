@@ -91,7 +91,7 @@ public class HealthCheckServiceTests
     {
         //ARRANGE
         var n = healthChecks.Count;
-        var taskNames = string.Join(", ", healthChecks.Select(x => x.ServiceName).ToArray());
+        var taskNames = string.Join(", ", healthChecks.Select(x =>  $"'{x.ServiceName}'").ToArray());
         var cacheError = _fixture.Create<CacheProviderError>();
         var options = new HealthCheckServiceOptions()
         {
