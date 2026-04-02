@@ -30,7 +30,7 @@ public class TokenProviderTests
         _options.Value.Returns(options);
         var userName = _fixture.Create<string>();
         var userId = Guid.NewGuid();
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         _timeProvider.GetUtcNow().Returns(now);
         var tokenProvider = new TokenProvider(_options, _timeProvider);
 

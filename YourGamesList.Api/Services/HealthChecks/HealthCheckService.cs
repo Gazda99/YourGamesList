@@ -49,34 +49,50 @@ public class HealthCheckService : IHealthCheckService
         var readFromCache = await _cacheProvider.Get<HealthCheckResponse>(HealthCheckCacheKey);
         if (readFromCache.IsSuccess)
         {
-            _logger.LogInformation("Returning cached value for health check");
+            _logger.LogInformation("Returning cached value for health check.");
             return readFromCache.Value;
         }
 
-        var cts = new CancellationTokenSource();
-        var timeout = TimeSpan.FromSeconds(_options.Value.TimeoutInSeconds);
-        cts.CancelAfter(timeout);
-        var token = cts.Token;
+        HealthCheckResponse response;
 
-        var tasks = _healthChecks.Select(x => x.CheckHealth(token)).ToArray();
-        var taskNames = string.Join(", ", _healthChecks.Select(x => x.ServiceName).ToArray());
-
-        _logger.LogInformation($"Starting health check with a timeout of {timeout.TotalSeconds} seconds for {tasks.Length} tasks: {taskNames}.");
-
-        var serviceStatuses = await Task.WhenAll(tasks);
-
-        var aggregatedStatus = AggregateStatus(serviceStatuses);
-
-        _logger.LogInformation($"Health check complete. Status: {aggregatedStatus}");
-
-        var response = new HealthCheckResponse()
+        if (!_healthChecks.Any())
         {
-            Services = serviceStatuses,
-            Status = aggregatedStatus,
-            CheckedAt = _timeProvider.GetUtcNow()
-        };
+            _logger.LogInformation("No health checks configured. Returning empty list with healthy status.");
+            response = new HealthCheckResponse()
+            {
+                Services = [],
+                Status = HealthCheckStatusDto.Healthy,
+                CheckedAt = _timeProvider.GetUtcNow()
+            };
+        }
+        else
+        {
+            var cts = new CancellationTokenSource();
+            var timeout = TimeSpan.FromSeconds(_options.Value.TimeoutInSeconds);
+            cts.CancelAfter(timeout);
+            var token = cts.Token;
+
+            var tasks = _healthChecks.Select(x => x.CheckHealth(token)).ToArray();
+            var taskNames = string.Join(", ", _healthChecks.Select(x => x.ServiceName).ToArray());
+
+            _logger.LogInformation($"Starting health check with a timeout of {timeout.TotalSeconds} seconds for {tasks.Length} tasks: {taskNames}.");
+
+            var serviceStatuses = await Task.WhenAll(tasks);
+
+            var aggregatedStatus = AggregateStatus(serviceStatuses);
+
+            _logger.LogInformation($"Health check complete. Status: {aggregatedStatus}");
+
+            response = new HealthCheckResponse()
+            {
+                Services = serviceStatuses,
+                Status = aggregatedStatus,
+                CheckedAt = _timeProvider.GetUtcNow()
+            };
+        }
 
         await _cacheProvider.Set(HealthCheckCacheKey, response, TimeSpan.FromSeconds(_options.Value.CacheDurationInSeconds));
+        _logger.LogInformation($"Health check status saved into cache for {_options.Value.CacheDurationInSeconds} seconds.");
 
         return response;
     }

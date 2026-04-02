@@ -7,5 +7,5 @@ namespace YourGamesList.Api.Services.HealthChecks;
 public interface IHealthCheck
 {
     public string ServiceName { get; }
-    Task<ServiceStatusDto> CheckHealth(CancellationToken cancellationToken);
+    Task<ServiceStatusDto> CheckHealth(CancellationToken cancellationToken = default);
 }

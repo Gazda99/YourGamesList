@@ -6,7 +6,6 @@ using AutoFixture;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using YourGamesList.Api.Model;
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Users;
 using YourGamesList.Api.Services.Users.Model;
@@ -28,8 +27,6 @@ public class UsersServiceTests : BaseTest
 
     private TestYglDbContextBuilder _yglDbContextBuilder;
     private IDbContextFactory<YglDbContext> _dbContextFactory;
-
-    private YglDbContext _yglDbContext;
 
     [SetUp]
     public void SetUp()
