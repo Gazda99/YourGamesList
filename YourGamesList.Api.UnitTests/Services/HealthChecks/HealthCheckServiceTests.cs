@@ -56,6 +56,44 @@ public class HealthCheckServiceTests
     }
 
     [Test]
+    public async Task CheckHealth_SemaphoreAlreadyOccupied_ReturnsAlreadyInProgressError()
+    {
+        //ARRANGE
+        var cacheError = _fixture.Create<CacheProviderError>();
+        var options = _fixture.Create<HealthCheckServiceOptions>();
+        _options.Value.Returns(options);
+        _cacheProvider.Get<HealthCheckResponse>(Arg.Any<string>()).Returns(CombinedResult<HealthCheckResponse, CacheProviderError>.Failure(cacheError));
+
+        var healthCheck = Substitute.For<IHealthCheck>();
+        healthCheck.CheckHealth(Arg.Any<CancellationToken>()).Returns(async x =>
+        {
+            await Task.Delay(500);
+            return new ServiceStatusDto() { Name = "SlowCheck", Status = HealthCheckStatusDto.Healthy };
+        });
+
+        var healthChecks = new List<IHealthCheck>() { healthCheck };
+        var healthCheckService = new HealthCheckService(_logger, _options, _cacheProvider, _timeProvider, healthChecks);
+
+        //ACT
+        var firstCheckTask = healthCheckService.CheckHealth();
+
+        await Task.Delay(50);
+
+        var secondCheckResult = await healthCheckService.CheckHealth();
+
+        var firstCheckResult = await firstCheckTask;
+
+        //ASSERT
+        // First check should succeed
+        Assert.That(firstCheckResult.IsSuccess, Is.True);
+
+        // Second check should fail with AlreadyInProgress error
+        Assert.That(secondCheckResult.IsSuccess, Is.False);
+        Assert.That(secondCheckResult.Error, Is.EqualTo(HealthCheckError.AlreadyInProgress));
+        _logger.ReceivedLog(LogLevel.Information, "Health check already in progress.");
+    }
+
+    [Test]
     public async Task CheckHealth_NoHealthChecksConfigured_ReturnsHealthyWithEmptyServices()
     {
         //ARRANGE
@@ -93,7 +131,7 @@ public class HealthCheckServiceTests
     {
         //ARRANGE
         var n = healthChecks.Count;
-        var taskNames = string.Join(", ", healthChecks.Select(x =>  $"'{x.ServiceName}'").ToArray());
+        var taskNames = string.Join(", ", healthChecks.Select(x => $"'{x.ServiceName}'").ToArray());
         var cacheError = _fixture.Create<CacheProviderError>();
         var options = new HealthCheckServiceOptions()
         {
