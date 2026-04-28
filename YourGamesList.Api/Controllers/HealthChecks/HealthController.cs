@@ -31,13 +31,20 @@ public class HealthController : YourGamesListBaseController
     {
         var res = await _healthCheckService.CheckHealth();
 
-        if (res.Status == HealthCheckStatusDto.Unhealthy)
+        if (res.IsFailure)
         {
-            return Result(StatusCodes.Status503ServiceUnavailable, res);
+            return Result(StatusCodes.Status429TooManyRequests);
+        }
+
+        var healthStatus = res.Value;
+
+        if (healthStatus.Status == HealthCheckStatusDto.Unhealthy)
+        {
+            return Result(StatusCodes.Status503ServiceUnavailable, healthStatus);
         }
         else
         {
-            return Result(StatusCodes.Status200OK, res);
+            return Result(StatusCodes.Status200OK, healthStatus);
         }
     }
 }

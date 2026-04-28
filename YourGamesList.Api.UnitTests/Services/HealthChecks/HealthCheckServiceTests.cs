@@ -50,7 +50,8 @@ public class HealthCheckServiceTests
         var res = await healthCheckService.CheckHealth();
 
         //ASSERT
-        Assert.That(res, Is.EqualTo(expectedResponse));
+        Assert.That(res.IsSuccess, Is.True);
+        Assert.That(res.Value, Is.EqualTo(expectedResponse));
         _logger.ReceivedLog(LogLevel.Information, "Returning cached value for health check.");
     }
 
@@ -75,8 +76,9 @@ public class HealthCheckServiceTests
         var res = await healthCheckService.CheckHealth();
 
         //ASSERT
-        Assert.That(res.Status, Is.EqualTo(HealthCheckStatusDto.Healthy));
-        Assert.That(res.CheckedAt, Is.EqualTo(now));
+        Assert.That(res.IsSuccess, Is.True);
+        Assert.That(res.Value.Status, Is.EqualTo(HealthCheckStatusDto.Healthy));
+        Assert.That(res.Value.CheckedAt, Is.EqualTo(now));
         _logger.NotReceivedLog(LogLevel.Information, "Returning cached value for health check.");
         _logger.ReceivedLog(LogLevel.Information, "No health checks configured. Returning empty list with healthy status.");
         _logger.ReceivedLog(LogLevel.Information, $"Health check status saved into cache for {_options.Value.CacheDurationInSeconds} seconds.");
@@ -108,8 +110,9 @@ public class HealthCheckServiceTests
         var res = await healthCheckService.CheckHealth();
 
         //ASSERT
-        Assert.That(res.Status, Is.EqualTo(aggregatedStatus));
-        Assert.That(res.CheckedAt, Is.EqualTo(now));
+        Assert.That(res.IsSuccess, Is.True);
+        Assert.That(res.Value.Status, Is.EqualTo(aggregatedStatus));
+        Assert.That(res.Value.CheckedAt, Is.EqualTo(now));
         _logger.NotReceivedLog(LogLevel.Information, "Returning cached value for health check.");
         _logger.ReceivedLog(LogLevel.Information, $"Starting health check with a timeout of {options.TimeoutInSeconds} seconds for {n} tasks: {taskNames}.");
         _logger.ReceivedLog(LogLevel.Information, $"Health check complete. Status: {aggregatedStatus}");
