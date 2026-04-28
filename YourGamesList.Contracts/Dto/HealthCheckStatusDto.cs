@@ -7,6 +7,5 @@ public enum HealthCheckStatusDto
 {
     Healthy,
     Degraded,
-    Unhealthy,
-    HealthCheckNotCompleted
+    Unhealthy
 }

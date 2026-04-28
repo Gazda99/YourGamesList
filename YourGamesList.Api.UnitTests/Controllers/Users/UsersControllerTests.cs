@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using AutoFixture;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using YourGamesList.Api.Controllers;
 using YourGamesList.Api.Controllers.Users;
 using YourGamesList.Api.Model.Requests.Users;
-using YourGamesList.Api.Services;
 using YourGamesList.Api.Services.ModelMappers;
 using YourGamesList.Api.Services.Users;
 using YourGamesList.Api.Services.Users.Model;
@@ -17,7 +14,7 @@ using YourGamesList.Common;
 using YourGamesList.Contracts.Dto;
 using YourGamesList.TestsUtils;
 
-namespace YourGamesList.Api.UnitTests.Controllers;
+namespace YourGamesList.Api.UnitTests.Controllers.Users;
 
 public class UsersControllerTests : BaseTest
 {
