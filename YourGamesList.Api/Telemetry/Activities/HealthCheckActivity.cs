@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using YourGamesList.Contracts.Dto;
 
-namespace YourGamesList.Api.Telemetry;
+namespace YourGamesList.Api.Telemetry.Activities;
 
 public  class HealthCheckActivity : IDisposable
 {

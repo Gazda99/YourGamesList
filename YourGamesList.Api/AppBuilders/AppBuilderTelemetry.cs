@@ -6,7 +6,9 @@ using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using YourGamesList.Api.Services.Users;
 using YourGamesList.Api.Telemetry;
+using YourGamesList.Api.Telemetry.Activities;
 using YourGamesList.Api.Telemetry.Options;
 using YourGamesList.Common.Options.Validators;
 
@@ -59,6 +61,10 @@ public static partial class AppBuilder
                     o.ExportProcessorType = ExportProcessorType.Simple;
                 })
             );
+        
+        
+        services.AddSingleton<IUsersServiceTelemetry, UsersServiceTelemetry>();
+        
         return services;
     }
 }

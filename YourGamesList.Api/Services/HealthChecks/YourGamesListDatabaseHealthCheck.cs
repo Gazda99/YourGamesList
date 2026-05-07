@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using YourGamesList.Api.Telemetry;
+using YourGamesList.Api.Telemetry.Activities;
 using YourGamesList.Contracts.Dto;
 using YourGamesList.Database;
 

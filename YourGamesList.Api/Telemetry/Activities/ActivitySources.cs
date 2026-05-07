@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using OpenTelemetry.Trace;
 
-namespace YourGamesList.Api.Telemetry;
+namespace YourGamesList.Api.Telemetry.Activities;
 
 public static class ActivitySources
 {
