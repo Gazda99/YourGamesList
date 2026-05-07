@@ -1,22 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using NSubstitute;
 using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Model;
 using YourGamesList.Common;
 using YourGamesList.Database;
 using YourGamesList.Database.Entities;
-using YourGamesList.Database.Options;
 using YourGamesList.Database.TestUtils;
 using YourGamesList.TestsUtils;
 
@@ -33,8 +27,6 @@ public class UserManagerServiceTests
 
     private TestYglDbContextBuilder _yglDbContextBuilder;
     private IDbContextFactory<YglDbContext> _dbContextFactory;
-
-    private YglDbContext _yglDbContext;
 
     [SetUp]
     public void SetUp()

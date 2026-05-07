@@ -27,8 +27,6 @@ public class ListsServiceTests : BaseTest
     private TestYglDbContextBuilder _yglDbContextBuilder;
     private IDbContextFactory<YglDbContext> _dbContextFactory;
 
-    private YglDbContext _yglDbContext;
-
     [SetUp]
     public void SetUp()
     {

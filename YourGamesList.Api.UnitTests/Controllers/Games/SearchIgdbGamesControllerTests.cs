@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using YourGamesList.Api.Controllers;
 using YourGamesList.Api.Controllers.Games;
 using YourGamesList.Api.Model.Requests.SearchIgdbGames;
 using YourGamesList.Api.Services.Igdb;
@@ -13,7 +12,7 @@ using YourGamesList.Api.Services.Igdb.Model;
 using YourGamesList.Common;
 using YourGamesList.TestsUtils;
 
-namespace YourGamesList.Api.UnitTests.Controllers;
+namespace YourGamesList.Api.UnitTests.Controllers.Games;
 
 public class SearchIgdbGamesControllerTests
 {

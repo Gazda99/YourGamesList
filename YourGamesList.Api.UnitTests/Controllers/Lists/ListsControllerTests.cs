@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using YourGamesList.Api.Controllers;
 using YourGamesList.Api.Controllers.Lists;
 using YourGamesList.Api.Model.Requests.Lists;
 using YourGamesList.Api.Services.ModelMappers;
@@ -17,7 +16,7 @@ using YourGamesList.Common;
 using YourGamesList.Contracts.Dto;
 using YourGamesList.TestsUtils;
 
-namespace YourGamesList.Api.UnitTests.Controllers;
+namespace YourGamesList.Api.UnitTests.Controllers.Lists;
 
 public class ListsControllerTests : BaseTest
 {

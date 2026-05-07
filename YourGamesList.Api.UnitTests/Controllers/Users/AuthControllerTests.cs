@@ -14,7 +14,7 @@ using YourGamesList.Contracts.Requests.Users;
 using YourGamesList.Contracts.Responses.Users;
 using YourGamesList.TestsUtils;
 
-namespace YourGamesList.Api.UnitTests.Controllers;
+namespace YourGamesList.Api.UnitTests.Controllers.Users;
 
 public class AuthControllerTests
 {

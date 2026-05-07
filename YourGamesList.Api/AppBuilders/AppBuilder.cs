@@ -16,6 +16,8 @@ using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Options;
 using YourGamesList.Api.Services.CorrelationId;
 using YourGamesList.Api.Services.CorrelationId.Options;
+using YourGamesList.Api.Services.HealthChecks;
+using YourGamesList.Api.Services.HealthChecks.Options;
 using YourGamesList.Api.Services.Igdb;
 using YourGamesList.Api.Services.Igdb.Options;
 using YourGamesList.Api.Services.ModelMappers;
@@ -96,6 +98,8 @@ public static partial class AppBuilder
         builder.Services.AddScraper();
 
         builder.Services.AddYglServices();
+        
+        builder.Services.AddHealthChecks();
 
         var app = builder.Build();
         return app;
@@ -200,6 +204,16 @@ public static partial class AppBuilder
         services.AddScoped<IScraperService, ScraperService>();
         services.AddScoped<IBackgroundScraper, BackgroundScraper>();
 
+        return services;
+    }
+
+    private static IServiceCollection AddHealthChecks(this IServiceCollection services)
+    {
+        services.AddOptionsWithFluentValidation<HealthCheckServiceOptions, HealthCheckServiceOptionsValidator>(HealthCheckServiceOptions.SectionName);
+        
+        services.AddScoped<IHealthCheck, YourGamesListDatabaseHealthCheck>();
+        
+        services.AddScoped<IHealthCheckService, HealthCheckService>();
         return services;
     }
 }
