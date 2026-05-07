@@ -51,6 +51,7 @@ public static partial class AppBuilder
                 .AddAspNetCoreInstrumentation()
                 .AddRuntimeInstrumentation()
                 .AddHttpClientInstrumentation()
+                .AddYourGamesListMeters()
                 .AddOtlpExporter(o =>
                 {
                     o.Protocol = OtlpExportProtocol.HttpProtobuf;
@@ -59,6 +60,10 @@ public static partial class AppBuilder
                     o.ExportProcessorType = ExportProcessorType.Simple;
                 })
             );
+        
+        
+        services.AddSingleton<IUserManagerServiceTelemetry, UserManagerServiceTelemetry>();
+        
         return services;
     }
 }

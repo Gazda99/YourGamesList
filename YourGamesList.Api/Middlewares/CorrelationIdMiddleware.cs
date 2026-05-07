@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -40,6 +41,9 @@ public class CorrelationIdMiddleware
         {
             corId = _correlationIdProvider.GetCorrelationId();
         }
+
+        var activity = Activity.Current;
+        activity?.SetTag("correlation_id", corId);
 
         using (_logger.BeginScope(new Dictionary<string, object> { [LogProperties.CorrelationId] = corId }))
         {

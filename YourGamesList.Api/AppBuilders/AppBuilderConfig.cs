@@ -11,6 +11,8 @@ public static partial class AppBuilder
         const string envVariableName = "ENV";
         var env = Environment.GetEnvironmentVariable(envVariableName);
         env = env?.ToLower();
+        
+        Console.WriteLine($"Using environment {env}");
 
         builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
         builder.Configuration
