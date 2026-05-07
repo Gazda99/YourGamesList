@@ -2,9 +2,9 @@
 using System.Diagnostics;
 using YourGamesList.Contracts.Dto;
 
-namespace YourGamesList.Api.Telemetry.Activities;
+namespace YourGamesList.Api.Telemetry;
 
-public  class HealthCheckActivity : IDisposable
+public class HealthCheckActivity : IDisposable
 {
     private readonly Activity? _activity;
 

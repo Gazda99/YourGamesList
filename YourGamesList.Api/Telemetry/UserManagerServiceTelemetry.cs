@@ -11,7 +11,7 @@ public interface IUserManagerServiceTelemetry
 
 public class UserManagerServiceTelemetry : IUserManagerServiceTelemetry
 {
-    private const string MeterName = "YourGamesList.Api.UserManagerService";
+    private const string MeterName = MeterSources.UserManagerServiceTelemetryMeterName;
     private const string LoggingAttemptCounterName = "user_login_attempts";
     private const string SuccessFlagName = "success";
     private const string FailedLoginReasonName = "reason";

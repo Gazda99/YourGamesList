@@ -7,7 +7,6 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using YourGamesList.Api.Telemetry;
-using YourGamesList.Api.Telemetry.Activities;
 using YourGamesList.Api.Telemetry.Options;
 using YourGamesList.Common.Options.Validators;
 
@@ -52,6 +51,7 @@ public static partial class AppBuilder
                 .AddAspNetCoreInstrumentation()
                 .AddRuntimeInstrumentation()
                 .AddHttpClientInstrumentation()
+                .AddYourGamesListMeters()
                 .AddOtlpExporter(o =>
                 {
                     o.Protocol = OtlpExportProtocol.HttpProtobuf;

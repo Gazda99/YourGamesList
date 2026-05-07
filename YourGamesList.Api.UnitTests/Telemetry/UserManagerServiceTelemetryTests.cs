@@ -8,8 +8,8 @@ namespace YourGamesList.Api.UnitTests.Telemetry;
 
 public class UserManagerServiceTelemetryTests
 {
-    private const string MeterName = "YourGamesList.Api.UserManagerService";
-    private const string LoggingAttemptCounterName = "user_login_attempts";
+    private const string MeterName = MeterSources.UserManagerServiceTelemetryMeterName;
+    private const string LoggingAttemptCounterName = "ygl_user_login_attempts";
 
     private IFixture _fixture;
     private IMeterFactory _meterFactory;
