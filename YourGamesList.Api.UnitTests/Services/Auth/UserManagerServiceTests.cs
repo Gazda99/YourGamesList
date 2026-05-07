@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Model;
+using YourGamesList.Api.Telemetry;
 using YourGamesList.Common;
 using YourGamesList.Database;
 using YourGamesList.Database.Entities;
@@ -24,6 +25,7 @@ public class UserManagerServiceTests
     private IPasswordValidator _passwordValidator;
     private ITokenProvider _tokenProvider;
     private TimeProvider _timeProvider;
+    private IUserManagerServiceTelemetry _telemetry;
 
     private TestYglDbContextBuilder _yglDbContextBuilder;
     private IDbContextFactory<YglDbContext> _dbContextFactory;
@@ -37,6 +39,7 @@ public class UserManagerServiceTests
         _passwordValidator = Substitute.For<IPasswordValidator>();
         _tokenProvider = Substitute.For<ITokenProvider>();
         _timeProvider = Substitute.For<TimeProvider>();
+        _telemetry = Substitute.For<IUserManagerServiceTelemetry>();
 
         _yglDbContextBuilder = TestYglDbContextBuilder.Build();
         _dbContextFactory = Substitute.For<IDbContextFactory<YglDbContext>>();
@@ -57,7 +60,7 @@ public class UserManagerServiceTests
         _passwordHasher.HashPassword(password).Returns(hashedPassword);
         _timeProvider.GetUtcNow().Returns(now);
 
-        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider);
+        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider, _telemetry);
 
         //ACT
         var result = await userManagerService.RegisterUser(username, password);
@@ -90,7 +93,7 @@ public class UserManagerServiceTests
         //ARRANGE
         var username = string.Empty;
         var password = _fixture.Create<string>();
-        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider);
+        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider, _telemetry);
 
         //ACT
         var result = await userManagerService.RegisterUser(username, password);
@@ -107,7 +110,7 @@ public class UserManagerServiceTests
         //ARRANGE
         var username = _fixture.Create<string>();
         var password = string.Empty;
-        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider);
+        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider, _telemetry);
 
         //ACT
         var result = await userManagerService.RegisterUser(username, password);
@@ -137,7 +140,7 @@ public class UserManagerServiceTests
         };
         _yglDbContextBuilder.WithUserDbSet(users);
 
-        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider);
+        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider, _telemetry);
 
         //ACT
         var result = await userManagerService.RegisterUser(username, password);
@@ -157,7 +160,7 @@ public class UserManagerServiceTests
         var passwordValidationError = _fixture.Create<UserAuthError>();
         _passwordValidator.ValidatePassword(password).Returns(ErrorResult<UserAuthError>.Failure(passwordValidationError));
 
-        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider);
+        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider, _telemetry);
 
         //ACT
         var result = await userManagerService.RegisterUser(username, password);
@@ -200,7 +203,7 @@ public class UserManagerServiceTests
             }
         };
         _yglDbContextBuilder.WithUserDbSet(users);
-        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider);
+        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider, _telemetry);
 
         //ACT
         var result = await userManagerService.Login(username, password);
@@ -211,6 +214,7 @@ public class UserManagerServiceTests
         _passwordHasher.Received(1).HashPassword(password, Arg.Is<byte[]>(x => x.SequenceEqual(userSalt)));
         _tokenProvider.Received(1).CreateToken(username, id);
         _logger.ReceivedLog(LogLevel.Information, $"User with username '{username}' logged in successfully.");
+        _telemetry.Received(1).TrackSuccessfulLogin();
         var userAfterTest = _yglDbContextBuilder.Get().Users.FirstOrDefault(u => u.Id == id);
         Assert.That(userAfterTest, Is.Not.Null);
         Assert.That(userAfterTest.LastLoginDate, Is.EqualTo(now));
@@ -222,7 +226,7 @@ public class UserManagerServiceTests
         //ARRANGE
         var username = string.Empty;
         var password = _fixture.Create<string>();
-        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider);
+        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider, _telemetry);
 
         //ACT
         var result = await userManagerService.Login(username, password);
@@ -231,6 +235,7 @@ public class UserManagerServiceTests
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.Error, Is.EqualTo(UserAuthError.InvalidUsername));
         _logger.ReceivedLog(LogLevel.Information, "Username is null or empty.");
+        _telemetry.Received(1).TrackFailedLogin(nameof(UserAuthError.InvalidUsername));
     }
 
     [Test]
@@ -239,7 +244,7 @@ public class UserManagerServiceTests
         //ARRANGE
         var username = _fixture.Create<string>();
         var password = string.Empty;
-        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider);
+        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider, _telemetry);
 
         //ACT
         var result = await userManagerService.Login(username, password);
@@ -248,6 +253,7 @@ public class UserManagerServiceTests
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.Error, Is.EqualTo(UserAuthError.WrongPassword));
         _logger.ReceivedLog(LogLevel.Information, "Password is null or empty.");
+        _telemetry.Received(1).TrackFailedLogin(nameof(UserAuthError.WrongPassword));
     }
 
     [Test]
@@ -257,7 +263,7 @@ public class UserManagerServiceTests
         var username = _fixture.Create<string>();
         var password = _fixture.Create<string>();
         //Not settings up any users in the database
-        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider);
+        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider, _telemetry);
 
         //ACT
         var result = await userManagerService.Login(username, password);
@@ -266,6 +272,7 @@ public class UserManagerServiceTests
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.Error, Is.EqualTo(UserAuthError.NoUserFound));
         _logger.ReceivedLog(LogLevel.Information, $"User with the username '{username}' was not found.");
+        _telemetry.Received(1).TrackFailedLogin(nameof(UserAuthError.NoUserFound));
     }
 
     [Test]
@@ -291,7 +298,7 @@ public class UserManagerServiceTests
             }
         };
         _yglDbContextBuilder.WithUserDbSet(users);
-        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider);
+        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider, _telemetry);
 
         //ACT
         var result = await userManagerService.Login(username, password);
@@ -301,6 +308,7 @@ public class UserManagerServiceTests
         Assert.That(result.Error, Is.EqualTo(UserAuthError.WrongPassword));
         _passwordHasher.Received(1).HashPassword(password, Arg.Is<byte[]>(x => x.SequenceEqual(userSalt)));
         _logger.ReceivedLog(LogLevel.Information, $"Provided password for '{username}' was invalid.");
+        _telemetry.Received(1).TrackFailedLogin(nameof(UserAuthError.WrongPassword));
     }
 
     #endregion
@@ -330,7 +338,7 @@ public class UserManagerServiceTests
             }
         };
         _yglDbContextBuilder.WithUserDbSet(users);
-        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider);
+        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider, _telemetry);
 
         //ACT
         var result = await userManagerService.Delete(username, password);
@@ -351,7 +359,7 @@ public class UserManagerServiceTests
         //ARRANGE
         var username = string.Empty;
         var password = _fixture.Create<string>();
-        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider);
+        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider, _telemetry);
 
         //ACT
         var result = await userManagerService.Delete(username, password);
@@ -368,7 +376,7 @@ public class UserManagerServiceTests
         //ARRANGE
         var username = _fixture.Create<string>();
         var password = string.Empty;
-        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider);
+        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider, _telemetry);
 
         //ACT
         var result = await userManagerService.Delete(username, password);
@@ -386,7 +394,7 @@ public class UserManagerServiceTests
         var username = _fixture.Create<string>();
         var password = _fixture.Create<string>();
         //Not settings up any users in the database
-        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider);
+        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider, _telemetry);
 
         //ACT
         var result = await userManagerService.Delete(username, password);
@@ -420,7 +428,7 @@ public class UserManagerServiceTests
             }
         };
         _yglDbContextBuilder.WithUserDbSet(users);
-        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider);
+        var userManagerService = new UserManagerService(_logger, _passwordHasher, _passwordValidator, _tokenProvider, _dbContextFactory, _timeProvider, _telemetry);
 
         //ACT
         var result = await userManagerService.Delete(username, password);

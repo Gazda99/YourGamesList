@@ -1,30 +1,26 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
-namespace YourGamesList.Api.Services.Users;
+namespace YourGamesList.Api.Telemetry;
 
-public interface IUsersServiceTelemetry
+public interface IUserManagerServiceTelemetry
 {
     void TrackSuccessfulLogin();
     void TrackFailedLogin(string failedLoginReason);
 }
 
-public class UsersServiceTelemetry : IUsersServiceTelemetry
+public class UserManagerServiceTelemetry : IUserManagerServiceTelemetry
 {
+    private const string MeterName = "YourGamesList.Api.UserManagerService";
     private const string LoggingAttemptCounterName = "user_login_attempts";
     private const string SuccessFlagName = "success";
     private const string FailedLoginReasonName = "reason";
 
     private readonly Counter<long> _loginAttemptCounter;
 
-
-    public UsersServiceTelemetry(IMeterFactory meterFactory)
+    public UserManagerServiceTelemetry(IMeterFactory meterFactory)
     {
-        var meter = meterFactory.Create(new MeterOptions("Ygl.OrderService")
-        {
-            Version = "1.0.0"
-        });
+        var meter = meterFactory.Create(new MeterOptions(MeterName));
 
         _loginAttemptCounter = meter.CreateCounter<long>(LoggingAttemptCounterName, description: "Counts the number of login attempts");
     }

@@ -6,7 +6,6 @@ using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using YourGamesList.Api.Services.Users;
 using YourGamesList.Api.Telemetry;
 using YourGamesList.Api.Telemetry.Activities;
 using YourGamesList.Api.Telemetry.Options;
@@ -63,7 +62,7 @@ public static partial class AppBuilder
             );
         
         
-        services.AddSingleton<IUsersServiceTelemetry, UsersServiceTelemetry>();
+        services.AddSingleton<IUserManagerServiceTelemetry, UserManagerServiceTelemetry>();
         
         return services;
     }

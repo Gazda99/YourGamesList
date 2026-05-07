@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Services.Auth.Model;
-using YourGamesList.Api.Services.Users;
+using YourGamesList.Api.Telemetry;
 using YourGamesList.Common;
 using YourGamesList.Database;
 using YourGamesList.Database.Entities;
@@ -24,7 +24,7 @@ public class UserManagerService : IUserManagerService
     private readonly IPasswordValidator _passwordValidator;
     private readonly ITokenProvider _tokenProvider;
     private readonly TimeProvider _timeProvider;
-    private readonly IUsersServiceTelemetry _usersServiceTelemetry;
+    private readonly IUserManagerServiceTelemetry _userManagerServiceTelemetry;
     private readonly YglDbContext _yglDbContext;
 
     public UserManagerService(
@@ -34,7 +34,7 @@ public class UserManagerService : IUserManagerService
         ITokenProvider tokenProvider,
         IDbContextFactory<YglDbContext> yglDbContext,
         TimeProvider timeProvider,
-        IUsersServiceTelemetry usersServiceTelemetry
+        IUserManagerServiceTelemetry userManagerServiceTelemetry
     )
     {
         _logger = logger;
@@ -42,7 +42,7 @@ public class UserManagerService : IUserManagerService
         _passwordValidator = passwordValidator;
         _tokenProvider = tokenProvider;
         _timeProvider = timeProvider;
-        _usersServiceTelemetry = usersServiceTelemetry;
+        _userManagerServiceTelemetry = userManagerServiceTelemetry;
         _yglDbContext = yglDbContext.CreateDbContext();
     }
 
@@ -114,14 +114,14 @@ public class UserManagerService : IUserManagerService
         if (string.IsNullOrWhiteSpace(username))
         {
             _logger.LogInformation("Username is null or empty.");
-            _usersServiceTelemetry.TrackFailedLogin(nameof(UserAuthError.InvalidUsername));
+            _userManagerServiceTelemetry.TrackFailedLogin(nameof(UserAuthError.InvalidUsername));
             return CombinedResult<string, UserAuthError>.Failure(UserAuthError.InvalidUsername);
         }
 
         if (string.IsNullOrWhiteSpace(password))
         {
             _logger.LogInformation("Password is null or empty.");
-            _usersServiceTelemetry.TrackFailedLogin(nameof(UserAuthError.WrongPassword));
+            _userManagerServiceTelemetry.TrackFailedLogin(nameof(UserAuthError.WrongPassword));
             return CombinedResult<string, UserAuthError>.Failure(UserAuthError.WrongPassword);
         }
 
@@ -129,7 +129,7 @@ public class UserManagerService : IUserManagerService
         if (findUser.IsFailure)
         {
             _logger.LogInformation($"User with the username '{username}' was not found.");
-            _usersServiceTelemetry.TrackFailedLogin(nameof(UserAuthError.NoUserFound));
+            _userManagerServiceTelemetry.TrackFailedLogin(nameof(UserAuthError.NoUserFound));
             return CombinedResult<string, UserAuthError>.Failure(UserAuthError.NoUserFound);
         }
 
@@ -138,7 +138,7 @@ public class UserManagerService : IUserManagerService
         if (!string.Equals(user.PasswordHash, _passwordHasher.HashPassword(password, user.Salt).HashString))
         {
             _logger.LogInformation($"Provided password for '{username}' was invalid.");
-            _usersServiceTelemetry.TrackFailedLogin(nameof(UserAuthError.WrongPassword));
+            _userManagerServiceTelemetry.TrackFailedLogin(nameof(UserAuthError.WrongPassword));
             return CombinedResult<string, UserAuthError>.Failure(UserAuthError.WrongPassword);
         }
 
@@ -149,7 +149,7 @@ public class UserManagerService : IUserManagerService
         user.LastLoginDate = now;
         await _yglDbContext.SaveChangesAsync();
 
-        _usersServiceTelemetry.TrackSuccessfulLogin();
+        _userManagerServiceTelemetry.TrackSuccessfulLogin();
         return CombinedResult<string, UserAuthError>.Success(token);
     }
 
