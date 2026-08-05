@@ -3,6 +3,7 @@ using AutoFixture;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Controllers;
+using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.Controllers;
 
@@ -28,6 +29,6 @@ public class TestControllerTests
         await controller.Get();
 
         //ASSERT
-        Assert.Pass();
+        _logger.ReceivedLog(LogLevel.Information, "Hello from TestController");
     }
 }
