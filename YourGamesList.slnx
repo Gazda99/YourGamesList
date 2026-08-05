@@ -4,4 +4,5 @@
     <Project Path="YourGamesList.TestsUtils/YourGamesList.TestsUtils.csproj" />
   </Folder>
   <Project Path="YourGamesList.Api/YourGamesList.Api.csproj" />
+  <Project Path="YourGamesList.Common/YourGamesList.Common.csproj" />
 </Solution>
