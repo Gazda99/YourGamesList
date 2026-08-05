@@ -35,7 +35,6 @@ public static class LogHelper
         ReceivedLog(logger, 1, level, messagePredicate, ex);
     }
 
-
     public static void NotReceivedLog(this ILogger logger, LogLevel level, Predicate<string> messagePredicate, Predicate<Exception?>? ex = null)
     {
         ReceivedLog(logger, 0, level, messagePredicate, ex);
