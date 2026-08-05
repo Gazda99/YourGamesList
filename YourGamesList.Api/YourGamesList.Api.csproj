@@ -19,4 +19,8 @@
     <ItemGroup>
         <InternalsVisibleTo Include="$(AssemblyName).UnitTests"/>
     </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\YourGamesList.Common\YourGamesList.Common.csproj" />
+    </ItemGroup>
 </Project>

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using YourGamesList.Api.Services.CorrelationId;
 
 namespace YourGamesList.Api;
 
@@ -24,6 +25,9 @@ public static class AppBuilder
         builder.Services.AddControllers();
         builder.Services.AddOpenApi();
         builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
+        
+        //YGL services
+        builder.Services.AddSingleton<ICorrelationIdProvider, CorrelationIdProvider>();
 
         var app = builder.Build();
         return app;
