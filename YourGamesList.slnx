@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="YourGamesList.Api.UnitTests/YourGamesList.Api.UnitTests.csproj" />
+    <Project Path="YourGamesList.TestsUtils/YourGamesList.TestsUtils.csproj" />
+  </Folder>
+  <Project Path="YourGamesList.Api/YourGamesList.Api.csproj" />
+</Solution>
