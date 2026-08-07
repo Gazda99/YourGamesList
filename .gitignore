@@ -10,10 +10,6 @@ dotnet-tools.json
 ###########################
 # Custom files
 
-
-
-scripts/
-
 TODOs
 launchSettings.json
 appsettings.json
@@ -24,6 +20,8 @@ HttpTester.http
 testSettings.json
 http-client.env.json
 integration_tests_log.txt
+TIPS/
+Tips/
 
 .idea/
 ###########################
