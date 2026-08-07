@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using YourGamesList.Api.Services.CorrelationId;
+using YourGamesList.Api.Telemetry;
+using YourGamesList.Common.Telemetry;
 
 namespace YourGamesList.Api;
 
@@ -25,6 +27,9 @@ public static class AppBuilder
         builder.Services.AddControllers();
         builder.Services.AddOpenApi();
         builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
+        
+        //Telemetry
+        builder.Services.AddTelemetry(builder.Configuration, TelemetryCustomConfiguration.CustomTracerConfiguration, TelemetryCustomConfiguration.CustomMeterConfiguration);
         
         //YGL services
         builder.Services.AddSingleton<ICorrelationIdProvider, CorrelationIdProvider>();
