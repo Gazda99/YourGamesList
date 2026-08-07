@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Net.Http;
 
-namespace YourGamesList.Api.Telemetry;
+namespace YourGamesList.Common.Telemetry;
 
 public static class TelemetryConfigurator
 {

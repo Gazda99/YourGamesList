@@ -4,16 +4,10 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OpenTelemetry.Exporter;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
 using Serilog;
 using YourGamesList.Api.Services.CorrelationId;
 using YourGamesList.Api.Telemetry;
-using YourGamesList.Api.Telemetry.Options;
-using YourGamesList.Common.Options.Validators;
-using ExportProcessorType = OpenTelemetry.ExportProcessorType;
+using YourGamesList.Common.Telemetry;
 
 namespace YourGamesList.Api;
 
@@ -35,60 +29,13 @@ public static class AppBuilder
         builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
         
         //Telemetry
-        builder.Services.AddTelemetry(builder.Configuration);
+        builder.Services.AddTelemetry(builder.Configuration, TelemetryCustomConfiguration.CustomTracerConfiguration, TelemetryCustomConfiguration.CustomMeterConfiguration);
         
         //YGL services
         builder.Services.AddSingleton<ICorrelationIdProvider, CorrelationIdProvider>();
 
         var app = builder.Build();
         return app;
-    }
-    private static IServiceCollection AddTelemetry(this IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddOptionsWithFluentValidation<TelemetryConfigurationOptions, TelemetryConfigurationOptionsValidator>(
-            TelemetryConfigurationOptions.SectionName);
-
-        var telemetryOptions = configuration.GetSection(TelemetryConfigurationOptions.SectionName).Get<TelemetryConfigurationOptions>()
-                               ?? throw new InvalidOperationException("TelemetryConfiguration section is missing or invalid");
-
-        var serviceName = telemetryOptions.ServiceName;
-        var tracesEndpoint = telemetryOptions.OtlpExporterTracesEndpoint;
-        var metricsEndpoint = telemetryOptions.OtlpExporterMetricsEndpoint;
-        var tracesStreamName = telemetryOptions.TracesStreamName;
-        var authHeader = $"Authorization=Basic {telemetryOptions.ApiSecret}";
-
-        services.AddOpenTelemetry()
-            .ConfigureResource(builder => builder.AddService(serviceName: serviceName, serviceInstanceId: Environment.MachineName))
-            .WithTracing(builder => builder
-                .AddHttpClientInstrumentation(options =>
-                {
-                    options.EnrichWithHttpRequestMessage += TelemetryConfigurator.HttpClientInstrumentationTracingEnrichWithBetterDisplayName;
-                })
-                .AddAspNetCoreInstrumentation()
-                .AddYourGamesListActivitySources()
-                .AddOtlpExporter(o =>
-                {
-                    o.Protocol = OtlpExportProtocol.HttpProtobuf;
-                    o.Endpoint = new Uri(tracesEndpoint);
-                    o.Headers = $"{authHeader},stream-name={tracesStreamName}";
-                    o.ExportProcessorType = ExportProcessorType.Simple;
-                })
-            )
-            .WithMetrics(builder => builder
-                .AddAspNetCoreInstrumentation()
-                .AddRuntimeInstrumentation()
-                .AddHttpClientInstrumentation()
-                .AddYourGamesListMeters()
-                .AddOtlpExporter(o =>
-                {
-                    o.Protocol = OtlpExportProtocol.HttpProtobuf;
-                    o.Endpoint = new Uri(metricsEndpoint);
-                    o.Headers = $"{authHeader}";
-                    o.ExportProcessorType = ExportProcessorType.Simple;
-                })
-            );
-
-        return services;
     }
 
     private static ConfigureHostBuilder AddLogger(this ConfigureHostBuilder host, IConfiguration configuration)

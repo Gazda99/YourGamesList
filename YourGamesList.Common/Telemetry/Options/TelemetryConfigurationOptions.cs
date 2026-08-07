@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 
-namespace YourGamesList.Api.Telemetry.Options;
+namespace YourGamesList.Common.Telemetry.Options;
 
 public class TelemetryConfigurationOptions
 {
