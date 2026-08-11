@@ -4,9 +4,15 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Refit;
 using Serilog;
 using YourGamesList.Api.Services.CorrelationId;
+using YourGamesList.Api.Services.Twitch;
+using YourGamesList.Api.Services.Twitch.Options;
 using YourGamesList.Api.Telemetry;
+using YourGamesList.Common.Http;
+using YourGamesList.Common.Options.Validators;
 using YourGamesList.Common.Telemetry;
 
 namespace YourGamesList.Api;
@@ -33,9 +39,29 @@ public static class AppBuilder
         
         //YGL services
         builder.Services.AddSingleton<ICorrelationIdProvider, CorrelationIdProvider>();
+        
+        //Other services
+        builder.Services.AddTwitchAuthService();
 
         var app = builder.Build();
         return app;
+    }
+
+    private static IServiceCollection AddTwitchAuthService(this IServiceCollection services)
+    {
+        services.AddOptionsWithFluentValidation<TwitchAuthHttpClientOptions, TwitchAuthHttpClientOptionsValidator>(TwitchAuthHttpClientOptions.SectionName);
+        services.AddOptionsWithFluentValidation<TwitchAuthOptions, TwitchAuthOptionsValidator>(TwitchAuthOptions.SectionName);
+
+        services.AddRefitGeneratedClient<ITwitchAuthApi>().ConfigureHttpClient((provider, client) =>
+            {
+                var options = provider.GetRequiredService<IOptions<TwitchAuthHttpClientOptions>>();
+                client.BaseAddress = new Uri(options.Value.BaseAddress);
+            })
+            .ConfigureLogging();
+        
+        services.AddScoped<ITwitchAuthService, TwitchAuthService>();
+        
+        return services;
     }
 
     private static ConfigureHostBuilder AddLogger(this ConfigureHostBuilder host, IConfiguration configuration)
