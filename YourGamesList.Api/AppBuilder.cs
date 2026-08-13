@@ -8,9 +8,12 @@ using Microsoft.Extensions.Options;
 using Refit;
 using Serilog;
 using YourGamesList.Api.Services.CorrelationId;
+using YourGamesList.Api.Services.Igdb;
+using YourGamesList.Api.Services.Igdb.Options;
 using YourGamesList.Api.Services.Twitch;
 using YourGamesList.Api.Services.Twitch.Options;
 using YourGamesList.Api.Telemetry;
+using YourGamesList.Common.Caching;
 using YourGamesList.Common.Http;
 using YourGamesList.Common.Options.Validators;
 using YourGamesList.Common.Telemetry;
@@ -32,7 +35,9 @@ public static class AppBuilder
 
         builder.Services.AddControllers();
         builder.Services.AddOpenApi();
+        
         builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
+        builder.Services.AddMemoryCache();
         
         //Telemetry
         builder.Services.AddTelemetry(builder.Configuration, TelemetryCustomConfiguration.CustomTracerConfiguration, TelemetryCustomConfiguration.CustomMeterConfiguration);
@@ -41,10 +46,30 @@ public static class AppBuilder
         builder.Services.AddSingleton<ICorrelationIdProvider, CorrelationIdProvider>();
         
         //Other services
+        builder.Services.AddKeyedSingleton<ICacheProvider, InMemoryCacheProvider>(CacheProviders.InMemory);
+        
+        
         builder.Services.AddTwitchAuthService();
+        builder.Services.AddIgdbService();
 
         var app = builder.Build();
         return app;
+    }
+
+    private static IServiceCollection AddIgdbService(this IServiceCollection services)
+    {
+        services.AddOptionsWithFluentValidation<IgdbHttpClientOptions, IgdbHttpClientOptionsValidator>(IgdbHttpClientOptions.SectionName);
+
+        services.AddRefitGeneratedClient<IIgdbApi>().ConfigureHttpClient((provider, client) =>
+            {
+                var options = provider.GetRequiredService<IOptions<IgdbHttpClientOptions>>();
+                client.BaseAddress = new Uri(options.Value.BaseAddress);
+            })
+            .ConfigureLogging();
+
+        services.AddScoped<IIgdbService, IgdbService>();
+
+        return services;
     }
 
     private static IServiceCollection AddTwitchAuthService(this IServiceCollection services)
@@ -59,7 +84,13 @@ public static class AppBuilder
             })
             .ConfigureLogging();
         
-        services.AddScoped<ITwitchAuthService, TwitchAuthService>();
+        services.AddScoped<TwitchAuthService>();
+        services.AddScoped<ITwitchAuthService>(x =>
+            new TwitchAuthServiceWithCaching(
+                x.GetRequiredService<ILogger<TwitchAuthServiceWithCaching>>(),
+                x.GetRequiredKeyedService<ICacheProvider>(CacheProviders.InMemory),
+                x.GetRequiredService<TwitchAuthService>()
+            ));
         
         return services;
     }
