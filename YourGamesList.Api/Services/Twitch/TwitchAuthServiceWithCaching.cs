@@ -21,7 +21,6 @@ public class TwitchAuthServiceWithCaching : ITwitchAuthService
 
     public TwitchAuthServiceWithCaching(
         ILogger<TwitchAuthServiceWithCaching> logger,
-        [FromKeyedServices(CacheProviders.InMemory)]
         ICacheProvider cacheProvider,
         ITwitchAuthService innerService
     )
