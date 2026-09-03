@@ -6,6 +6,7 @@ public class IgdbGame
 {
     [JsonPropertyName("id")] public long Id { get; init; }
 
+    [JsonPropertyName("cover")] public IgdbCover Cover { get; init; } = new IgdbCover();
     [JsonPropertyName("first_release_date")] public long FirstReleaseDate { get; init; }
     [JsonPropertyName("game_type")] public IgdbGameType GameType { get; init; } = new IgdbGameType();
     [JsonPropertyName("genres")] public IgdbGenre[] Genres { get; init; } = [];

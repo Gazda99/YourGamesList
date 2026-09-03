@@ -12,7 +12,21 @@ namespace YourGamesList.Api.UnitTests.Services.Igdb;
 
 public class IgdbGamesServiceTests
 {
-    private const string RequestGameFields = "first_release_date,game_type.type,genres.name,id,name,rating_count,storyline,summary,themes.name";
+    private const string RequestGameFields = """
+                                             cover.id,
+                                             cover.image_id,
+                                             cover.image_type.name,
+                                             cover.url,
+                                             first_release_date,
+                                             game_type.type,
+                                             genres.name,
+                                             id,
+                                             name,
+                                             rating_count,
+                                             storyline,
+                                             summary,
+                                             themes.name;
+                                             """;
 
     private IFixture _fixture;
     private ILogger<IgdbGamesService> _logger;
