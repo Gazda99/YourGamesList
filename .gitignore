@@ -22,6 +22,7 @@ http-client.env.json
 integration_tests_log.txt
 TIPS/
 Tips/
+/YourGamesList.Api/Controllers/TestController.cs
 
 .idea/
 ###########################

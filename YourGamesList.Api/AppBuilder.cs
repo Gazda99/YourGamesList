@@ -68,6 +68,7 @@ public static class AppBuilder
             .ConfigureLogging();
 
         services.AddScoped<IIgdbService, IgdbService>();
+        services.AddScoped<IIgdbGamesService, IgdbGamesService>();
 
         return services;
     }
