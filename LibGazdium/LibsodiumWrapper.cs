@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace GazdaSodium;
+namespace LibGazdium;
 
 /// <summary>
 /// Wrapper around Libsodium C library

@@ -1,4 +1,4 @@
-﻿namespace GazdaSodium;
+﻿namespace LibGazdium;
 
 public static partial class LibsodiumWrapper
 {

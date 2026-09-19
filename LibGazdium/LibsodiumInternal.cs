@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace GazdaSodium;
+namespace LibGazdium;
 
 internal static partial class LibsodiumInternal
 {

@@ -10,7 +10,7 @@ public class IgdbHttpClientOptions
     public required string BaseAddress { get; init; }
 }
 
-internal sealed class IgdbHttpClientOptionsValidator : AbstractValidator<IgdbHttpClientOptions>
+public class IgdbHttpClientOptionsValidator : AbstractValidator<IgdbHttpClientOptions>
 {
     public IgdbHttpClientOptionsValidator()
     {

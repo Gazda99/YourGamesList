@@ -22,7 +22,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\GazdaSodium\GazdaSodium.csproj" />
+      <ProjectReference Include="..\LibGazdium\LibGazdium.csproj" />
       <ProjectReference Include="..\YourGamesList.Common\YourGamesList.Common.csproj" />
     </ItemGroup>
 </Project>

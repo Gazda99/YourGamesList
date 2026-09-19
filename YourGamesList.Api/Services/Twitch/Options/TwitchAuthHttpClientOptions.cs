@@ -10,7 +10,7 @@ public class TwitchAuthHttpClientOptions
     public required string BaseAddress { get; init; }
 }
 
-internal sealed class TwitchAuthHttpClientOptionsValidator : AbstractValidator<TwitchAuthHttpClientOptions>
+public class TwitchAuthHttpClientOptionsValidator : AbstractValidator<TwitchAuthHttpClientOptions>
 {
     public TwitchAuthHttpClientOptionsValidator()
     {
