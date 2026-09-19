@@ -10,7 +10,7 @@ public class TwitchAuthOptions
     public required string ClientSecret { get; init; }
 }
 
-internal sealed class TwitchAuthOptionsValidator : AbstractValidator<TwitchAuthOptions>
+public class TwitchAuthOptionsValidator : AbstractValidator<TwitchAuthOptions>
 {
     public TwitchAuthOptionsValidator()
     {

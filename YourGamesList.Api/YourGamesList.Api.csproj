@@ -24,5 +24,6 @@
     <ItemGroup>
         <ProjectReference Include="..\YourGamesList.Common\YourGamesList.Common.csproj"/>
         <ProjectReference Include="..\YourGamesList.Database\YourGamesList.Database.csproj"/>
+        <ProjectReference Include="..\LibGazdium\LibGazdium.csproj"/>
     </ItemGroup>
 </Project>
