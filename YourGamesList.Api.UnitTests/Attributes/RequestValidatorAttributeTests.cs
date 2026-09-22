@@ -1,152 +1,194 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using AutoFixture;
 using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Attributes;
 using YourGamesList.Api.Services.ControllerModelValidators;
-using YourGamesList.Contracts.Responses;
-using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.Attributes;
 
+[TestFixture]
 public class RequestValidatorAttributeTests
 {
     private IFixture _fixture;
-    private ILogger<RequestValidatorAttribute<TestClass>> _logger;
-    private IBaseRequestValidator _baseRequestValidator;
-    private IValidator<TestClass> _validator;
+    private IServiceProvider _serviceProvider;
+    private IValidationFailedResultFactory _resultFactory;
+    private IValidator _validator;
+    private RequestValidatorAttribute _attribute;
 
     [SetUp]
     public void Setup()
     {
         _fixture = new Fixture();
-        _logger = Substitute.For<ILogger<RequestValidatorAttribute<TestClass>>>();
-        _baseRequestValidator = Substitute.For<IBaseRequestValidator>();
-        _validator = Substitute.For<IValidator<TestClass>>();
+        _serviceProvider = Substitute.For<IServiceProvider>();
+        _resultFactory = Substitute.For<IValidationFailedResultFactory>();
+        _validator = Substitute.For<IValidator>();
+
+        // Setup the DI container to return our mocked factory
+        _serviceProvider
+            .GetService(typeof(IValidationFailedResultFactory))
+            .Returns(_resultFactory);
+
+        _attribute = new RequestValidatorAttribute();
     }
 
     [Test]
-    public void Validate_OnMissingArgument_ReturnsCorrectErrorResponse()
+    public async Task OnActionExecutionAsync_WhenNoValidatorRegisteredForArgument_CallsNextAndDoesNotSetResult()
     {
-        //ARRANGE
+        // ARRANGE
         var argumentName = _fixture.Create<string>();
+        var requestObject = new TestClass();
 
         var filterContext = PrepareActionExecutingContext(
-            // Won't be able to TryGetValue argumentName
-            actionArguments: new Dictionary<string, object>()
-        );
-        var requestValidatorAttribute = new RequestValidatorAttribute<TestClass>(_logger, _baseRequestValidator, _validator, argumentName);
-
-        //ACT
-        requestValidatorAttribute.OnActionExecuting(filterContext);
-
-        //ASSERT
-
-        Assert.That(filterContext.Result, Is.TypeOf<ObjectResult>());
-        var objectResult = filterContext.Result as ObjectResult;
-        Assert.That(objectResult, Is.Not.Null);
-        Assert.That(objectResult.StatusCode, Is.EqualTo(400));
-        Assert.That(objectResult.Value, Is.TypeOf<ErrorResponse>());
-        var errorResponse = objectResult.Value as ErrorResponse;
-        Assert.That(errorResponse.Errors, Contains.Item("Missing required arguments."));
-        _logger.ReceivedLog(LogLevel.Warning, $"{argumentName} argument is missing from request.");
-    }
-
-    [Test]
-    public void Validate_OnWrongArgumentType_ReturnsCorrectErrorResponse()
-    {
-        //ARRANGE
-        var argumentName = _fixture.Create<string>();
-
-        var filterContext = PrepareActionExecutingContext(
-            // Wrong type of argument TestClass != OtherTestClass
-            actionArguments: new Dictionary<string, object>()
+            actionArguments: new Dictionary<string, object>
             {
-                { argumentName, _fixture.Create<OtherTestClass>() }
+                { argumentName, requestObject }
             }
         );
-        var requestValidatorAttribute = new RequestValidatorAttribute<TestClass>(_logger, _baseRequestValidator, _validator, argumentName);
 
-        //ACT
-        requestValidatorAttribute.OnActionExecuting(filterContext);
+        _serviceProvider.GetService(typeof(IValidator<TestClass>)).Returns(null);
 
-        //ASSERT
+        var nextCalled = false;
+        ActionExecutionDelegate next = () =>
+        {
+            nextCalled = true;
+            return Task.FromResult<ActionExecutedContext>(null!);
+        };
 
-        Assert.That(filterContext.Result, Is.TypeOf<ObjectResult>());
-        var objectResult = filterContext.Result as ObjectResult;
-        Assert.That(objectResult, Is.Not.Null);
-        Assert.That(objectResult.StatusCode, Is.EqualTo(400));
-        Assert.That(objectResult.Value, Is.TypeOf<ErrorResponse>());
-        var errorResponse = objectResult.Value as ErrorResponse;
-        Assert.That(errorResponse.Errors, Contains.Item("Missing required arguments."));
-        _logger.ReceivedLog(LogLevel.Warning, $"{argumentName} argument is null or not of type '{typeof(TestClass)}'.");
-    }
+        // ACT
+        await _attribute.OnActionExecutionAsync(filterContext, next);
 
-    [Test]
-    public void Validate_OnValidateTrue_DoesNothing()
-    {
-        //ARRANGE
-        var argumentName = _fixture.Create<string>();
-        var request = _fixture.Create<TestClass>();
-        var filterContext = PrepareActionExecutingContext(
-            actionArguments: new Dictionary<string, object>()
-            {
-                { argumentName, request }
-            }
-        );
-        _baseRequestValidator.Validate(_validator, request, out _).Returns(true);
-
-        var requestValidatorAttribute = new RequestValidatorAttribute<TestClass>(_logger, _baseRequestValidator, _validator, argumentName);
-
-        //ACT
-        requestValidatorAttribute.OnActionExecuting(filterContext);
-
-        //ASSERT
+        // ASSERT
+        Assert.That(nextCalled, Is.True);
         Assert.That(filterContext.Result, Is.Null);
     }
 
     [Test]
-    public void Validate_OnValidateFalse_ReturnsValidationResult()
+    public async Task OnActionExecutionAsync_WhenValidationPasses_CallsNextAndDoesNotSetResult()
     {
-        //ARRANGE
+        // ARRANGE
         var argumentName = _fixture.Create<string>();
-        var request = _fixture.Create<TestClass>();
+        var requestObject = new TestClass();
+
         var filterContext = PrepareActionExecutingContext(
-            actionArguments: new Dictionary<string, object>()
+            actionArguments: new Dictionary<string, object>
             {
-                { argumentName, request }
+                { argumentName, requestObject }
+            }
+        );
+        
+        var validResult = new ValidationResult();
+        _validator.ValidateAsync(Arg.Any<IValidationContext>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(validResult));
+        
+        _serviceProvider.GetService(typeof(IValidator<TestClass>)).Returns(_validator);
+
+        var nextCalled = false;
+        ActionExecutionDelegate next = () =>
+        {
+            nextCalled = true;
+            return Task.FromResult<ActionExecutedContext>(null!);
+        };
+
+        // ACT
+        await _attribute.OnActionExecutionAsync(filterContext, next);
+
+        // ASSERT
+        Assert.That(nextCalled, Is.True);
+        Assert.That(filterContext.Result, Is.Null);
+    }
+
+    [Test]
+    public async Task OnActionExecutionAsync_WhenValidationFails_ShortCircuitsAndSetsResult()
+    {
+        // ARRANGE
+        var argumentName = _fixture.Create<string>();
+        var requestObject = new TestClass();
+
+        var filterContext = PrepareActionExecutingContext(
+            actionArguments: new Dictionary<string, object>
+            {
+                { argumentName, requestObject }
+            }
+        );
+        
+        var invalidResult = new ValidationResult(new[] { new ValidationFailure("Property", "Error") });
+        _validator.ValidateAsync(Arg.Any<IValidationContext>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(invalidResult));
+
+        _serviceProvider.GetService(typeof(IValidator<TestClass>)).Returns(_validator);
+
+        var expectedFailedResult = new BadRequestObjectResult("Validation Failed");
+        _resultFactory.CreateValidationFailedResult(invalidResult).Returns(expectedFailedResult);
+
+        var nextCalled = false;
+        ActionExecutionDelegate next = () =>
+        {
+            nextCalled = true;
+            return Task.FromResult<ActionExecutedContext>(null!);
+        };
+
+        // ACT
+        await _attribute.OnActionExecutionAsync(filterContext, next);
+
+        // ASSERT
+        Assert.That(nextCalled, Is.False, "The 'next' delegate should not be called when validation fails.");
+        Assert.That(filterContext.Result, Is.EqualTo(expectedFailedResult));
+    }
+
+    [Test]
+    public async Task OnActionExecutionAsync_WithMultipleArguments_ValidatesSuccessfully()
+    {
+        // ARRANGE
+        var filterContext = PrepareActionExecutingContext(
+            actionArguments: new Dictionary<string, object>
+            {
+                { "id", Guid.NewGuid() },
+                { "request", new TestClass() }
             }
         );
 
-        var validationFailedResult = _fixture.Create<ObjectResult>();
+        _serviceProvider.GetService(typeof(IValidator<Guid>)).Returns(null);
 
-        _baseRequestValidator.Validate(_validator, request, out Arg.Any<IActionResult?>()).Returns(x =>
+        var validResult = new ValidationResult();
+        _validator.ValidateAsync(Arg.Any<IValidationContext>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(validResult));
+
+        _serviceProvider.GetService(typeof(IValidator<TestClass>)).Returns(_validator);
+
+        var nextCalled = false;
+        ActionExecutionDelegate next = () =>
         {
-            x[2] = validationFailedResult;
-            return false;
-        });
+            nextCalled = true;
+            return Task.FromResult<ActionExecutedContext>(null!);
+        };
 
-        var requestValidatorAttribute = new RequestValidatorAttribute<TestClass>(_logger, _baseRequestValidator, _validator, argumentName);
+        // ACT
+        await _attribute.OnActionExecutionAsync(filterContext, next);
 
-        //ACT
-        requestValidatorAttribute.OnActionExecuting(filterContext);
-
-        //ASSERT
-        Assert.That(filterContext.Result, Is.EqualTo(validationFailedResult));
+        // ASSERT
+        Assert.That(nextCalled, Is.True);
+        Assert.That(filterContext.Result, Is.Null);
+        
+        await _validator.Received(1).ValidateAsync(Arg.Any<IValidationContext>(), Arg.Any<CancellationToken>());
     }
 
     private ActionExecutingContext PrepareActionExecutingContext(
         Dictionary<string, object>? actionArguments = null
     )
     {
-        var httpContext = new DefaultHttpContext();
-        var routeData = _fixture.Create<RouteData>();
+        var httpContext = new DefaultHttpContext
+        {
+            RequestServices = _serviceProvider // Inject the mocked ServiceProvider
+        };
+
+        var routeData = new RouteData();
         var actionDescriptor = new ActionDescriptor();
 
         var context = new ActionExecutingContext(
@@ -164,10 +206,6 @@ public class RequestValidatorAttributeTests
     }
 
     public class TestClass
-    {
-    }
-
-    public class OtherTestClass
     {
     }
 }

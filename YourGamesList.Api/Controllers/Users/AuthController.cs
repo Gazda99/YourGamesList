@@ -9,6 +9,7 @@ namespace YourGamesList.Api.Controllers.Users;
 
 [ApiController]
 [Route("users/auth")]
+[RequestValidator]
 public class AuthController : YourGamesListBaseController
 {
     private readonly ILogger<AuthController> _logger;
@@ -19,7 +20,6 @@ public class AuthController : YourGamesListBaseController
     }
 
     [HttpPost("register")]
-    [TypeFilter(typeof(RequestValidatorAttribute<UserRegisterRequest>), Arguments = ["userRegisterRequest"])]
     public async Task<IActionResult> Register(UserRegisterRequest userRegisterRequest)
     {
         _logger.LogInformation("Requested to register user {Username}", userRegisterRequest.Body.Username);
@@ -28,7 +28,6 @@ public class AuthController : YourGamesListBaseController
     }
 
     [HttpPost("login")]
-    [TypeFilter(typeof(RequestValidatorAttribute<UserLoginRequest>), Arguments = ["userLoginRequest"])]
     public async Task<IActionResult> Login(UserLoginRequest userLoginRequest)
     {
         _logger.LogInformation("Requested to login user {Username}", userLoginRequest.Body.Username);
@@ -37,7 +36,6 @@ public class AuthController : YourGamesListBaseController
     }
 
     [HttpDelete("delete")]
-    [TypeFilter(typeof(RequestValidatorAttribute<UserDeleteRequest>), Arguments = ["userDeleteRequest"])]
     public async Task<IActionResult> Delete(UserDeleteRequest userDeleteRequest)
     {
         _logger.LogInformation("Requested to delete user {Username}", userDeleteRequest.Body.Username);
