@@ -33,7 +33,6 @@ public class RequestValidatorAttributeTests
         _resultFactory = Substitute.For<IValidationFailedResultFactory>();
         _validator = Substitute.For<IValidator>();
 
-        // Setup the DI container to return our mocked factory
         _serviceProvider
             .GetService(typeof(IValidationFailedResultFactory))
             .Returns(_resultFactory);
@@ -44,7 +43,7 @@ public class RequestValidatorAttributeTests
     [Test]
     public async Task OnActionExecutionAsync_WhenNoValidatorRegisteredForArgument_CallsNextAndDoesNotSetResult()
     {
-        // ARRANGE
+        //ARRANGE
         var argumentName = _fixture.Create<string>();
         var requestObject = new TestClass();
 
@@ -64,10 +63,10 @@ public class RequestValidatorAttributeTests
             return Task.FromResult<ActionExecutedContext>(null!);
         };
 
-        // ACT
+        //ACT
         await _attribute.OnActionExecutionAsync(filterContext, next);
 
-        // ASSERT
+        //ASSERT
         Assert.That(nextCalled, Is.True);
         Assert.That(filterContext.Result, Is.Null);
     }
@@ -75,7 +74,7 @@ public class RequestValidatorAttributeTests
     [Test]
     public async Task OnActionExecutionAsync_WhenValidationPasses_CallsNextAndDoesNotSetResult()
     {
-        // ARRANGE
+        //ARRANGE
         var argumentName = _fixture.Create<string>();
         var requestObject = new TestClass();
 
@@ -98,10 +97,10 @@ public class RequestValidatorAttributeTests
             return Task.FromResult<ActionExecutedContext>(null!);
         };
 
-        // ACT
+        //ACT
         await _attribute.OnActionExecutionAsync(filterContext, next);
 
-        // ASSERT
+        //ASSERT
         Assert.That(nextCalled, Is.True);
         Assert.That(filterContext.Result, Is.Null);
     }
@@ -109,7 +108,7 @@ public class RequestValidatorAttributeTests
     [Test]
     public async Task OnActionExecutionAsync_WhenValidationFails_ShortCircuitsAndSetsResult()
     {
-        // ARRANGE
+        //ARRANGE
         var argumentName = _fixture.Create<string>();
         var requestObject = new TestClass();
 
@@ -120,7 +119,7 @@ public class RequestValidatorAttributeTests
             }
         );
         
-        var invalidResult = new ValidationResult(new[] { new ValidationFailure("Property", "Error") });
+        var invalidResult = new ValidationResult([new ValidationFailure("Property", "Error")]);
         _validator.ValidateAsync(Arg.Any<IValidationContext>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(invalidResult));
 
         _serviceProvider.GetService(typeof(IValidator<TestClass>)).Returns(_validator);
@@ -135,10 +134,10 @@ public class RequestValidatorAttributeTests
             return Task.FromResult<ActionExecutedContext>(null!);
         };
 
-        // ACT
+        //ACT
         await _attribute.OnActionExecutionAsync(filterContext, next);
 
-        // ASSERT
+        //ASSERT
         Assert.That(nextCalled, Is.False, "The 'next' delegate should not be called when validation fails.");
         Assert.That(filterContext.Result, Is.EqualTo(expectedFailedResult));
     }
@@ -146,7 +145,7 @@ public class RequestValidatorAttributeTests
     [Test]
     public async Task OnActionExecutionAsync_WithMultipleArguments_ValidatesSuccessfully()
     {
-        // ARRANGE
+        //ARRANGE
         var filterContext = PrepareActionExecutingContext(
             actionArguments: new Dictionary<string, object>
             {
@@ -169,10 +168,10 @@ public class RequestValidatorAttributeTests
             return Task.FromResult<ActionExecutedContext>(null!);
         };
 
-        // ACT
+        //ACT
         await _attribute.OnActionExecutionAsync(filterContext, next);
 
-        // ASSERT
+        //ASSERT
         Assert.That(nextCalled, Is.True);
         Assert.That(filterContext.Result, Is.Null);
         
@@ -185,7 +184,7 @@ public class RequestValidatorAttributeTests
     {
         var httpContext = new DefaultHttpContext
         {
-            RequestServices = _serviceProvider // Inject the mocked ServiceProvider
+            RequestServices = _serviceProvider
         };
 
         var routeData = new RouteData();
@@ -198,7 +197,7 @@ public class RequestValidatorAttributeTests
                 actionDescriptor
             ),
             filters: new List<IFilterMetadata>(),
-            actionArguments: actionArguments ?? new Dictionary<string, object>(),
+            actionArguments: actionArguments ?? new Dictionary<string, object?>(),
             controller: new object()
         );
 
