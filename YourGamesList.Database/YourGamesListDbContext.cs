@@ -47,6 +47,7 @@ public class YourGamesListDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(x => x.Username).IsUnique();
+            entity.HasIndex(x => x.Email).IsUnique();
         });
 
         modelBuilder.Entity<GamesList>(entity =>
