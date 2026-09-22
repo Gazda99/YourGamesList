@@ -15,7 +15,7 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
     {
         RuleFor(x => x.Body)
             .NotEmpty()
-            .WithMessage("Request body is required.")
+            .WithMessage("Proper request body is required.")
             .ChildRules(body =>
             {
                 body.RuleFor(x => x.Username)

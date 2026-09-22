@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Attributes;
 using YourGamesList.Api.Services.ControllerModelValidators;
@@ -19,11 +20,47 @@ namespace YourGamesList.Api.UnitTests.Attributes;
 [TestFixture]
 public class RequestValidatorAttributeTests
 {
+    [Test]
+    public void IsReusable_ReturnsFalse()
+    {
+        // ARRANGE
+        var attribute = new RequestValidatorAttribute();
+
+        // ACT & ASSERT
+        Assert.That(attribute.IsReusable, Is.False);
+    }
+
+    [Test]
+    public void CreateInstance_ReturnsValidateRequestFilter()
+    {
+        // ARRANGE
+        var attribute = new RequestValidatorAttribute();
+        var serviceProvider = Substitute.For<IServiceProvider>();
+        var resultFactory = Substitute.For<IValidationFailedResultFactory>();
+        var logger = Substitute.For<ILogger<ValidateRequestFilter>>();
+
+        // ActivatorUtilities needs the service provider to resolve the constructor dependency
+        serviceProvider.GetService(typeof(IValidationFailedResultFactory)).Returns(resultFactory);
+        serviceProvider.GetService(typeof(ILogger<ValidateRequestFilter>)).Returns(logger);
+
+        // ACT
+        var instance = attribute.CreateInstance(serviceProvider);
+
+        // ASSERT
+        Assert.That(instance, Is.Not.Null);
+        Assert.That(instance, Is.TypeOf<ValidateRequestFilter>());
+    }
+}
+
+[TestFixture]
+public class ValidateRequestFilterTests
+{
     private IFixture _fixture;
     private IServiceProvider _serviceProvider;
     private IValidationFailedResultFactory _resultFactory;
+    private ILogger<ValidateRequestFilter> _logger;
     private IValidator _validator;
-    private RequestValidatorAttribute _attribute;
+    private ValidateRequestFilter _filter;
 
     [SetUp]
     public void Setup()
@@ -32,12 +69,9 @@ public class RequestValidatorAttributeTests
         _serviceProvider = Substitute.For<IServiceProvider>();
         _resultFactory = Substitute.For<IValidationFailedResultFactory>();
         _validator = Substitute.For<IValidator>();
+        _logger = Substitute.For<ILogger<ValidateRequestFilter>>();
 
-        _serviceProvider
-            .GetService(typeof(IValidationFailedResultFactory))
-            .Returns(_resultFactory);
-
-        _attribute = new RequestValidatorAttribute();
+        _filter = new ValidateRequestFilter(_logger, _resultFactory);
     }
 
     [Test]
@@ -64,7 +98,7 @@ public class RequestValidatorAttributeTests
         };
 
         //ACT
-        await _attribute.OnActionExecutionAsync(filterContext, next);
+        await _filter.OnActionExecutionAsync(filterContext, next);
 
         //ASSERT
         Assert.That(nextCalled, Is.True);
@@ -84,10 +118,10 @@ public class RequestValidatorAttributeTests
                 { argumentName, requestObject }
             }
         );
-        
+
         var validResult = new ValidationResult();
         _validator.ValidateAsync(Arg.Any<IValidationContext>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(validResult));
-        
+
         _serviceProvider.GetService(typeof(IValidator<TestClass>)).Returns(_validator);
 
         var nextCalled = false;
@@ -98,7 +132,7 @@ public class RequestValidatorAttributeTests
         };
 
         //ACT
-        await _attribute.OnActionExecutionAsync(filterContext, next);
+        await _filter.OnActionExecutionAsync(filterContext, next);
 
         //ASSERT
         Assert.That(nextCalled, Is.True);
@@ -118,7 +152,7 @@ public class RequestValidatorAttributeTests
                 { argumentName, requestObject }
             }
         );
-        
+
         var invalidResult = new ValidationResult([new ValidationFailure("Property", "Error")]);
         _validator.ValidateAsync(Arg.Any<IValidationContext>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(invalidResult));
 
@@ -135,7 +169,7 @@ public class RequestValidatorAttributeTests
         };
 
         //ACT
-        await _attribute.OnActionExecutionAsync(filterContext, next);
+        await _filter.OnActionExecutionAsync(filterContext, next);
 
         //ASSERT
         Assert.That(nextCalled, Is.False, "The 'next' delegate should not be called when validation fails.");
@@ -169,12 +203,12 @@ public class RequestValidatorAttributeTests
         };
 
         //ACT
-        await _attribute.OnActionExecutionAsync(filterContext, next);
+        await _filter.OnActionExecutionAsync(filterContext, next);
 
         //ASSERT
         Assert.That(nextCalled, Is.True);
         Assert.That(filterContext.Result, Is.Null);
-        
+
         await _validator.Received(1).ValidateAsync(Arg.Any<IValidationContext>(), Arg.Any<CancellationToken>());
     }
 
@@ -197,7 +231,7 @@ public class RequestValidatorAttributeTests
                 actionDescriptor
             ),
             filters: new List<IFilterMetadata>(),
-            actionArguments: actionArguments ?? new Dictionary<string, object?>(),
+            actionArguments: actionArguments ?? new Dictionary<string, object>(),
             controller: new object()
         );
 
