@@ -17,7 +17,7 @@ public class GamesList
     [StringLength(50)] public required string Name { get; set; }
 
     public Guid UserId { get; set; }
-    public User User { get; set; } = null!;
+    public virtual User User { get; set; } = null!;
 
-    public ICollection<GamesListEntry> GameListEntries { get; } = new List<GamesListEntry>();
+    public virtual ICollection<GamesListEntry> GameListEntries { get; } = [];
 }

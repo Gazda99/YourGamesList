@@ -14,6 +14,7 @@ public class YourGamesListDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<GamesList> GamesLists { get; set; }
     public DbSet<GamesListEntry> GameListEntries { get; set; }
+    public DbSet<OwnershipInfo> OwnershipInfos { get; set; }
 
     public YourGamesListDbContext(IOptions<YourGamesListDatabaseOptions> options)
     {
@@ -58,7 +59,20 @@ public class YourGamesListDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
-        modelBuilder.Entity<GamesListEntry>(entity => { entity.HasKey(x => x.Id); });
+        modelBuilder.Entity<GamesListEntry>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.HasMany(x => x.OwnershipInfo)
+                .WithOne(x => x.GameListEntry)
+                .HasForeignKey(x => x.GameListEntryId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        modelBuilder.Entity<OwnershipInfo>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+        });
 
         base.OnModelCreating(modelBuilder);
     }

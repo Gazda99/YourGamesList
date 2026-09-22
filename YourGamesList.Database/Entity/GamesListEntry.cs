@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace YourGamesList.Database.Entity;
@@ -16,5 +17,7 @@ public class GamesListEntry
     public byte? Rating { get; set; }
 
     public Guid GamesListId { get; set; }
-    public GamesList GamesList { get; } = null!;
+    public virtual GamesList GamesList { get; } = null!;
+
+    public virtual ICollection<OwnershipInfo> OwnershipInfo { get; } = [];
 }

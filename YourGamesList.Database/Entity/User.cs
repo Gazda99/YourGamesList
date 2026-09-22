@@ -12,6 +12,7 @@ public class User
     public DateTimeOffset? ModifiedAt { get; set; }
 
     public required DateTimeOffset DateOfBirth { get; set; }
+    [StringLength(512)] public string? Description { get; set; }
     [StringLength(256)] public required string Email { get; set; }
     public DateTimeOffset? LastLoginDate { get; set; }
 
@@ -23,5 +24,5 @@ public class User
 
     [StringLength(64)] public required string Username { get; set; }
 
-    public ICollection<GamesList> GamesLists { get; } = [];
+    public virtual ICollection<GamesList> GamesLists { get; } = [];
 }
