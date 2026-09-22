@@ -11,9 +11,9 @@ public class Program
     public static void Main(string[] args)
     {
         var app = AppBuilder.GetApp(args);
-        
+
         app.UseMiddleware<CorrelationIdMiddleware>();
-        
+
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
@@ -24,6 +24,8 @@ public class Program
 
         app.UseAuthentication();
         app.UseAuthorization();
+
+        app.UseMiddleware<ExceptionMiddleware>();
 
         app.MapControllers();
 
