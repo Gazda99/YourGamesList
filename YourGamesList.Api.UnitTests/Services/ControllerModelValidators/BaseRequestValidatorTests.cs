@@ -9,7 +9,7 @@ using NSubstitute;
 using YourGamesList.Api.Services.ControllerModelValidators;
 using YourGamesList.TestsUtils;
 
-namespace YourGamesList.Api.UnitTests.ControllerModelValidators;
+namespace YourGamesList.Api.UnitTests.Services.ControllerModelValidators;
 
 public class BaseRequestValidatorTests
 {

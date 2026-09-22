@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using YourGamesList.Api.Services.ControllerModelValidators;
 using YourGamesList.Contracts.Responses;
 
-namespace YourGamesList.Api.UnitTests.ControllerModelValidators;
+namespace YourGamesList.Api.UnitTests.Services.ControllerModelValidators;
 
 public class ValidationFailedResultFactoryTests
 {
