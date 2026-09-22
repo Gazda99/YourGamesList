@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Net;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace YourGamesList.Api.Controllers;
@@ -13,5 +14,12 @@ public class YourGamesListBaseController : ControllerBase
         {
             StatusCode = statusCode
         };
+    }
+
+    [NonAction]
+    [ApiExplorerSettings(IgnoreApi = true)]
+    protected static IActionResult Result([ActionResultStatusCode] HttpStatusCode statusCode, [ActionResultObjectValue] object? value = null)
+    {
+        return Result((int) statusCode, value);
     }
 }

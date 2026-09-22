@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Refit;
 using Serilog;
+using YourGamesList.Api.Model.Requests.Users;
+using YourGamesList.Api.Services.ControllerModelValidators;
 using YourGamesList.Api.Services.CorrelationId;
 using YourGamesList.Api.Services.Igdb;
 using YourGamesList.Api.Services.Igdb.Options;
@@ -37,6 +41,11 @@ public static class AppBuilder
 
         builder.Services.AddControllers();
         builder.Services.AddOpenApi();
+        
+        builder.Services.Configure<ApiBehaviorOptions>(options =>
+        {
+            options.SuppressModelStateInvalidFilter = true;
+        });
 
         builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
         builder.Services.AddMemoryCache();
@@ -49,6 +58,8 @@ public static class AppBuilder
         builder.Services.AddSingleton<ICorrelationIdProvider, CorrelationIdProvider>();
 
         //Other services
+        builder.Services.AddRequestModelValidators();
+
         builder.Services.AddKeyedSingleton<ICacheProvider, InMemoryCacheProvider>(CacheProviders.InMemory);
 
 
@@ -103,8 +114,26 @@ public static class AppBuilder
     private static IServiceCollection AddYourGamesListDatabase(this IServiceCollection services)
     {
         services.AddOptionsWithFluentValidation<YourGamesListDatabaseOptions, YourGamesListDatabaseOptionsValidator>(YourGamesListDatabaseOptions.SectionName);
-      
+
         services.AddDbContextFactory<YourGamesListDbContext>();
+        return services;
+    }
+
+    private static IServiceCollection AddRequestModelValidators(this IServiceCollection services)
+    {
+        //Essentials
+        services
+            .AddScoped<IBaseRequestValidator, BaseRequestValidator>()
+            .AddScoped<IValidationFailedResultFactory, ValidationFailedResultFactory>()
+            ;
+
+        //Auth controller validators
+        services
+            .AddScoped<IValidator<UserRegisterRequest>, UserRegisterRequestValidator>()
+            .AddScoped<IValidator<UserLoginRequest>, UserLoginRequestValidator>()
+            .AddScoped<IValidator<UserDeleteRequest>, UserDeleteRequestValidator>()
+            ;
+
         return services;
     }
 

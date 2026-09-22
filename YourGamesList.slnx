@@ -8,4 +8,5 @@
   <Project Path="YourGamesList.Api/YourGamesList.Api.csproj" />
   <Project Path="YourGamesList.Common/YourGamesList.Common.csproj" />
   <Project Path="YourGamesList.Database/YourGamesList.Database.csproj" />
+  <Project Path="YourGamesList.Contracts/YourGamesList.Contracts.csproj" />
 </Solution>
