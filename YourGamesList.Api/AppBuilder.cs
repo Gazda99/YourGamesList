@@ -17,6 +17,8 @@ using YourGamesList.Common.Caching;
 using YourGamesList.Common.Http;
 using YourGamesList.Common.Options.Validators;
 using YourGamesList.Common.Telemetry;
+using YourGamesList.Database;
+using YourGamesList.Database.Options;
 
 namespace YourGamesList.Api;
 
@@ -35,22 +37,24 @@ public static class AppBuilder
 
         builder.Services.AddControllers();
         builder.Services.AddOpenApi();
-        
+
         builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
         builder.Services.AddMemoryCache();
-        
+
         //Telemetry
         builder.Services.AddTelemetry(builder.Configuration, TelemetryCustomConfiguration.CustomTracerConfiguration, TelemetryCustomConfiguration.CustomMeterConfiguration);
-        
+
         //YGL services
+        builder.Services.AddYourGamesListDatabase();
         builder.Services.AddSingleton<ICorrelationIdProvider, CorrelationIdProvider>();
-        
+
         //Other services
         builder.Services.AddKeyedSingleton<ICacheProvider, InMemoryCacheProvider>(CacheProviders.InMemory);
-        
-        
+
+
         builder.Services.AddTwitchAuthService();
         builder.Services.AddIgdbService();
+
 
         var app = builder.Build();
         return app;
@@ -84,7 +88,7 @@ public static class AppBuilder
                 client.BaseAddress = new Uri(options.Value.BaseAddress);
             })
             .ConfigureLogging();
-        
+
         services.AddScoped<TwitchAuthService>();
         services.AddScoped<ITwitchAuthService>(x =>
             new TwitchAuthServiceWithCaching(
@@ -92,7 +96,15 @@ public static class AppBuilder
                 x.GetRequiredKeyedService<ICacheProvider>(CacheProviders.InMemory),
                 x.GetRequiredService<TwitchAuthService>()
             ));
-        
+
+        return services;
+    }
+
+    private static IServiceCollection AddYourGamesListDatabase(this IServiceCollection services)
+    {
+        services.AddOptionsWithFluentValidation<YourGamesListDatabaseOptions, YourGamesListDatabaseOptionsValidator>(YourGamesListDatabaseOptions.SectionName);
+      
+        services.AddDbContextFactory<YourGamesListDbContext>();
         return services;
     }
 
