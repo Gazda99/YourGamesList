@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -23,11 +22,18 @@ public class ExceptionMiddleware
         {
             await _next(context);
         }
+        catch (UnauthorizedAccessException exception)
+        {
+            _logger.LogInformation(exception, "Unauthorized access exception during executing {RequestPath}", context.Request.Path.Value);
+            var response = context.Response;
+            response.StatusCode = StatusCodes.Status401Unauthorized;
+            await response.WriteAsync(string.Empty);
+        }
         catch (Exception exception)
         {
-            _logger.LogError(exception, $"Unhandled exception during executing '{context.Request.Path.Value}'");
+            _logger.LogError(exception, "Unhandled exception during executing {RequestPath}", context.Request.Path.Value);
             var response = context.Response;
-            response.StatusCode = (int) HttpStatusCode.InternalServerError;
+            response.StatusCode = StatusCodes.Status500InternalServerError;
             await response.WriteAsync(string.Empty);
             return;
         }

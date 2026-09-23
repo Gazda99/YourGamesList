@@ -23,8 +23,8 @@ public class Program
         app.UseHttpsRedirection();
 
         app.UseAuthentication();
+        app.UseMiddleware<UserInformationLoggingMiddleware>();
         app.UseAuthorization();
-
         app.UseMiddleware<ExceptionMiddleware>();
 
         app.MapControllers();

@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Refit;
 using Serilog;
 using YourGamesList.Api.Model.Requests.Users;
+using YourGamesList.Api.ModelBinders;
+using YourGamesList.Api.Services.Auth.Options;
 using YourGamesList.Api.Services.ControllerModelValidators;
 using YourGamesList.Api.Services.CorrelationId;
 using YourGamesList.Api.Services.Igdb;
@@ -39,14 +44,29 @@ public static class AppBuilder
         builder.Logging.ClearProviders();
         builder.Host.AddLogger(builder.Configuration);
 
-        builder.Services.AddControllers();
-        builder.Services.AddOpenApi();
+        builder.Services.AddControllers(options => { options.ModelBinderProviders.Insert(0, new UserInformationTokenModelBinderProvider()); });
+        
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
+        {
+            o.MapInboundClaims = false;
+            o.RequireHttpsMetadata = false;
+            o.TokenValidationParameters = new TokenValidationParameters()
+            {
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                    builder.Configuration[$"{TokenAuthOptions.SectionName}:{nameof(TokenAuthOptions.JwtSecret)}"] ??
+                    throw new NullReferenceException("JwtSecret is not set in appsettings"))),
+                ValidIssuer = builder.Configuration[$"{TokenAuthOptions.SectionName}:{nameof(TokenAuthOptions.Issuer)}"],
+                ValidateAudience = false
+            };
+        });
         
         builder.Services.Configure<ApiBehaviorOptions>(options =>
         {
             options.SuppressModelStateInvalidFilter = true;
         });
 
+        builder.Services.AddOpenApi();
+        
         builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
         builder.Services.AddMemoryCache();
 

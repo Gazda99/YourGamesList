@@ -23,30 +23,29 @@ public class RequestValidatorAttributeTests
     [Test]
     public void IsReusable_ReturnsFalse()
     {
-        // ARRANGE
+        //ARRANGE
         var attribute = new RequestValidatorAttribute();
 
-        // ACT & ASSERT
+        //ACT & ASSERT
         Assert.That(attribute.IsReusable, Is.False);
     }
 
     [Test]
     public void CreateInstance_ReturnsValidateRequestFilter()
     {
-        // ARRANGE
+        //ARRANGE
         var attribute = new RequestValidatorAttribute();
         var serviceProvider = Substitute.For<IServiceProvider>();
         var resultFactory = Substitute.For<IValidationFailedResultFactory>();
         var logger = Substitute.For<ILogger<ValidateRequestFilter>>();
 
-        // ActivatorUtilities needs the service provider to resolve the constructor dependency
         serviceProvider.GetService(typeof(IValidationFailedResultFactory)).Returns(resultFactory);
         serviceProvider.GetService(typeof(ILogger<ValidateRequestFilter>)).Returns(logger);
 
-        // ACT
+        //ACT
         var instance = attribute.CreateInstance(serviceProvider);
 
-        // ASSERT
+        //ASSERT
         Assert.That(instance, Is.Not.Null);
         Assert.That(instance, Is.TypeOf<ValidateRequestFilter>());
     }
