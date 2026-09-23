@@ -22,7 +22,8 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     .NotEmpty();
 
                 body.RuleFor(x => x.Email)
-                    .NotEmpty();
+                    .NotEmpty()
+                    .EmailAddress();
 
                 body.RuleFor(x => x.Password)
                     .NotEmpty();
