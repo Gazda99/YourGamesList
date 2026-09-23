@@ -22,6 +22,7 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     .NotEmpty();
 
                 body.RuleFor(x => x.Email)
+                    .Cascade(CascadeMode.Stop)
                     .NotEmpty()
                     .EmailAddress();
 
