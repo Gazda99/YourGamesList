@@ -96,13 +96,15 @@ public static class AppBuilder
         });
         
         services.AddOptionsWithFluentValidation<TokenAuthOptions, TokenAuthOptionsValidator>(TokenAuthOptions.SectionName);
-        services.AddOptionsWithFluentValidation<PasswordValidatorOptions, PasswordValidatorOptionsValidator>(PasswordValidatorOptions.SectionName);
+        services.AddOptionsWithFluentValidation<UserValuesValidatorOptions, PasswordValidatorOptionsValidator>(UserValuesValidatorOptions.SectionName);
 
         services.AddSingleton<ITokenProvider, UserInformationTokenProvider>();
-        services.AddSingleton<IPasswordValidator, PasswordValidator>();
+        services.AddSingleton<IUserValuesValidator, UserValuesValidator>();
         services.AddSingleton<ISodiumInitializer, SodiumInitializer>();
         services.AddSingleton<IPasswordHasher, LibSodiumPasswordHasher>();
 
+        services.AddScoped<IUserManagerService, UserManagerService>();
+        
         return services;
     }
 

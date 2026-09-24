@@ -2,15 +2,15 @@
 
 namespace YourGamesList.Api.Services.Auth.Options;
 
-public class PasswordValidatorOptions
+public class UserValuesValidatorOptions
 {
-    public const string SectionName = "PasswordValidator";
+    public const string SectionName = "UserValuesValidator";
 
     public int MinimumPasswordLength { get; init; }
     public int MaximumPasswordLength { get; init; }
 }
 
-public class PasswordValidatorOptionsValidator : AbstractValidator<PasswordValidatorOptions>
+public class PasswordValidatorOptionsValidator : AbstractValidator<UserValuesValidatorOptions>
 {
     public PasswordValidatorOptionsValidator()
     {

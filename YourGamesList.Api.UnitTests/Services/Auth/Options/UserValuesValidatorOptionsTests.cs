@@ -5,7 +5,7 @@ using YourGamesList.Api.Services.Auth.Options;
 
 namespace YourGamesList.Api.UnitTests.Services.Auth.Options;
 
-public class PasswordValidatorOptionsTests
+public class UserValuesValidatorOptionsTests
 {
     private IFixture _fixture;
 
@@ -19,7 +19,7 @@ public class PasswordValidatorOptionsTests
     public void Validate_ValidOptions_ReturnsTrue()
     {
         //ARRANGE
-        var options = _fixture.Build<PasswordValidatorOptions>()
+        var options = _fixture.Build<UserValuesValidatorOptions>()
             .With(x => x.MinimumPasswordLength, 10)
             .With(x => x.MaximumPasswordLength, 100)
             .WithAutoProperties()
@@ -40,7 +40,7 @@ public class PasswordValidatorOptionsTests
     public void Validate_InvalidMinimumPasswordLength_ReturnsFalse(int minimumPasswordLength)
     {
         //ARRANGE
-        var options = _fixture.Build<PasswordValidatorOptions>()
+        var options = _fixture.Build<UserValuesValidatorOptions>()
             .With(x => x.MinimumPasswordLength, minimumPasswordLength)
             .WithAutoProperties()
             .Create();
@@ -63,7 +63,7 @@ public class PasswordValidatorOptionsTests
     public void Validate_InvalidMaximumPasswordLength_ReturnsFalse(int maximumPasswordLength)
     {
         //ARRANGE
-        var options = _fixture.Build<PasswordValidatorOptions>()
+        var options = _fixture.Build<UserValuesValidatorOptions>()
             .With(x => x.MaximumPasswordLength, maximumPasswordLength)
             .WithAutoProperties()
             .Create();
@@ -83,7 +83,7 @@ public class PasswordValidatorOptionsTests
     public void Validate_MinimumBiggerThanMaximum_ReturnsFalse()
     {
         //ARRANGE
-        var options = _fixture.Build<PasswordValidatorOptions>()
+        var options = _fixture.Build<UserValuesValidatorOptions>()
             .With(x => x.MinimumPasswordLength, 100)
             .With(x => x.MaximumPasswordLength, 10)
             .WithAutoProperties()

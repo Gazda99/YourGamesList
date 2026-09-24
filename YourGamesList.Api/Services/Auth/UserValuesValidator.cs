@@ -6,22 +6,44 @@ using YourGamesList.Common;
 
 namespace YourGamesList.Api.Services.Auth;
 
-public interface IPasswordValidator
+public interface IUserValuesValidator
 {
+    /// <summary>
+    /// Validates the string value of <paramref name="email"/>. It does not check the DB availability!
+
+    /// </summary>
+    ErrorResult<UserAuthError> ValidateEmail(string email);
+    /// <summary>
+    /// Validates the string value of <paramref name="username"/>. It does not check the DB availability!
+    /// </summary>
+    ErrorResult<UserAuthError> ValidateUsername(string username);
+    /// <summary>
+    /// Validates the string value of <paramref name="password"/>. It does not check the DB availability!
+    /// </summary>
     ErrorResult<UserAuthError> ValidatePassword(string password);
 }
 
-public class PasswordValidator : IPasswordValidator
+public class UserValuesValidator : IUserValuesValidator
 {
-    private readonly ILogger<PasswordValidator> _logger;
-    private readonly IOptions<PasswordValidatorOptions> _options;
+    private readonly ILogger<UserValuesValidator> _logger;
+    private readonly IOptions<UserValuesValidatorOptions> _options;
 
-    public PasswordValidator(
-        ILogger<PasswordValidator> logger,
-        IOptions<PasswordValidatorOptions> options)
+    public UserValuesValidator(
+        ILogger<UserValuesValidator> logger,
+        IOptions<UserValuesValidatorOptions> options)
     {
         _logger = logger;
         _options = options;
+    }
+
+    public ErrorResult<UserAuthError> ValidateEmail(string email)
+    {
+        return ErrorResult<UserAuthError>.Success();
+    }
+
+    public ErrorResult<UserAuthError> ValidateUsername(string username)
+    {
+        return ErrorResult<UserAuthError>.Success();
     }
 
     public ErrorResult<UserAuthError> ValidatePassword(string password)

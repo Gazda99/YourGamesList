@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Attributes;
 using YourGamesList.Api.Model.Requests.Users;
+using YourGamesList.Api.Services.Auth;
+using YourGamesList.Api.Services.Auth.Model;
 using YourGamesList.Contracts.Responses.Users;
 
 namespace YourGamesList.Api.Controllers.Users;
@@ -12,13 +14,15 @@ namespace YourGamesList.Api.Controllers.Users;
 [ApiController]
 [Route("users/auth")]
 [RequestValidator]
-public class AuthController : YourGamesListBaseController
+public class UserAuthController : YourGamesListBaseController
 {
-    private readonly ILogger<AuthController> _logger;
+    private readonly ILogger<UserAuthController> _logger;
+    private readonly IUserManagerService _userManagerService;
 
-    public AuthController(ILogger<AuthController> logger)
+    public UserAuthController(ILogger<UserAuthController> logger, IUserManagerService userManagerService)
     {
         _logger = logger;
+        _userManagerService = userManagerService;
     }
 
     [HttpPost("register")]
@@ -29,7 +33,29 @@ public class AuthController : YourGamesListBaseController
     {
         _logger.LogInformation("Requested to register user {Username}", userRegisterRequest.Body.Username);
 
-        return Result(StatusCodes.Status501NotImplemented);
+        var dto = userRegisterRequest.ToDto();
+
+        var result = await _userManagerService.Register(dto);
+
+        if (result.IsFailure)
+        {
+            if (result.Error == UserAuthError.RegisterNameAlreadyTaken)
+            {
+                return Result(StatusCodes.Status409Conflict);
+            }
+            else if (result.Error is UserAuthError.PasswordIsTooShort or UserAuthError.PasswordIsTooLong or UserAuthError.InvalidEmail or UserAuthError.InvalidUsername)
+            {
+                return Result(StatusCodes.Status400BadRequest, result.Error.ToString());
+            }
+            else
+            {
+                return Result(StatusCodes.Status500InternalServerError);
+            }
+        }
+        else
+        {
+            return Result(StatusCodes.Status200OK, result.Value.ToString());
+        }
     }
 
     [HttpPost("login")]
@@ -40,7 +66,7 @@ public class AuthController : YourGamesListBaseController
     {
         _logger.LogInformation("Requested to login user {Username}", userLoginRequest.Body.Username);
 
-        return Result(StatusCodes.Status501NotImplemented);
+        return Result(StatusCodes.Status200OK);
     }
 
     [HttpDelete("delete")]
@@ -51,6 +77,6 @@ public class AuthController : YourGamesListBaseController
     {
         _logger.LogInformation("Requested to delete user {Username}", userDeleteRequest.Body.Username);
 
-        return Result(StatusCodes.Status501NotImplemented);
+        return Result(StatusCodes.Status200OK);
     }
 }

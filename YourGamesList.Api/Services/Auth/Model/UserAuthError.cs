@@ -6,6 +6,7 @@ namespace YourGamesList.Api.Services.Auth.Model;
 public enum UserAuthError
 {
     InvalidUsername,
+    InvalidEmail,
     WrongPassword,
 
     NoUserFound,
