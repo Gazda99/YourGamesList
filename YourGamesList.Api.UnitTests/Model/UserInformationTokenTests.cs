@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Security.Claims;
 using AutoFixture;
+using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.JsonWebTokens;
 using YourGamesList.Api.Model;
 using YourGamesList.Api.Services.Auth;
@@ -20,15 +21,18 @@ public class UserInformationTokenTests
     }
 
     [Test]
-    public void FromClaimsPrincipal_WhenUserNotAuthenticated_ReturnsFailure()
+    public void FromHttpContext_WhenUserNotAuthenticated_ReturnsFailure()
     {
-        // ARRANGE
-        var unauthenticatedPrincipal = new ClaimsPrincipal(new ClaimsIdentity());
+        //ARRANGE
+        var httpContext = new DefaultHttpContext
+        {
+            User = new ClaimsPrincipal(new ClaimsIdentity())
+        };
 
         // ACT
-        var result = UserInformationToken.FromClaimsPrincipal(unauthenticatedPrincipal);
+        var result = UserInformationToken.FromHttpContext(httpContext);
 
-        // ASSERT
+        //ASSERT
         Assert.That(result.IsFailure, Is.True);
     }
 
@@ -36,9 +40,41 @@ public class UserInformationTokenTests
     [TestCase(null)]
     [TestCase("")]
     [TestCase("  ")]
-    public void FromClaimsPrincipal_WhenInvalidUsername_ReturnsFailure(string? username)
+    [TestCase("Basic xyz123")]
+    public void FromHttpContext_WhenMissingOrInvalidAuthorizationHeader_ReturnsFailure(string? authHeader)
     {
-        // ARRANGE
+        //ARRANGE
+        var claims = new[]
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, "Gazda"),
+            new Claim(JwtCustomClaimNames.UserId, Guid.NewGuid().ToString())
+        };
+        var identity = new ClaimsIdentity(claims, "TestAuth");
+
+        var httpContext = new DefaultHttpContext
+        {
+            User = new ClaimsPrincipal(identity)
+        };
+
+        if (authHeader != null)
+        {
+            httpContext.Request.Headers.Authorization = authHeader;
+        }
+
+        // ACT
+        var result = UserInformationToken.FromHttpContext(httpContext);
+
+        //ASSERT
+        Assert.That(result.IsFailure, Is.True);
+    }
+
+    [Test]
+    [TestCase(null)]
+    [TestCase("")]
+    [TestCase("  ")]
+    public void FromHttpContext_WhenInvalidUsername_ReturnsFailure(string? username)
+    {
+        //ARRANGE
         var userId = Guid.NewGuid().ToString();
         var claims = new List<Claim>();
 
@@ -50,12 +86,16 @@ public class UserInformationTokenTests
         claims.Add(new Claim(JwtCustomClaimNames.UserId, userId));
 
         var identity = new ClaimsIdentity(claims, "TestAuth");
-        var claimsPrincipal = new ClaimsPrincipal(identity);
+        var httpContext = new DefaultHttpContext
+        {
+            User = new ClaimsPrincipal(identity)
+        };
+        httpContext.Request.Headers.Authorization = "Bearer sample.raw.jwt";
 
         // ACT
-        var result = UserInformationToken.FromClaimsPrincipal(claimsPrincipal);
+        var result = UserInformationToken.FromHttpContext(httpContext);
 
-        // ASSERT
+        //ASSERT
         Assert.That(result.IsFailure, Is.True);
     }
 
@@ -65,9 +105,9 @@ public class UserInformationTokenTests
     [TestCase("  ")]
     [TestCase("not-a-guid")]
     [TestCase("00000000-0000-0000-0000-000000000000")] // Guid.Empty
-    public void FromClaimsPrincipal_WhenInvalidUserId_ReturnsFailure(string? userId)
+    public void FromHttpContext_WhenInvalidUserId_ReturnsFailure(string? userId)
     {
-        // ARRANGE
+        //ARRANGE
         var username = _fixture.Create<string>();
         var claims = new List<Claim>
         {
@@ -80,21 +120,26 @@ public class UserInformationTokenTests
         }
 
         var identity = new ClaimsIdentity(claims, "TestAuth");
-        var claimsPrincipal = new ClaimsPrincipal(identity);
+        var httpContext = new DefaultHttpContext
+        {
+            User = new ClaimsPrincipal(identity)
+        };
+        httpContext.Request.Headers.Authorization = "Bearer sample.raw.jwt";
 
         // ACT
-        var result = UserInformationToken.FromClaimsPrincipal(claimsPrincipal);
+        var result = UserInformationToken.FromHttpContext(httpContext);
 
-        // ASSERT
+        //ASSERT
         Assert.That(result.IsFailure, Is.True);
     }
 
     [Test]
-    public void FromClaimsPrincipal_WhenValidClaimsWithSub_ReturnsSuccessResult()
+    public void FromHttpContext_WhenValidRequest_ReturnsSuccessResult()
     {
-        // ARRANGE
+        //ARRANGE
         var expectedUsername = _fixture.Create<string>();
         var expectedUserId = Guid.NewGuid();
+        const string expectedRawToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.sample.token";
 
         var claims = new[]
         {
@@ -103,13 +148,18 @@ public class UserInformationTokenTests
         };
 
         var identity = new ClaimsIdentity(claims, "TestAuth");
-        var claimsPrincipal = new ClaimsPrincipal(identity);
+        var httpContext = new DefaultHttpContext
+        {
+            User = new ClaimsPrincipal(identity)
+        };
+        httpContext.Request.Headers.Authorization = $"Bearer {expectedRawToken}";
 
         // ACT
-        var result = UserInformationToken.FromClaimsPrincipal(claimsPrincipal);
+        var result = UserInformationToken.FromHttpContext(httpContext);
 
-        // ASSERT
+        //ASSERT
         Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value.RawToken, Is.EqualTo(expectedRawToken));
         Assert.That(result.Value.Username, Is.EqualTo(expectedUsername));
         Assert.That(result.Value.UserId, Is.EqualTo(expectedUserId));
     }

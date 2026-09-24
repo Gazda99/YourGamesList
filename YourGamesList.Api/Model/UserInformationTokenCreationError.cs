@@ -17,6 +17,11 @@ public class UserInformationTokenCreationError
         Message = message;
         Exception = ex;
     }
+    
+    public static UserInformationTokenCreationError RawTokenMissing()
+    {
+        return new UserInformationTokenCreationError("Raw token is missing from request header");
+    }
 
     public static UserInformationTokenCreationError NotValid()
     {

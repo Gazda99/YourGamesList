@@ -32,6 +32,7 @@ public class UserInformationTokenModelBinderTests
         //ARRANGE
         var expectedUserId = Guid.NewGuid();
         const string expectedUsername = "Gazda";
+        const string expectedRawToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.sample.token";
 
         var claims = new[]
         {
@@ -39,7 +40,6 @@ public class UserInformationTokenModelBinderTests
             new Claim(JwtCustomClaimNames.UserId, expectedUserId.ToString())
         };
 
-        // Note: Providing authenticationType ("TestAuth") sets IsAuthenticated to true
         var identity = new ClaimsIdentity(claims, "TestAuth");
         var claimsPrincipal = new ClaimsPrincipal(identity);
 
@@ -47,6 +47,7 @@ public class UserInformationTokenModelBinderTests
         {
             User = claimsPrincipal
         };
+        httpContext.Request.Headers.Authorization = $"Bearer {expectedRawToken}";
 
         var context = Substitute.For<ModelBindingContext>();
         context.HttpContext.Returns(httpContext);
@@ -60,7 +61,8 @@ public class UserInformationTokenModelBinderTests
 
         var boundToken = context.Result.Model as UserInformationToken;
         Assert.That(boundToken, Is.Not.Null);
-        Assert.That(boundToken!.Username, Is.EqualTo(expectedUsername));
+        Assert.That(boundToken!.RawToken, Is.EqualTo(expectedRawToken));
+        Assert.That(boundToken.Username, Is.EqualTo(expectedUsername));
         Assert.That(boundToken.UserId, Is.EqualTo(expectedUserId));
     }
 

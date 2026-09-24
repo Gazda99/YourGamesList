@@ -25,7 +25,7 @@ public class UserInformationTokenModelBinder : IModelBinder
             return Task.CompletedTask;
         }
 
-        var userTokenResult = UserInformationToken.FromClaimsPrincipal(bindingContext.HttpContext.User);
+        var userTokenResult = UserInformationToken.FromHttpContext(bindingContext.HttpContext);
         if (userTokenResult.IsFailure)
         {
             _logger.LogWarning(userTokenResult.Error.Exception, "User token cannot be parsed. Error: {UserTokenCreationErrorMessage}", userTokenResult.Error.Message);

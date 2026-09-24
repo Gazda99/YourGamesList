@@ -91,6 +91,14 @@ public static class AppBuilder
         return app;
     }
 
+    private static IServiceCollection AddAuth(this IServiceCollection services)
+    {
+        services.AddOptionsWithFluentValidation<TokenAuthOptions, TokenAuthOptionsValidator>(TokenAuthOptions.SectionName);
+        services.AddOptionsWithFluentValidation<PasswordValidatorOptions, PasswordValidatorOptionsValidator>(PasswordValidatorOptions.SectionName);
+
+        return services;
+    }
+    
     private static IServiceCollection AddIgdbService(this IServiceCollection services)
     {
         services.AddOptionsWithFluentValidation<IgdbHttpClientOptions, IgdbHttpClientOptionsValidator>(IgdbHttpClientOptions.SectionName);

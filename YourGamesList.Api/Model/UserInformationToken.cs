@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.JsonWebTokens;
 using YourGamesList.Api.Services.Auth;
 using YourGamesList.Common;
@@ -8,17 +9,24 @@ namespace YourGamesList.Api.Model;
 
 public class UserInformationToken
 {
-    public string Username { get; }
-    public Guid UserId { get; }
+    public required string RawToken { get; init; }
+    public required string Username { get; init; }
+    public required Guid UserId { get; init; }
 
-    public UserInformationToken(string username, Guid userId)
+    public static CombinedResult<UserInformationToken, UserInformationTokenCreationError> FromHttpContext(HttpContext httpContext)
     {
-        Username = username;
-        UserId = userId;
-    }
+        var user = httpContext.User;
+        if (user.Identity?.IsAuthenticated != true)
+        {
+            return CombinedResult<UserInformationToken, UserInformationTokenCreationError>.Failure(UserInformationTokenCreationError.NotValid());
+        }
 
-    public static CombinedResult<UserInformationToken, UserInformationTokenCreationError> FromClaimsPrincipal(ClaimsPrincipal user)
-    {
+        var rawToken = GetRawBearerToken(httpContext.Request);
+        if (string.IsNullOrWhiteSpace(rawToken))
+        {
+            return CombinedResult<UserInformationToken, UserInformationTokenCreationError>.Failure(UserInformationTokenCreationError.RawTokenMissing());
+        }
+
         if (user.Identity?.IsAuthenticated != true)
         {
             return CombinedResult<UserInformationToken, UserInformationTokenCreationError>.Failure(UserInformationTokenCreationError.NotValid());
@@ -30,11 +38,6 @@ public class UserInformationToken
             return CombinedResult<UserInformationToken, UserInformationTokenCreationError>.Failure(usernameClaimReadResult.Error);
         }
 
-        if (string.IsNullOrWhiteSpace(usernameClaimReadResult.Value))
-        {
-            return CombinedResult<UserInformationToken, UserInformationTokenCreationError>.Failure(UserInformationTokenCreationError.MissingOrInvalidClaim(JwtRegisteredClaimNames.Sub, usernameClaimReadResult.Value));
-        }
-
         var rawUserIdClaimReadResult = GetRequiredClaimOrThrow(user, JwtCustomClaimNames.UserId);
         if (rawUserIdClaimReadResult.IsFailure)
         {
@@ -43,18 +46,41 @@ public class UserInformationToken
 
         if (!Guid.TryParse(rawUserIdClaimReadResult.Value, out var userId) || userId == Guid.Empty)
         {
-            return CombinedResult<UserInformationToken, UserInformationTokenCreationError>.Failure(UserInformationTokenCreationError.MissingOrInvalidClaim(JwtCustomClaimNames.UserId, rawUserIdClaimReadResult.Value));
+            return CombinedResult<UserInformationToken, UserInformationTokenCreationError>.Failure(
+                UserInformationTokenCreationError.MissingOrInvalidClaim(JwtCustomClaimNames.UserId, rawUserIdClaimReadResult.Value));
         }
 
-        var userInformationToken = new UserInformationToken(usernameClaimReadResult.Value, userId);
+        var userInformationToken = new UserInformationToken()
+        {
+            RawToken = rawToken,
+            UserId = userId,
+            Username = usernameClaimReadResult.Value
+        };
         return CombinedResult<UserInformationToken, UserInformationTokenCreationError>.Success(userInformationToken);
     }
 
     private static CombinedResult<string, UserInformationTokenCreationError> GetRequiredClaimOrThrow(ClaimsPrincipal user, string claimType)
     {
         var value = user.FindFirst(claimType)?.Value;
-        return string.IsNullOrEmpty(value)
+        return string.IsNullOrWhiteSpace(value)
             ? CombinedResult<string, UserInformationTokenCreationError>.Failure(UserInformationTokenCreationError.MissingOrInvalidClaim(claimType, value))
             : CombinedResult<string, UserInformationTokenCreationError>.Success(value);
+    }
+
+    private static string? GetRawBearerToken(HttpRequest request)
+    {
+        var authorizationHeader = request.Headers.Authorization.ToString();
+        if (string.IsNullOrWhiteSpace(authorizationHeader))
+        {
+            return null;
+        }
+
+        const string bearerPrefix = "Bearer ";
+        if (authorizationHeader.StartsWith(bearerPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return authorizationHeader[bearerPrefix.Length..].Trim();
+        }
+
+        return null;
     }
 }
