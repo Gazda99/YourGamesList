@@ -10,6 +10,7 @@ using YourGamesList.Api.Middlewares;
 using YourGamesList.Api.Services.CorrelationId;
 using YourGamesList.Common.Http;
 using YourGamesList.Common.Logging;
+using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.Middlewares;
 
@@ -18,7 +19,7 @@ public class CorrelationIdMiddlewareTests
     private IFixture _fixture;
     private ILogger<CorrelationIdMiddleware> _logger;
     private ICorrelationIdProvider _correlationIdProvider;
-    
+
     [SetUp]
     public void SetUp()
     {
@@ -52,7 +53,10 @@ public class CorrelationIdMiddlewareTests
         var isCorIdPresent = ctx.Response.Headers.TryGetValue(YglHttpHeaders.CorrelationId, out var actualCorId);
         Assert.That(isCorIdPresent, Is.True);
         Assert.That(actualCorId.ToString(), Is.EquivalentTo(corId));
-        _logger.Received(1).BeginScope(Arg.Is<Dictionary<string, object>>(x => x.ContainsKey(LogProperties.CorrelationId) && x.ContainsValue(corId)));
+        _logger.ReceivedBeginScope(new Dictionary<string, object>()
+        {
+            { LogProperties.CorrelationId, corId }
+        });
     }
 
     [Test]
@@ -82,6 +86,9 @@ public class CorrelationIdMiddlewareTests
         var isCorIdPresent = ctx.Response.Headers.TryGetValue(YglHttpHeaders.CorrelationId, out var actualCorId);
         Assert.That(isCorIdPresent, Is.True);
         Assert.That(actualCorId.ToString(), Is.EquivalentTo(corId));
-        _logger.Received(1).BeginScope(Arg.Is<Dictionary<string, object>>(x => x.ContainsKey(LogProperties.CorrelationId) && x.ContainsValue(corId)));
+        _logger.ReceivedBeginScope(new Dictionary<string, object>()
+        {
+            { LogProperties.CorrelationId, corId }
+        });
     }
 }

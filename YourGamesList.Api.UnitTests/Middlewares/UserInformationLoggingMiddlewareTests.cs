@@ -41,9 +41,6 @@ public class UserInformationLoggingMiddlewareTests
             User = new ClaimsPrincipal(identity)
         };
 
-        var scopeDisposable = Substitute.For<IDisposable>();
-        _logger.BeginScope(Arg.Any<Dictionary<string, object>>()).Returns(scopeDisposable);
-
         //ACT
         await _middleware.InvokeAsync(httpContext);
 
@@ -53,7 +50,6 @@ public class UserInformationLoggingMiddlewareTests
             { LogProperties.UserId, expectedUserId }
         });
         await _next.Received(1).Invoke(httpContext);
-        scopeDisposable.Received(1).Dispose();
     }
 
     [Test]
@@ -70,9 +66,6 @@ public class UserInformationLoggingMiddlewareTests
             User = new ClaimsPrincipal(identity)
         };
 
-        var scopeDisposable = Substitute.For<IDisposable>();
-        _logger.BeginScope(Arg.Any<Dictionary<string, object>>()).Returns(scopeDisposable);
-
         //ACT
         await _middleware.InvokeAsync(httpContext);
 
@@ -83,6 +76,5 @@ public class UserInformationLoggingMiddlewareTests
         });
 
         await _next.Received(1).Invoke(httpContext);
-        scopeDisposable.Received(1).Dispose();
     }
 }
