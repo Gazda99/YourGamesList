@@ -15,6 +15,8 @@ public class YourGamesListDbContext : DbContext
     public DbSet<GamesList> GamesLists { get; set; }
     public DbSet<GamesListEntry> GameListEntries { get; set; }
     public DbSet<OwnershipInfo> OwnershipInfos { get; set; }
+    
+    public DbSet<EmailVerification> EmailVerifications { get; set; }
 
     public YourGamesListDbContext(IOptions<YourGamesListDatabaseOptions> options)
     {
@@ -73,6 +75,17 @@ public class YourGamesListDbContext : DbContext
         modelBuilder.Entity<OwnershipInfo>(entity =>
         {
             entity.HasKey(x => x.Id);
+        });
+
+        modelBuilder.Entity<EmailVerification>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.HasIndex(x => x.Token).IsUnique();
+            entity.HasOne(x => x.User)
+                .WithOne()
+                .HasForeignKey<EmailVerification>(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         base.OnModelCreating(modelBuilder);

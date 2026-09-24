@@ -14,6 +14,7 @@ public class User
     public required DateTimeOffset DateOfBirth { get; set; }
     [StringLength(512)] public string? Description { get; set; }
     [StringLength(256)] public required string Email { get; set; }
+    public DateTimeOffset? ExpiryAt { get; set; }
     public DateTimeOffset? LastLoginDate { get; set; }
 
     /// <summary>
@@ -21,6 +22,8 @@ public class User
     /// </summary>
     [StringLength(128)]
     public required string PasswordHash { get; set; }
+    
+    public required UserStatus UserStatus { get; set; }
 
     [StringLength(64)] public required string Username { get; set; }
 
