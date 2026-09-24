@@ -8,6 +8,7 @@ using NSubstitute;
 using YourGamesList.Api.Middlewares;
 using YourGamesList.Api.Services.Auth;
 using YourGamesList.Common.Logging;
+using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.Middlewares;
 
@@ -26,7 +27,7 @@ public class UserInformationLoggingMiddlewareTests
     }
 
     [Test]
-    public async Task InvokeAsync_WhenUserIdClaimIsPresent_BeginsLoggerScopeAndCallsNext()
+    public async Task InvokeAsync_LogsAll()
     {
         //ARRANGE
         const string expectedUserId = "a0b1c2d3-e4f5-6789-0123-456789abcdef";
@@ -47,28 +48,16 @@ public class UserInformationLoggingMiddlewareTests
         await _middleware.InvokeAsync(httpContext);
 
         //ASSERT
-        _logger.Received(1).BeginScope(Arg.Is<Dictionary<string, object>>(x => x.ContainsKey(LogProperties.UserId) && x.ContainsValue(expectedUserId)));
-
+        _logger.ReceivedBeginScope(new Dictionary<string, object>()
+        {
+            { LogProperties.UserId, expectedUserId }
+        });
         await _next.Received(1).Invoke(httpContext);
         scopeDisposable.Received(1).Dispose();
     }
 
     [Test]
-    public async Task InvokeAsync_WhenUserIdClaimIsMissing_DoesNotBeginScopeAndCallsNext()
-    {
-        //ARRANGE
-        var httpContext = new DefaultHttpContext(); // Unauthenticated user with no claims
-
-        //ACT
-        await _middleware.InvokeAsync(httpContext);
-
-        //ASSERT
-        _logger.DidNotReceiveWithAnyArgs().BeginScope(default!);
-        await _next.Received(1).Invoke(httpContext);
-    }
-
-    [Test]
-    public async Task InvokeAsync_WhenUserIdClaimIsEmpty_DoesNotBeginScopeAndCallsNext()
+    public async Task InvokeAsync_WhenUserIdClaimIsNullOrEmpty_LogsNA()
     {
         //ARRANGE
         var claims = new[]
@@ -81,11 +70,19 @@ public class UserInformationLoggingMiddlewareTests
             User = new ClaimsPrincipal(identity)
         };
 
+        var scopeDisposable = Substitute.For<IDisposable>();
+        _logger.BeginScope(Arg.Any<Dictionary<string, object>>()).Returns(scopeDisposable);
+
         //ACT
         await _middleware.InvokeAsync(httpContext);
 
         //ASSERT
-        _logger.DidNotReceiveWithAnyArgs().BeginScope(default!);
+        _logger.ReceivedBeginScope(new Dictionary<string, object>()
+        {
+            { LogProperties.UserId, "N/A" }
+        });
+
         await _next.Received(1).Invoke(httpContext);
+        scopeDisposable.Received(1).Dispose();
     }
 }

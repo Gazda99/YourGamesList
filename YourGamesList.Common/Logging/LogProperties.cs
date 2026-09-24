@@ -2,6 +2,6 @@
 
 public static class LogProperties
 {
-    public const string CorrelationId = "CorrelationId";
-    public const string UserId = "UserId";
+    public const string CorrelationId = "corId";
+    public const string UserId = "userId";
 }

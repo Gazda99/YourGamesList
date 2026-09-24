@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -20,17 +21,22 @@ public class UserInformationLoggingMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        var userId = context.User.FindFirst(JwtCustomClaimNames.UserId)?.Value;
+        var userId = GetClaimOrNotAvailable(context.User, JwtCustomClaimNames.UserId);
 
-        if (!string.IsNullOrEmpty(userId))
+        var scopes = new Dictionary<string, object>
         {
-            using (_logger.BeginScope(new Dictionary<string, object> { [LogProperties.UserId] = userId }))
-            {
-                await _next(context);
-                return;
-            }
-        }
+            [LogProperties.UserId] = userId
+        };
 
-        await _next(context);
+        using (_logger.BeginScope(scopes))
+        {
+            await _next(context);
+        }
+    }
+
+    private static string GetClaimOrNotAvailable(ClaimsPrincipal user, string claimType)
+    {
+        var value = user.FindFirst(claimType)?.Value;
+        return !string.IsNullOrEmpty(value) ? value : "N/A";
     }
 }
