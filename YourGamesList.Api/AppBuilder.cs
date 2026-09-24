@@ -14,6 +14,7 @@ using Refit;
 using Serilog;
 using YourGamesList.Api.Model.Requests.Users;
 using YourGamesList.Api.ModelBinders;
+using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Options;
 using YourGamesList.Api.Services.ControllerModelValidators;
 using YourGamesList.Api.Services.CorrelationId;
@@ -44,8 +45,8 @@ public static class AppBuilder
         builder.Logging.ClearProviders();
         builder.Host.AddLogger(builder.Configuration);
 
-        builder.Services.AddControllers(options => { options.ModelBinderProviders.Insert(0, new UserInformationTokenModelBinderProvider()); });
-        
+        builder.Services.AddControllers();
+
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
         {
             o.MapInboundClaims = false;
@@ -59,14 +60,11 @@ public static class AppBuilder
                 ValidateAudience = false
             };
         });
-        
-        builder.Services.Configure<ApiBehaviorOptions>(options =>
-        {
-            options.SuppressModelStateInvalidFilter = true;
-        });
+
+        builder.Services.Configure<ApiBehaviorOptions>(options => { options.SuppressModelStateInvalidFilter = true; });
 
         builder.Services.AddOpenApi();
-        
+
         builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
         builder.Services.AddMemoryCache();
 
@@ -74,6 +72,7 @@ public static class AppBuilder
         builder.Services.AddTelemetry(builder.Configuration, TelemetryCustomConfiguration.CustomTracerConfiguration, TelemetryCustomConfiguration.CustomMeterConfiguration);
 
         //YGL services
+        builder.Services.AddYourGamesListAuth();
         builder.Services.AddYourGamesListDatabase();
         builder.Services.AddSingleton<ICorrelationIdProvider, CorrelationIdProvider>();
 
@@ -82,23 +81,31 @@ public static class AppBuilder
 
         builder.Services.AddKeyedSingleton<ICacheProvider, InMemoryCacheProvider>(CacheProviders.InMemory);
 
-
         builder.Services.AddTwitchAuthService();
         builder.Services.AddIgdbService();
-
 
         var app = builder.Build();
         return app;
     }
 
-    private static IServiceCollection AddAuth(this IServiceCollection services)
+    private static IServiceCollection AddYourGamesListAuth(this IServiceCollection services)
     {
+        services.Configure<MvcOptions>(options =>
+        {
+            options.ModelBinderProviders.Insert(0, new UserInformationTokenModelBinderProvider());
+        });
+        
         services.AddOptionsWithFluentValidation<TokenAuthOptions, TokenAuthOptionsValidator>(TokenAuthOptions.SectionName);
         services.AddOptionsWithFluentValidation<PasswordValidatorOptions, PasswordValidatorOptionsValidator>(PasswordValidatorOptions.SectionName);
 
+        services.AddSingleton<ITokenProvider, UserInformationTokenProvider>();
+        services.AddSingleton<IPasswordValidator, PasswordValidator>();
+        services.AddSingleton<ISodiumInitializer, SodiumInitializer>();
+        services.AddSingleton<IPasswordHasher, LibSodiumPasswordHasher>();
+
         return services;
     }
-    
+
     private static IServiceCollection AddIgdbService(this IServiceCollection services)
     {
         services.AddOptionsWithFluentValidation<IgdbHttpClientOptions, IgdbHttpClientOptionsValidator>(IgdbHttpClientOptions.SectionName);
