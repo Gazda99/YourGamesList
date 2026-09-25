@@ -43,7 +43,7 @@ public class UserAuthController : YourGamesListBaseController
             {
                 return Result(StatusCodes.Status409Conflict);
             }
-            else if (result.Error is UserAuthError.PasswordIsTooShort or UserAuthError.PasswordIsTooLong or UserAuthError.InvalidEmail or UserAuthError.InvalidUsername)
+            else if (IsErrorBadRequest(result.Error))
             {
                 return Result(StatusCodes.Status400BadRequest, result.Error.ToString());
             }
@@ -55,6 +55,12 @@ public class UserAuthController : YourGamesListBaseController
         else
         {
             return Result(StatusCodes.Status200OK, result.Value.ToString());
+        }
+
+        static bool IsErrorBadRequest(UserAuthError userAuthError)
+        {
+            return userAuthError is UserAuthError.PasswordIsTooShort or UserAuthError.PasswordIsTooLong or UserAuthError.InvalidEmail
+                or UserAuthError.InvalidUsername or UserAuthError.UsernameIsTooShort or UserAuthError.UsernameIsTooLong or UserAuthError.EmailIsTooLong;
         }
     }
 

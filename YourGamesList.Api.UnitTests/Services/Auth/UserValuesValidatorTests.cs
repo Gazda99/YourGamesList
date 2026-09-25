@@ -23,6 +23,119 @@ public class UserValuesValidatorTests
         _options = Substitute.For<IOptions<UserValuesValidatorOptions>>();
     }
 
+    #region Email
+
+    
+    [Test]
+    public void ValidateEmail_ValidEmail_ReturnsTrue()
+    {
+        //ARRANGE
+        var options = _fixture.Build<UserValuesValidatorOptions>()
+            .With(x => x.Email, _fixture.Build<EmailValidatorOptions>()
+                .With(x => x.MaximumEmailLength, 100)
+                .Create()).Create();
+        _options.Value.Returns(options);
+        const string email = "thisis@correct.email.com";
+        var usernameValidator = new UserValuesValidator(_logger, _options);
+
+        //ACT
+        var res = usernameValidator.ValidateEmail(email);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.True);
+    }
+    
+    [Test]
+    public void ValidateEmail_EmailTooLong_ReturnsFalse()
+    {
+        //ARRANGE
+        var options = _fixture.Build<UserValuesValidatorOptions>()
+            .With(x => x.Email, _fixture.Build<EmailValidatorOptions>()
+                .With(x => x.MaximumEmailLength, 3)
+                .Create()).Create();
+        _options.Value.Returns(options);
+        const string email = "thisis@incorrect.email.com";
+        var usernameValidator = new UserValuesValidator(_logger, _options);
+
+        //ACT
+        var res = usernameValidator.ValidateEmail(email);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.False);
+        Assert.That(res.Error, Is.EqualTo(UserAuthError.EmailIsTooLong));
+        _logger.ReceivedLog(LogLevel.Information, $"email length {email.Length} is more than {options.Email.MaximumEmailLength} allowed.");
+    }
+
+    #endregion
+    
+    #region Username
+
+    [Test]
+    public void ValidateUsername_ValidUsername_ReturnsTrue()
+    {
+        //ARRANGE
+        var options = _fixture.Build<UserValuesValidatorOptions>()
+            .With(x => x.Username, _fixture.Build<UsernameValidatorOptions>()
+                .With(x => x.MinimumUsernameLength, 1)
+                .With(x => x.MaximumUsernameLength, 100)
+                .Create()).Create();
+        _options.Value.Returns(options);
+        const string username = "this_is_correct_Username";
+        var usernameValidator = new UserValuesValidator(_logger, _options);
+
+        //ACT
+        var res = usernameValidator.ValidateUsername(username);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.True);
+    }
+
+    [Test]
+    public void ValidateUsername_UsernameTooShort_ReturnsFalse()
+    {
+        //ARRANGE
+        var options = _fixture.Build<UserValuesValidatorOptions>()
+            .With(x => x.Username, _fixture.Build<UsernameValidatorOptions>()
+                .With(x => x.MinimumUsernameLength, 90)
+                .With(x => x.MaximumUsernameLength, 100)
+                .Create()).Create();
+        _options.Value.Returns(options);
+        const string username = "this_is_incorrect_username";
+        var usernameValidator = new UserValuesValidator(_logger, _options);
+
+        //ACT
+        var res = usernameValidator.ValidateUsername(username);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.False);
+        Assert.That(res.Error, Is.EqualTo(UserAuthError.UsernameIsTooShort));
+        _logger.ReceivedLog(LogLevel.Information, $"username length {username.Length} is less than {options.Username.MinimumUsernameLength} required.");
+    }
+
+    [Test]
+    public void ValidateUsername_UsernameTooLong_ReturnsFalse()
+    {
+        //ARRANGE
+        var options = _fixture.Build<UserValuesValidatorOptions>()
+            .With(x => x.Username, _fixture.Build<UsernameValidatorOptions>()
+                .With(x => x.MinimumUsernameLength, 1)
+                .With(x => x.MaximumUsernameLength, 2)
+                .Create()).Create();
+        _options.Value.Returns(options);
+        const string username = "this_is_incorrect_username";
+        var usernameValidator = new UserValuesValidator(_logger, _options);
+
+        //ACT
+        var res = usernameValidator.ValidateUsername(username);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.False);
+        Assert.That(res.Error, Is.EqualTo(UserAuthError.UsernameIsTooLong));
+        _logger.ReceivedLog(LogLevel.Information, $"username length {username.Length} is more than {options.Username.MaximumUsernameLength} allowed.");
+    }
+
+    #endregion
+
     #region Password
 
     [Test]
@@ -30,9 +143,10 @@ public class UserValuesValidatorTests
     {
         //ARRANGE
         var options = _fixture.Build<UserValuesValidatorOptions>()
-            .With(x => x.MinimumPasswordLength, 1)
-            .With(x => x.MaximumPasswordLength, 100)
-            .Create();
+            .With(x => x.Password, _fixture.Build<PasswordValidatorOptions>()
+                .With(x => x.MinimumPasswordLength, 1)
+                .With(x => x.MaximumPasswordLength, 100)
+                .Create()).Create();
         _options.Value.Returns(options);
         const string password = "this_is_correct_password";
         var passwordValidator = new UserValuesValidator(_logger, _options);
@@ -49,9 +163,10 @@ public class UserValuesValidatorTests
     {
         //ARRANGE
         var options = _fixture.Build<UserValuesValidatorOptions>()
-            .With(x => x.MinimumPasswordLength, 90)
-            .With(x => x.MaximumPasswordLength, 100)
-            .Create();
+            .With(x => x.Password, _fixture.Build<PasswordValidatorOptions>()
+                .With(x => x.MinimumPasswordLength, 90)
+                .With(x => x.MaximumPasswordLength, 100)
+                .Create()).Create();
         _options.Value.Returns(options);
         const string password = "this_is_incorrect_password";
         var passwordValidator = new UserValuesValidator(_logger, _options);
@@ -62,7 +177,7 @@ public class UserValuesValidatorTests
         //ASSERT
         Assert.That(res.IsSuccess, Is.False);
         Assert.That(res.Error, Is.EqualTo(UserAuthError.PasswordIsTooShort));
-        _logger.ReceivedLog(LogLevel.Information, $"Password length {password.Length} is less than {options.MinimumPasswordLength} required.");
+        _logger.ReceivedLog(LogLevel.Information, $"password length {password.Length} is less than {options.Password.MinimumPasswordLength} required.");
     }
 
     [Test]
@@ -70,9 +185,10 @@ public class UserValuesValidatorTests
     {
         //ARRANGE
         var options = _fixture.Build<UserValuesValidatorOptions>()
-            .With(x => x.MinimumPasswordLength, 1)
-            .With(x => x.MaximumPasswordLength, 2)
-            .Create();
+            .With(x => x.Password, _fixture.Build<PasswordValidatorOptions>()
+                .With(x => x.MinimumPasswordLength, 1)
+                .With(x => x.MaximumPasswordLength, 2)
+                .Create()).Create();
         _options.Value.Returns(options);
         const string password = "this_is_incorrect_password";
         var passwordValidator = new UserValuesValidator(_logger, _options);
@@ -83,7 +199,7 @@ public class UserValuesValidatorTests
         //ASSERT
         Assert.That(res.IsSuccess, Is.False);
         Assert.That(res.Error, Is.EqualTo(UserAuthError.PasswordIsTooLong));
-        _logger.ReceivedLog(LogLevel.Information, $"Password length {password.Length} is more than {options.MaximumPasswordLength} allowed.");
+        _logger.ReceivedLog(LogLevel.Information, $"password length {password.Length} is more than {options.Password.MaximumPasswordLength} allowed.");
     }
 
     #endregion

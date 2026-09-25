@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Runtime.CompilerServices;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using YourGamesList.Api.Services.Auth.Model;
 using YourGamesList.Api.Services.Auth.Options;
@@ -10,13 +11,14 @@ public interface IUserValuesValidator
 {
     /// <summary>
     /// Validates the string value of <paramref name="email"/>. It does not check the DB availability!
-
     /// </summary>
     ErrorResult<UserAuthError> ValidateEmail(string email);
+
     /// <summary>
     /// Validates the string value of <paramref name="username"/>. It does not check the DB availability!
     /// </summary>
     ErrorResult<UserAuthError> ValidateUsername(string username);
+
     /// <summary>
     /// Validates the string value of <paramref name="password"/>. It does not check the DB availability!
     /// </summary>
@@ -38,22 +40,37 @@ public class UserValuesValidator : IUserValuesValidator
 
     public ErrorResult<UserAuthError> ValidateEmail(string email)
     {
+        if (!IsLessOrEqualThanMaximumLength(email, _options.Value.Email.MaximumEmailLength))
+        {
+            return ErrorResult<UserAuthError>.Failure(UserAuthError.EmailIsTooLong);
+        }
+        
         return ErrorResult<UserAuthError>.Success();
     }
 
     public ErrorResult<UserAuthError> ValidateUsername(string username)
     {
+        if (!IsGreaterOrEqualMinimumLength(username, _options.Value.Username.MinimumUsernameLength))
+        {
+            return ErrorResult<UserAuthError>.Failure(UserAuthError.UsernameIsTooShort);
+        }
+
+        if (!IsLessOrEqualThanMaximumLength(username, _options.Value.Username.MaximumUsernameLength))
+        {
+            return ErrorResult<UserAuthError>.Failure(UserAuthError.UsernameIsTooLong);
+        }
+
         return ErrorResult<UserAuthError>.Success();
     }
 
     public ErrorResult<UserAuthError> ValidatePassword(string password)
     {
-        if (!IsGreaterOrEqualMinimumLength(password, _options.Value.MinimumPasswordLength))
+        if (!IsGreaterOrEqualMinimumLength(password, _options.Value.Password.MinimumPasswordLength))
         {
             return ErrorResult<UserAuthError>.Failure(UserAuthError.PasswordIsTooShort);
         }
 
-        if (!IsLessOrEqualThanMaximumLength(password, _options.Value.MaximumPasswordLength))
+        if (!IsLessOrEqualThanMaximumLength(password, _options.Value.Password.MaximumPasswordLength))
         {
             return ErrorResult<UserAuthError>.Failure(UserAuthError.PasswordIsTooLong);
         }
@@ -61,28 +78,28 @@ public class UserValuesValidator : IUserValuesValidator
         return ErrorResult<UserAuthError>.Success();
     }
 
-    private bool IsGreaterOrEqualMinimumLength(string password, int minimumLength)
+    private bool IsGreaterOrEqualMinimumLength(string value, int minimumLength, [CallerArgumentExpression(nameof(value))] string? valueName = null)
     {
-        if (password.Length >= minimumLength)
+        if (value.Length >= minimumLength)
         {
             return true;
         }
         else
         {
-            _logger.LogInformation("Password length {ActualPasswordLength} is less than {MinimumPasswordLength} required.", password.Length, minimumLength);
+            _logger.LogInformation("{ValidatedValueName} length {ActualValueLength} is less than {MinimumValueLength} required.", valueName, value.Length, minimumLength);
             return false;
         }
     }
 
-    private bool IsLessOrEqualThanMaximumLength(string password, int maximumLength)
+    private bool IsLessOrEqualThanMaximumLength(string value, int maximumLength, [CallerArgumentExpression(nameof(value))] string? valueName = null)
     {
-        if (password.Length <= maximumLength)
+        if (value.Length <= maximumLength)
         {
             return true;
         }
         else
         {
-            _logger.LogInformation("Password length {ActualPasswordLength} is more than {MaximumPasswordLength} allowed.", password.Length, maximumLength);
+            _logger.LogInformation("{ValidatedValueName} length {ActualValueLength} is more than {MaximumValueLength} allowed.", valueName, value.Length, maximumLength);
             return false;
         }
     }

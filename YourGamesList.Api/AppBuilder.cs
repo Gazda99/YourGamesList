@@ -96,7 +96,7 @@ public static class AppBuilder
         });
         
         services.AddOptionsWithFluentValidation<TokenAuthOptions, TokenAuthOptionsValidator>(TokenAuthOptions.SectionName);
-        services.AddOptionsWithFluentValidation<UserValuesValidatorOptions, PasswordValidatorOptionsValidator>(UserValuesValidatorOptions.SectionName);
+        services.AddOptionsWithFluentValidation<UserValuesValidatorOptions, UserValuesValidatorOptionsValidator>(UserValuesValidatorOptions.SectionName);
 
         services.AddSingleton<ITokenProvider, UserInformationTokenProvider>();
         services.AddSingleton<IUserValuesValidator, UserValuesValidator>();

@@ -5,11 +5,22 @@ namespace YourGamesList.Api.Services.Auth.Model;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum UserAuthError
 {
-    InvalidUsername,
-    InvalidEmail,
-    WrongPassword,
-
     NoUserFound,
+
+    #region Email
+
+    InvalidEmail,
+    EmailIsTooLong,
+
+    #endregion
+
+    #region UserName
+
+    InvalidUsername,
+    UsernameIsTooShort,
+    UsernameIsTooLong,
+
+    #endregion
 
     #region Register
 
@@ -19,6 +30,7 @@ public enum UserAuthError
 
     #region Password
 
+    WrongPassword,
     PasswordIsTooShort,
     PasswordIsTooLong,
 
