@@ -171,7 +171,7 @@ public class ValidateRequestFilterTests
         await _filter.OnActionExecutionAsync(filterContext, next);
 
         //ASSERT
-        Assert.That(nextCalled, Is.False, "The 'next' delegate should not be called when validation fails.");
+        Assert.That(nextCalled, Is.False);
         Assert.That(filterContext.Result, Is.EqualTo(expectedFailedResult));
     }
 
