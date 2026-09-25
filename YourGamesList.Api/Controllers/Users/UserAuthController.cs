@@ -11,7 +11,6 @@ using YourGamesList.Contracts.Responses.Users;
 
 namespace YourGamesList.Api.Controllers.Users;
 
-//TODO: unit tests
 [ApiController]
 [Route("users/auth")]
 [RequestValidator]
