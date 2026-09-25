@@ -11,8 +11,6 @@ using YourGamesList.Database.Entity;
 
 namespace YourGamesList.Api.Services.Auth;
 
-//TODO: Unit tests
-
 public interface IUserManagerService
 {
     Task<CombinedResult<Guid, UserAuthError>> Register(UserRegisterDto userRegisterDto);

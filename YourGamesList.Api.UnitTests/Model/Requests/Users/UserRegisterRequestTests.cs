@@ -14,8 +14,7 @@ public class UserRegisterRequestTests
     public void Setup()
     {
         _fixture = new Fixture();
-        _fixture.Customize<DateOnly>(composer => 
-            composer.FromFactory(() => DateOnly.FromDateTime(_fixture.Create<DateTime>())));
+        _fixture.Customize<DateOnly>(composer => composer.FromFactory(() => DateOnly.FromDateTime(_fixture.Create<DateTime>())));
     }
 
     [Test]

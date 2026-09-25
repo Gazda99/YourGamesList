@@ -9,7 +9,7 @@ namespace YourGamesList.Database;
 [ExcludeFromCodeCoverage]
 public class YourGamesListDbContext : DbContext
 {
-    private readonly IOptions<YourGamesListDatabaseOptions> _options;
+    private readonly IOptions<YourGamesListDatabaseOptions>? _options;
 
     public DbSet<User> Users { get; set; }
     public DbSet<GamesList> GamesLists { get; set; }
@@ -23,18 +23,26 @@ public class YourGamesListDbContext : DbContext
         _options = options;
     }
 
+    public YourGamesListDbContext(DbContextOptions<YourGamesListDbContext> options, IOptions<YourGamesListDatabaseOptions>? databaseOptions = null) : base(options)
+    {
+        _options = databaseOptions;
+    }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlite(
-                _options.Value.ConnectionString,
-                ob =>
-                {
-                    if (!string.IsNullOrWhiteSpace(_options.Value.MigrationAssembly))
+        if (!optionsBuilder.IsConfigured && _options?.Value != null)
+        {
+            optionsBuilder.UseSqlite(
+                    _options.Value.ConnectionString,
+                    ob =>
                     {
-                        ob.MigrationsAssembly(_options.Value.MigrationAssembly);
-                    }
-                })
-            .UseSnakeCaseNamingConvention();
+                        if (!string.IsNullOrWhiteSpace(_options.Value.MigrationAssembly))
+                        {
+                            ob.MigrationsAssembly(_options.Value.MigrationAssembly);
+                        }
+                    })
+                .UseSnakeCaseNamingConvention();
+        }
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
