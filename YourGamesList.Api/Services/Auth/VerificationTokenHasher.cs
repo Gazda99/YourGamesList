@@ -5,12 +5,10 @@ using SQLitePCL;
 
 namespace YourGamesList.Api.Services.Auth;
 
-//TODO: unit tests
 public interface IVerificationTokenHasher
 {
     (string RawToken, string TokenHash) GenerateToken();
     string HashToken(string rawToken);
-    bool CompareToken(string rawToken, string tokenHash);
 }
 
 public class VerificationTokenHasher : IVerificationTokenHasher
@@ -26,21 +24,8 @@ public class VerificationTokenHasher : IVerificationTokenHasher
             .ToLower();
 
         var tokenHash = HashToken(rawToken).ToLower();
-        ;
 
         return (rawToken, tokenHash);
-    }
-
-    public bool CompareToken(string rawToken, string hashedToken)
-    {
-        rawToken = rawToken.ToLower();
-        hashedToken = hashedToken.ToLower();
-        var rawHashed = HashToken(rawToken).ToLower();
-
-        return CryptographicOperations.FixedTimeEquals(
-            Encoding.UTF8.GetBytes(rawHashed),
-            Encoding.UTF8.GetBytes(hashedToken)
-        );
     }
 
     public string HashToken(string rawToken)
