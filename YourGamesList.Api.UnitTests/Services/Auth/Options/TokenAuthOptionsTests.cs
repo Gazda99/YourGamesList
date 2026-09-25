@@ -92,11 +92,13 @@ public class TokenAuthOptionsTests
     }
 
     [Test]
-    public void Validate_InvalidExpirationInMinutes_ReturnsFalse()
+    [TestCase(0)]
+    [TestCase(-10)]
+    public void Validate_InvalidExpirationInMinutes_ReturnsFalse(int expirationInMinutes)
     {
         //ARRANGE
         var options = _fixture.Build<TokenAuthOptions>()
-            .With(x => x.ExpirationInMinutes, -100)
+            .With(x => x.ExpirationInMinutes, expirationInMinutes)
             .WithAutoProperties()
             .Create();
 

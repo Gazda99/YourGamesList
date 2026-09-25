@@ -90,19 +90,19 @@ public static class AppBuilder
 
     private static IServiceCollection AddYourGamesListAuth(this IServiceCollection services)
     {
-        services.Configure<MvcOptions>(options =>
-        {
-            options.ModelBinderProviders.Insert(0, new UserInformationTokenModelBinderProvider());
-        });
-        
+        services.Configure<MvcOptions>(options => { options.ModelBinderProviders.Insert(0, new UserInformationTokenModelBinderProvider()); });
+
         services.AddOptionsWithFluentValidation<TokenAuthOptions, TokenAuthOptionsValidator>(TokenAuthOptions.SectionName);
         services.AddOptionsWithFluentValidation<UserValuesValidatorOptions, UserValuesValidatorOptionsValidator>(UserValuesValidatorOptions.SectionName);
+        services.AddOptionsWithFluentValidation<UserManagerServiceOptions, UserManagerServiceOptionsValidator>(UserManagerServiceOptions.SectionName);
+        services.AddOptionsWithFluentValidation<VerificationEmailSenderOptions, VerificationEmailSenderOptionsValidator>(VerificationEmailSenderOptions.SectionName);
 
         services.AddSingleton<ITokenProvider, UserInformationTokenProvider>();
         services.AddSingleton<IUserValuesValidator, UserValuesValidator>();
         services.AddSingleton<ISodiumInitializer, SodiumInitializer>();
         services.AddSingleton<IPasswordHasher, LibSodiumPasswordHasher>();
-
+        services.AddSingleton<IVerificationTokenHasher, VerificationTokenHasher>();
+        services.AddScoped<IVerificationEmailSender, VerificationEmailSender>();
         services.AddScoped<IUserManagerService, UserManagerService>();
         
         return services;

@@ -1,4 +1,5 @@
-﻿using AutoFixture;
+﻿using System;
+using AutoFixture;
 using FluentValidation.TestHelper;
 using YourGamesList.Api.Model.Requests.Users;
 using YourGamesList.Contracts.Requests.Users;
@@ -13,6 +14,8 @@ public class UserRegisterRequestTests
     public void Setup()
     {
         _fixture = new Fixture();
+        _fixture.Customize<DateOnly>(composer => 
+            composer.FromFactory(() => DateOnly.FromDateTime(_fixture.Create<DateTime>())));
     }
 
     [Test]

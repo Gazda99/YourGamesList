@@ -28,6 +28,9 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
 
                 body.RuleFor(x => x.Password)
                     .NotEmpty();
+                
+                body.RuleFor(x => x.DateOfBirth)
+                    .NotEmpty();
             });
     }
 }

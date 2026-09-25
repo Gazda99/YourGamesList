@@ -39,9 +39,9 @@ public class UserAuthController : YourGamesListBaseController
 
         if (result.IsFailure)
         {
-            if (result.Error == UserAuthError.RegisterNameAlreadyTaken)
+            if (result.Error is UserAuthError.UsernameAlreadyTaken or UserAuthError.EmailAlreadyTaken)
             {
-                return Result(StatusCodes.Status409Conflict);
+                return Result(StatusCodes.Status409Conflict, result.Error.ToString());
             }
             else if (IsErrorBadRequest(result.Error))
             {
@@ -61,7 +61,8 @@ public class UserAuthController : YourGamesListBaseController
         {
             return userAuthError is UserAuthError.PasswordIsTooShort or UserAuthError.PasswordIsTooLong
                 or UserAuthError.InvalidUsername or UserAuthError.UsernameIsTooShort or UserAuthError.UsernameIsTooLong
-                or UserAuthError.InvalidEmail or UserAuthError.EmailIsTooLong;
+                or UserAuthError.InvalidEmail or UserAuthError.EmailIsTooLong
+                or UserAuthError.InvalidDateOfBirth or UserAuthError.UnderMinimumAge or UserAuthError.ExceedsMaximumAge;
         }
     }
 

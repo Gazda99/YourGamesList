@@ -62,13 +62,13 @@ public class LibSodiumPasswordHasherTests
         var hashedPassword = hasher.HashPassword(password);
 
         //ASSERT
-        Assert.That(hashedPassword, Is.Not.Null);
-        Assert.That(hashedPassword, Is.Not.Empty);
+        Assert.That(hashedPassword.IsSuccess, Is.True);
+        Assert.That(hashedPassword.Value, Is.Not.Empty);
         _logger.NotReceivedLog(LogLevel.Warning, _ => true);
     }
 
     [Test]
-    public void HashPassword_LibSodiumWrapperExceptionScenario_ReturnsEmptyString()
+    public void HashPassword_LibSodiumWrapperExceptionScenario_ReturnsFailure()
     {
         //ARRANGE
         var options = new LibSodiumPasswordHashingOptions() { MemoryLimit = 0 };
@@ -82,8 +82,8 @@ public class LibSodiumPasswordHasherTests
         var hashedPassword = hasher.HashPassword(password);
 
         //ASSERT
-        Assert.That(hashedPassword, Is.Empty);
-        _logger.ReceivedLog(LogLevel.Warning, ["Libsodium password hashing failed"]);
+        Assert.That(hashedPassword.IsSuccess, Is.False);
+        _logger.ReceivedLog(LogLevel.Warning, ["LibGazdium throws an exception"]);
     }
 
     #endregion

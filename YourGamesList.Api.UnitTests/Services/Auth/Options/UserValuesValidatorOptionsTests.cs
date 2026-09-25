@@ -31,6 +31,9 @@ public class UserValuesValidatorOptionsTests
                 .With(x => x.MinimumPasswordLength, 1)
                 .With(x => x.MaximumPasswordLength, 100)
                 .Create())
+            .With(x => x.DateOfBirth, _fixture.Build<DateOfBirthValidatorOptions>()
+                .With(x => x.MinimumAge, 18)
+                .Create())
             .Create();
 
         var validator = new UserValuesValidatorOptionsValidator();
@@ -206,6 +209,54 @@ public class UserValuesValidatorOptionsTests
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
         Assert.That(res.Errors.Select(x => x.ErrorMessage), Contains.Item("Minimum password length must be less or equal than maximum password length."));
+    }
+
+    #endregion
+
+    #region DateOfBirth
+
+    [Test]
+    [TestCase(0)]
+    [TestCase(-10)]
+    public void Validate_InvalidMinimumAge_ReturnsFalse(int minimumAge)
+    {
+        //ARRANGE
+        var options = _fixture.Build<DateOfBirthValidatorOptions>()
+            .With(x => x.MinimumAge, minimumAge)
+            .WithAutoProperties()
+            .Create();
+
+        var validator = new DateOfBirthValidatorOptionsValidator();
+
+        //ACT
+        var res = validator.TestValidate(options);
+
+        //ASSERT
+        Assert.That(res.IsValid, Is.False);
+        Assert.That(res.Errors, Is.Not.Null);
+        res.ShouldHaveValidationErrorFor(x => x.MinimumAge);
+    }
+
+    [Test]
+    [TestCase(0)]
+    [TestCase(-10)]
+    public void Validate_InvalidMaximum_ReturnsFalse(int maximumAge)
+    {
+        //ARRANGE
+        var options = _fixture.Build<DateOfBirthValidatorOptions>()
+            .With(x => x.MaximumAge, maximumAge)
+            .WithAutoProperties()
+            .Create();
+
+        var validator = new DateOfBirthValidatorOptionsValidator();
+
+        //ACT
+        var res = validator.TestValidate(options);
+
+        //ASSERT
+        Assert.That(res.IsValid, Is.False);
+        Assert.That(res.Errors, Is.Not.Null);
+        res.ShouldHaveValidationErrorFor(x => x.MaximumAge);
     }
 
     #endregion

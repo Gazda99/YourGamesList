@@ -1,4 +1,5 @@
-﻿using YourGamesList.Api.Model.Requests.Users;
+﻿using System;
+using YourGamesList.Api.Model.Requests.Users;
 
 namespace YourGamesList.Api.Services.Auth.Model;
 
@@ -7,6 +8,7 @@ public class UserRegisterDto
     public required string Email { get; set; }
     public required string Username { get; set; }
     public required string Password { get; set; }
+    public required DateOnly DateOfBirth { get; set; }
 }
 
 public static class UserRegisterDtoMappingExtensions
@@ -17,7 +19,8 @@ public static class UserRegisterDtoMappingExtensions
         {
             Email = request.Body.Email,
             Username = request.Body.Username,
-            Password = request.Body.Password
+            Password = request.Body.Password,
+            DateOfBirth = request.Body.DateOfBirth
         };
     }
 }

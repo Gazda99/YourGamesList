@@ -9,6 +9,7 @@ public class UserValuesValidatorOptions
     public EmailValidatorOptions Email { get; set; } = new();
     public UsernameValidatorOptions Username { get; set; } = new();
     public PasswordValidatorOptions Password { get; set; } = new();
+    public DateOfBirthValidatorOptions DateOfBirth { get; set; } = new();
 }
 
 public class EmailValidatorOptions
@@ -29,6 +30,12 @@ public class PasswordValidatorOptions
     public int MaximumPasswordLength { get; init; }
 }
 
+public class DateOfBirthValidatorOptions
+{
+    public int MinimumAge { get; init; }
+    public int MaximumAge { get; init; }
+}
+
 public class UserValuesValidatorOptionsValidator : AbstractValidator<UserValuesValidatorOptions>
 {
     public UserValuesValidatorOptionsValidator()
@@ -36,6 +43,7 @@ public class UserValuesValidatorOptionsValidator : AbstractValidator<UserValuesV
         RuleFor(x => x.Email).SetValidator(new EmailValidatorOptionsValidator());
         RuleFor(x => x.Username).SetValidator(new UsernameValidatorOptionsValidator());
         RuleFor(x => x.Password).SetValidator(new PasswordValidatorOptionsValidator());
+        RuleFor(x => x.DateOfBirth).SetValidator(new DateOfBirthValidatorOptionsValidator());
     }
 }
 
@@ -83,5 +91,23 @@ public class PasswordValidatorOptionsValidator : AbstractValidator<PasswordValid
         RuleFor(x => new { x.MinimumPasswordLength, x.MaximumPasswordLength })
             .Must(x => x.MinimumPasswordLength <= x.MaximumPasswordLength)
             .WithMessage("Minimum password length must be less or equal than maximum password length.");
+    }
+}
+
+public class DateOfBirthValidatorOptionsValidator : AbstractValidator<DateOfBirthValidatorOptions>
+{
+    public DateOfBirthValidatorOptionsValidator()
+    {
+        RuleFor(x => x.MinimumAge)
+            .NotEmpty()
+            .GreaterThan(0);
+
+        RuleFor(x => x.MaximumAge)
+            .NotEmpty()
+            .GreaterThan(0);
+        
+        RuleFor(x => new { x.MinimumAge, x.MaximumAge })
+            .Must(x => x.MinimumAge <= x.MaximumAge)
+            .WithMessage("Minimum age must be less or equal than maximum age.");
     }
 }

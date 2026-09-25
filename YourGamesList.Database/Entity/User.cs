@@ -11,7 +11,7 @@ public class User
     public required DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? ModifiedAt { get; set; }
 
-    public required DateTimeOffset DateOfBirth { get; set; }
+    public required DateOnly DateOfBirth { get; set; }
     [StringLength(512)] public string? Description { get; set; }
     [StringLength(256)] public required string Email { get; set; }
     public DateTimeOffset? ExpiryAt { get; set; }
