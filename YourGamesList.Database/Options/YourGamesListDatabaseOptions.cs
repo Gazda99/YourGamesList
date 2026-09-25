@@ -1,7 +1,9 @@
-﻿using FluentValidation;
+﻿using System.Diagnostics.CodeAnalysis;
+using FluentValidation;
 
 namespace YourGamesList.Database.Options;
 
+[ExcludeFromCodeCoverage]
 public class YourGamesListDatabaseOptions
 {
     public const string SectionName = "YourGamesListDatabase";
@@ -9,6 +11,7 @@ public class YourGamesListDatabaseOptions
     public string? MigrationAssembly { get; init; }
 }
 
+[ExcludeFromCodeCoverage]
 public class YourGamesListDatabaseOptionsValidator : AbstractValidator<YourGamesListDatabaseOptions>
 {
     public YourGamesListDatabaseOptionsValidator()
