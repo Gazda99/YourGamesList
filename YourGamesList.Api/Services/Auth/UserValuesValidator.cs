@@ -1,4 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using YourGamesList.Api.Services.Auth.Model;
@@ -40,16 +42,28 @@ public class UserValuesValidator : IUserValuesValidator
 
     public ErrorResult<UserAuthError> ValidateEmail(string email)
     {
+        email = email.ToLowerInvariant().Trim();
+
         if (!IsLessOrEqualThanMaximumLength(email, _options.Value.Email.MaximumEmailLength))
         {
             return ErrorResult<UserAuthError>.Failure(UserAuthError.EmailIsTooLong);
         }
-        
+
+        //local part should be <= 64
+        var localPart = email.Split("@").FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(localPart) || localPart.Length > 64)
+        {
+            _logger.LogInformation("{EmailLocalPart} is invalid email local part.", localPart);
+            return ErrorResult<UserAuthError>.Failure(UserAuthError.InvalidEmail);
+        }
+
         return ErrorResult<UserAuthError>.Success();
     }
 
     public ErrorResult<UserAuthError> ValidateUsername(string username)
     {
+        username = username.ToLowerInvariant().Trim();
+
         if (!IsGreaterOrEqualMinimumLength(username, _options.Value.Username.MinimumUsernameLength))
         {
             return ErrorResult<UserAuthError>.Failure(UserAuthError.UsernameIsTooShort);
@@ -58,6 +72,12 @@ public class UserValuesValidator : IUserValuesValidator
         if (!IsLessOrEqualThanMaximumLength(username, _options.Value.Username.MaximumUsernameLength))
         {
             return ErrorResult<UserAuthError>.Failure(UserAuthError.UsernameIsTooLong);
+        }
+
+        if (!Regex.IsMatch(username, _options.Value.Username.AllowedCharactersRegex))
+        {
+            _logger.LogInformation("username doesn't match allowed characters.");
+            return ErrorResult<UserAuthError>.Failure(UserAuthError.InvalidUsername);
         }
 
         return ErrorResult<UserAuthError>.Success();

@@ -18,6 +18,7 @@ public class EmailValidatorOptions
 
 public class UsernameValidatorOptions
 {
+    public string AllowedCharactersRegex { get; init; } = "";
     public int MinimumUsernameLength { get; init; }
     public int MaximumUsernameLength { get; init; }
 }
@@ -62,6 +63,9 @@ public class UsernameValidatorOptionsValidator : AbstractValidator<UsernameValid
         RuleFor(x => new { x.MinimumUsernameLength, x.MaximumUsernameLength })
             .Must(x => x.MinimumUsernameLength <= x.MaximumUsernameLength)
             .WithMessage("Minimum username length must be less or equal than maximum username length.");
+
+        RuleFor(x => x.AllowedCharactersRegex)
+            .NotEmpty();
     }
 }
 

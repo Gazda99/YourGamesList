@@ -1,4 +1,5 @@
-﻿using AutoFixture;
+﻿using System.Linq;
+using AutoFixture;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
@@ -25,14 +26,13 @@ public class UserValuesValidatorTests
 
     #region Email
 
-    
     [Test]
     public void ValidateEmail_ValidEmail_ReturnsTrue()
     {
         //ARRANGE
         var options = _fixture.Build<UserValuesValidatorOptions>()
             .With(x => x.Email, _fixture.Build<EmailValidatorOptions>()
-                .With(x => x.MaximumEmailLength, 100)
+                .With(x => x.MaximumEmailLength, 256)
                 .Create()).Create();
         _options.Value.Returns(options);
         const string email = "thisis@correct.email.com";
@@ -44,7 +44,7 @@ public class UserValuesValidatorTests
         //ASSERT
         Assert.That(res.IsSuccess, Is.True);
     }
-    
+
     [Test]
     public void ValidateEmail_EmailTooLong_ReturnsFalse()
     {
@@ -66,8 +66,30 @@ public class UserValuesValidatorTests
         _logger.ReceivedLog(LogLevel.Information, $"email length {email.Length} is more than {options.Email.MaximumEmailLength} allowed.");
     }
 
+    [Test]
+    public void ValidateEmail_LocalPartTooLong_ReturnsFalse()
+    {
+        //ARRANGE
+        var options = _fixture.Build<UserValuesValidatorOptions>()
+            .With(x => x.Email, _fixture.Build<EmailValidatorOptions>()
+                .With(x => x.MaximumEmailLength, 256)
+                .Create()).Create();
+        _options.Value.Returns(options);
+        var localPart = new string(Enumerable.Range(0, 65).Select(_ => 'x').ToArray());
+        var email = $"{localPart}@incorrect.email.com";
+        var usernameValidator = new UserValuesValidator(_logger, _options);
+
+        //ACT
+        var res = usernameValidator.ValidateEmail(email);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.False);
+        Assert.That(res.Error, Is.EqualTo(UserAuthError.InvalidEmail));
+        _logger.ReceivedLog(LogLevel.Information, $"{localPart} is invalid email local part.");
+    }
+
     #endregion
-    
+
     #region Username
 
     [Test]
@@ -76,6 +98,7 @@ public class UserValuesValidatorTests
         //ARRANGE
         var options = _fixture.Build<UserValuesValidatorOptions>()
             .With(x => x.Username, _fixture.Build<UsernameValidatorOptions>()
+                .With(x=>x.AllowedCharactersRegex, @"[\s\S]")
                 .With(x => x.MinimumUsernameLength, 1)
                 .With(x => x.MaximumUsernameLength, 100)
                 .Create()).Create();
@@ -132,6 +155,30 @@ public class UserValuesValidatorTests
         Assert.That(res.IsSuccess, Is.False);
         Assert.That(res.Error, Is.EqualTo(UserAuthError.UsernameIsTooLong));
         _logger.ReceivedLog(LogLevel.Information, $"username length {username.Length} is more than {options.Username.MaximumUsernameLength} allowed.");
+    }
+    
+    
+    [Test]
+    public void ValidateUsername_InvalidCharacters_ReturnsTrue()
+    {
+        //ARRANGE
+        var options = _fixture.Build<UserValuesValidatorOptions>()
+            .With(x => x.Username, _fixture.Build<UsernameValidatorOptions>()
+                .With(x=>x.AllowedCharactersRegex, "^[a-zA-Z]+$")
+                .With(x => x.MinimumUsernameLength, 1)
+                .With(x => x.MaximumUsernameLength, 100)
+                .Create()).Create();
+        _options.Value.Returns(options);
+        const string username = "this_is_incorrect_because_contains_numbers_1234";
+        var usernameValidator = new UserValuesValidator(_logger, _options);
+
+        //ACT
+        var res = usernameValidator.ValidateUsername(username);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.False);
+        Assert.That(res.Error, Is.EqualTo(UserAuthError.InvalidUsername));
+        _logger.ReceivedLog(LogLevel.Information, $"username doesn't match allowed characters.");
     }
 
     #endregion

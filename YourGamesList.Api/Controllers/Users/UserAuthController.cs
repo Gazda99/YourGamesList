@@ -59,8 +59,9 @@ public class UserAuthController : YourGamesListBaseController
 
         static bool IsErrorBadRequest(UserAuthError userAuthError)
         {
-            return userAuthError is UserAuthError.PasswordIsTooShort or UserAuthError.PasswordIsTooLong or UserAuthError.InvalidEmail
-                or UserAuthError.InvalidUsername or UserAuthError.UsernameIsTooShort or UserAuthError.UsernameIsTooLong or UserAuthError.EmailIsTooLong;
+            return userAuthError is UserAuthError.PasswordIsTooShort or UserAuthError.PasswordIsTooLong
+                or UserAuthError.InvalidUsername or UserAuthError.UsernameIsTooShort or UserAuthError.UsernameIsTooLong
+                or UserAuthError.InvalidEmail or UserAuthError.EmailIsTooLong;
         }
     }
 
