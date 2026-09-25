@@ -11,6 +11,7 @@ using YourGamesList.Contracts.Responses.Users;
 
 namespace YourGamesList.Api.Controllers.Users;
 
+//TODO: unit tests
 [ApiController]
 [Route("users/auth")]
 [RequestValidator]
@@ -74,7 +75,33 @@ public class UserAuthController : YourGamesListBaseController
     {
         _logger.LogInformation("Requested to login user {Username}", userLoginRequest.Body.Username);
 
-        return Result(StatusCodes.Status200OK);
+        var dto = userLoginRequest.ToDto();
+
+        var result = await _userManagerService.Login(dto);
+
+        if (result.IsFailure)
+        {
+            if (result.Error is UserAuthError.NoUserFound)
+            {
+                return Result(StatusCodes.Status404NotFound);
+            }
+            else if (result.Error is UserAuthError.UnauthorizedUser)
+            {
+                return Result(StatusCodes.Status401Unauthorized);
+            }
+            else
+            {
+                return Result(StatusCodes.Status500InternalServerError);
+            }
+        }
+        else
+        {
+            var response = new AuthLoginResponse()
+            {
+                Token = result.Value
+            };
+            return Result(StatusCodes.Status200OK, response);
+        }
     }
 
     [HttpDelete("delete")]

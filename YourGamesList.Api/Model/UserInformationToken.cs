@@ -13,6 +13,7 @@ public class UserInformationToken
     public required string Username { get; init; }
     public required Guid UserId { get; init; }
 
+    //TODO: unit tests
     public static CombinedResult<UserInformationToken, UserInformationTokenCreationError> FromHttpContext(HttpContext httpContext)
     {
         var user = httpContext.User;

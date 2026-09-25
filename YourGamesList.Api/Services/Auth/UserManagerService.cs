@@ -16,7 +16,7 @@ namespace YourGamesList.Api.Services.Auth;
 public interface IUserManagerService
 {
     Task<CombinedResult<Guid, UserAuthError>> Register(UserRegisterDto userRegisterDto);
-    Task Login(UserLoginDto userLoginDto);
+    Task<CombinedResult<string, UserAuthError>> Login(UserLoginDto userLoginDto);
     Task<ErrorResult<UserAuthError>> Delete(UserDeleteDto userDeleteDto);
 }
 
@@ -29,6 +29,7 @@ public class UserManagerService : IUserManagerService
     private readonly TimeProvider _timeProvider;
     private readonly IVerificationTokenHasher _verificationTokenHasher;
     private readonly IVerificationEmailSender _verificationEmailSender;
+    private readonly ITokenProvider _tokenProvider;
     private readonly YourGamesListDbContext _yglDbContext;
 
     public UserManagerService(ILogger<UserManagerService> logger,
@@ -38,7 +39,8 @@ public class UserManagerService : IUserManagerService
         IPasswordHasher passwordHasher,
         TimeProvider timeProvider,
         IVerificationTokenHasher verificationTokenHasher,
-        IVerificationEmailSender verificationEmailSender
+        IVerificationEmailSender verificationEmailSender,
+        ITokenProvider tokenProvider
     )
     {
         _logger = logger;
@@ -48,11 +50,38 @@ public class UserManagerService : IUserManagerService
         _timeProvider = timeProvider;
         _verificationTokenHasher = verificationTokenHasher;
         _verificationEmailSender = verificationEmailSender;
+        _tokenProvider = tokenProvider;
         _yglDbContext = yglDbContext.CreateDbContext();
     }
 
-    public async Task Login(UserLoginDto userLoginDto)
+    public async Task<CombinedResult<string, UserAuthError>> Login(UserLoginDto userLoginDto)
     {
+        var username = userLoginDto.Username.ToLowerInvariant().Trim();
+        var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
+
+        if (user == null)
+        {
+            _logger.LogInformation("Not user found.");
+            return CombinedResult<string, UserAuthError>.Failure(UserAuthError.NoUserFound);
+        }
+
+        var hashedPassword = user.PasswordHash;
+        var passwordMatch = _passwordHasher.VerifyHashedPassword(userLoginDto.Password, hashedPassword);
+
+        if (!passwordMatch)
+        {
+            _logger.LogInformation("Password does not match.");
+            return CombinedResult<string, UserAuthError>.Failure(UserAuthError.UnauthorizedUser);
+        }
+
+        var newToken = _tokenProvider.CreateToken(user.Username, user.Id);
+        _logger.LogInformation("Created new user token. User logged in.");
+
+        var now = _timeProvider.GetUtcNow();
+        user.LastLoginDate = now;
+        await _yglDbContext.SaveChangesAsync();
+
+        return CombinedResult<string, UserAuthError>.Success(newToken);
     }
 
     public async Task<CombinedResult<Guid, UserAuthError>> Register(UserRegisterDto userRegisterDto)
