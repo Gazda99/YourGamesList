@@ -10,6 +10,7 @@ $repoRoot = Split-Path -Parent $scriptDirectory
 $apiProjectPath = Join-Path $repoRoot 'YourGamesList.API/YourGamesList.API.csproj'
 $databaseProjectPath = Join-Path $repoRoot 'YourGamesList.Database/YourGamesList.Database.csproj'
 
+# Tool versions
 $dotnetEfVersion = "10.0.10"
 $microsoftEntityFrameworkCoreDesignVersion = "10.0.10"
 
@@ -30,68 +31,52 @@ if (!(Test-Path $apiProjectPath))
 
 Push-Location $repoRoot
 
-$toolManifestPath = Join-Path $repoRoot 'dotnet-tools.json'
+$configFolder = Join-Path $repoRoot '.config'
+$toolManifestPath = Join-Path $configFolder 'dotnet-tools.json'
 
 try
 {
+    # Check if manifest already exists
     if (!(Test-Path $toolManifestPath))
     {
-        Write-Host "Create new tool manifest"
-        dotnet new tool-manifest --force
+        Write-Host "No tool manifest found. Creating a new one at .config/dotnet-tools.json..."
+        dotnet new tool-manifest --output $configFolder
     }
+
+    # Install or update dotnet-ef package
+    Write-Host "Ensuring dotnet-ef version $dotnetEfVersion is installed..."
+    $installOutput = dotnet tool install dotnet-ef --version $dotnetEfVersion 2>&1
+    if ($LASTEXITCODE -ne 0)
+    {
+        Write-Host "Tool 'dotnet-ef' is already present. Updating to version $dotnetEfVersion..."
+        dotnet tool update dotnet-ef --version $dotnetEfVersion
+    }
+
+    # add 'Microsoft.EntityFrameworkCore.Design' package to api project
+    Write-Host "Ensuring package 'Microsoft.EntityFrameworkCore.Design' ($microsoftEntityFrameworkCoreDesignVersion) is added to API project..."
+    dotnet add $apiProjectPath package Microsoft.EntityFrameworkCore.Design --version $microsoftEntityFrameworkCoreDesignVersion
 
     Write-Host "Setting 'ENV' environment variable to '$environment'"
     $env:ENV = $environment
 
-    Write-Host "Install dotnet tool 'dotnet-ef'"
-    dotnet tool install --local dotnet-ef --version $dotnetEfVersion
-
-    Write-Host "Add package 'Microsoft.EntityFrameworkCore.Design'"
-    dotnet add $apiProjectPath package Microsoft.EntityFrameworkCore.Design --version $microsoftEntityFrameworkCoreDesignVersion
-
+    # run mingration if requested
     if (![string]::IsNullOrEmpty($migrationName))
     {
-        Write-Host "Create new migration '$migrationName'"
+        Write-Host "Creating new migration '$migrationName'..."
         dotnet ef migrations add $migrationName --project $databaseProjectPath --startup-project $apiProjectPath
     }
     else
     {
-        Write-Host "Skipping migration"
+        Write-Host "Skipping migration creation."
     }
-    
-    Write-Host "Update database"
+
+    Write-Host "Updating database..."
     dotnet ef database update --project $databaseProjectPath --startup-project $apiProjectPath
 }
 finally
 {
+    dotnet remove $apiProjectPath package Microsoft.EntityFrameworkCore.Design
     Write-Host "Resetting 'ENV' environment variable"
     $env:ENV = $null
-
-    try
-    {
-        dotnet tool uninstall --local dotnet-ef
-    }
-    catch
-    {
-        Write-Warning "Unable to uninstall dotnet-ef from the local tool manifest."
-    }
-
-    try
-    {
-        Write-Host "Remove package 'Microsoft.EntityFrameworkCore.Design'"
-        dotnet remove $apiProjectPath package Microsoft.EntityFrameworkCore.Design
-    }
-    catch
-    {
-        Write-Warning "Unable to remove package 'Microsoft.EntityFrameworkCore.Design'."
-    }
-
-    if (Test-Path $toolManifestPath)
-    {
-        Remove-Item $toolManifestPath -Force
-    }
-
-
-
     Pop-Location
 }

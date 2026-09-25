@@ -249,6 +249,11 @@ public class UserManagerService : IUserManagerService
     public async Task<ErrorResult<UserAuthError>> ConfirmEmail(ConfirmEmailDto confirmEmailDto)
     {
         var token = confirmEmailDto.Token.ToLower();
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return ErrorResult<UserAuthError>.Failure(UserAuthError.EmailVerificationInvalid);
+        }
+        
         var hashToken = _verificationTokenHasher.HashToken(token);
         var emailVerification = await _yglDbContext.EmailVerifications.FirstOrDefaultAsync(x => x.Token == hashToken);
         if (emailVerification == null)

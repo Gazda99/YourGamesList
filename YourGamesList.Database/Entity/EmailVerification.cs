@@ -1,8 +1,10 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace YourGamesList.Database.Entity;
 
+[ExcludeFromCodeCoverage]
 public class EmailVerification
 {
     public Guid Id { get; set; }
