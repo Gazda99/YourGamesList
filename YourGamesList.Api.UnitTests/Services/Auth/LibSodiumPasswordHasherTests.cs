@@ -102,7 +102,7 @@ public class LibSodiumPasswordHasherTests
         var hashedPassword = LibsodiumWrapper.CryptoPwhashStr(password, options.OpsLimit, options.MemoryLimit);
 
         //ACT
-        var result = hasher.VerifyHashedPassword(hashedPassword, password);
+        var result = hasher.VerifyHashedPassword(password, hashedPassword);
 
         //ASSERT
         Assert.That(result, Is.True);
@@ -122,7 +122,7 @@ public class LibSodiumPasswordHasherTests
         var hashedPassword = LibsodiumWrapper.CryptoPwhashStr(password, options.OpsLimit, options.MemoryLimit);
 
         //ACT
-        var result = hasher.VerifyHashedPassword(hashedPassword, password2);
+        var result = hasher.VerifyHashedPassword(password2, hashedPassword);
 
         //ASSERT
         Assert.That(result, Is.False);

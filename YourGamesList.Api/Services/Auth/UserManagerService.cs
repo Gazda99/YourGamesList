@@ -17,7 +17,7 @@ public interface IUserManagerService
 {
     Task<CombinedResult<Guid, UserAuthError>> Register(UserRegisterDto userRegisterDto);
     Task Login(UserLoginDto userLoginDto);
-    Task Delete(UserDeleteDto userDeleteDto);
+    Task<ErrorResult<UserAuthError>> Delete(UserDeleteDto userDeleteDto);
 }
 
 public class UserManagerService : IUserManagerService
@@ -53,7 +53,6 @@ public class UserManagerService : IUserManagerService
 
     public async Task Login(UserLoginDto userLoginDto)
     {
-        throw new System.NotImplementedException();
     }
 
     public async Task<CombinedResult<Guid, UserAuthError>> Register(UserRegisterDto userRegisterDto)
@@ -186,8 +185,30 @@ public class UserManagerService : IUserManagerService
         return CombinedResult<Guid, UserAuthError>.Success(Guid.NewGuid());
     }
 
-    public async Task Delete(UserDeleteDto userDeleteDto)
+    public async Task<ErrorResult<UserAuthError>> Delete(UserDeleteDto userDeleteDto)
     {
-        throw new System.NotImplementedException();
+        var username = userDeleteDto.Username.ToLowerInvariant().Trim();
+        var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
+
+        if (user == null)
+        {
+            _logger.LogInformation("Not user found.");
+            return ErrorResult<UserAuthError>.Failure(UserAuthError.NoUserFound);
+        }
+
+        var hashedPassword = user.PasswordHash;
+        var passwordMatch = _passwordHasher.VerifyHashedPassword(userDeleteDto.Password, hashedPassword);
+
+        if (!passwordMatch)
+        {
+            _logger.LogInformation("Password does not match.");
+            return ErrorResult<UserAuthError>.Failure(UserAuthError.UnauthorizedUser);
+        }
+
+        _yglDbContext.Users.Remove(user);
+        await _yglDbContext.SaveChangesAsync();
+        _logger.LogInformation("Removed user from database.");
+
+        return ErrorResult<UserAuthError>.Success();
     }
 }

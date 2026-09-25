@@ -56,7 +56,7 @@ public static partial class LibsodiumWrapper
     /// Uses underlying Libsodium crypto_pwhash_str_verify() method to check if <paramref name="password"/> matches hash <paramref name="hashedPassword"/>
     /// </summary>
     /// <returns>True if password matches hash, else False</returns>
-    public static bool CryptoPwhashStrVerify(string hashedPassword, string password)
+    public static bool CryptoPwhashStrVerify(string password, string hashedPassword)
     {
         var hashByteCount = Encoding.UTF8.GetByteCount(hashedPassword);
         var passByteCount = Encoding.UTF8.GetByteCount(password);

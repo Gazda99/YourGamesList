@@ -85,6 +85,28 @@ public class UserAuthController : YourGamesListBaseController
     {
         _logger.LogInformation("Requested to delete user {Username}", userDeleteRequest.Body.Username);
 
-        return Result(StatusCodes.Status200OK);
+        var dto = userDeleteRequest.ToDto();
+
+        var result = await _userManagerService.Delete(dto);
+
+        if (result.IsFailure)
+        {
+            if (result.Error is UserAuthError.NoUserFound)
+            {
+                return Result(StatusCodes.Status404NotFound);
+            }
+            else if (result.Error is UserAuthError.UnauthorizedUser)
+            {
+                return Result(StatusCodes.Status401Unauthorized);
+            }
+            else
+            {
+                return Result(StatusCodes.Status500InternalServerError);
+            }
+        }
+        else
+        {
+            return Result(StatusCodes.Status204NoContent);
+        }
     }
 }

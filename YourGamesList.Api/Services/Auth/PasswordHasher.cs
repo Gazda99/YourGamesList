@@ -9,7 +9,7 @@ namespace YourGamesList.Api.Services.Auth;
 public interface IPasswordHasher
 {
     ValueResult<string> HashPassword(string password);
-    bool VerifyHashedPassword(string hashedPassword, string password);
+    bool VerifyHashedPassword(string password, string hashedPassword);
 }
 
 public class LibSodiumPasswordHasher : IPasswordHasher
@@ -45,9 +45,9 @@ public class LibSodiumPasswordHasher : IPasswordHasher
         }
     }
 
-    public bool VerifyHashedPassword(string hashedPassword, string password)
+    public bool VerifyHashedPassword(string password, string hashedPassword)
     {
-        var result = LibGazdium.LibsodiumWrapper.CryptoPwhashStrVerify(hashedPassword, password);
+        var result = LibGazdium.LibsodiumWrapper.CryptoPwhashStrVerify(password, hashedPassword);
         if (result)
         {
             _logger.LogInformation("Password has been verified.");

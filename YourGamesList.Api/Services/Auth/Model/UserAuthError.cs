@@ -7,6 +7,7 @@ public enum UserAuthError
 {
     InternalServerError,
     NoUserFound,
+    UnauthorizedUser,
 
     #region Email
 
