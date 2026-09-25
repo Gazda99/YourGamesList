@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Security.Cryptography;
 using System.Text;
+using SQLitePCL;
 
 namespace YourGamesList.Api.Services.Auth;
 
 public interface IVerificationTokenHasher
 {
     (string RawToken, string TokenHash) GenerateToken();
+    string HashToken(string rawToken);
     bool CompareToken(string rawToken, string tokenHash);
 }
 
@@ -19,16 +21,20 @@ public class VerificationTokenHasher : IVerificationTokenHasher
         var rawToken = Convert.ToBase64String(randomBytes)
             .TrimEnd('=')
             .Replace('+', '-')
-            .Replace('/', '_');
+            .Replace('/', '_')
+            .ToLower();
 
-        var tokenHash = HashToken(rawToken);
+        var tokenHash = HashToken(rawToken).ToLower();
+        ;
 
         return (rawToken, tokenHash);
     }
 
     public bool CompareToken(string rawToken, string hashedToken)
     {
-        var rawHashed = HashToken(rawToken);
+        rawToken = rawToken.ToLower();
+        hashedToken = hashedToken.ToLower();
+        var rawHashed = HashToken(rawToken).ToLower();
 
         return CryptographicOperations.FixedTimeEquals(
             Encoding.UTF8.GetBytes(rawHashed),
@@ -36,10 +42,10 @@ public class VerificationTokenHasher : IVerificationTokenHasher
         );
     }
 
-    private static string HashToken(string rawToken)
+    public string HashToken(string rawToken)
     {
-        var inputBytes = Encoding.UTF8.GetBytes(rawToken);
+        var inputBytes = Encoding.UTF8.GetBytes(rawToken.ToLower());
         var hashBytes = SHA512.HashData(inputBytes);
-        return Convert.ToHexString(hashBytes);
+        return Convert.ToHexString(hashBytes).ToLower();
     }
 }

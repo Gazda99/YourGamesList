@@ -71,6 +71,7 @@ public class UserAuthController : YourGamesListBaseController
     [ProducesResponseType<AuthLoginResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Login(UserLoginRequest userLoginRequest)
     {
         _logger.LogInformation("Requested to login user {Username}", userLoginRequest.Body.Username);
@@ -84,6 +85,10 @@ public class UserAuthController : YourGamesListBaseController
             if (result.Error is UserAuthError.NoUserFound)
             {
                 return Result(StatusCodes.Status404NotFound);
+            }
+            else if (result.Error is UserAuthError.UserNotActiveEmailActivation)
+            {
+                return Result(StatusCodes.Status403Forbidden, result.Error.ToString());
             }
             else if (result.Error is UserAuthError.UnauthorizedUser)
             {
@@ -134,6 +139,33 @@ public class UserAuthController : YourGamesListBaseController
         else
         {
             return Result(StatusCodes.Status204NoContent);
+        }
+    }
+
+    [HttpGet("confirmEmail")]
+    [ProducesResponseType(typeof(void), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ConfirmEmail(ConfirmEmailRequest confirmEmailRequest)
+    {
+        _logger.LogInformation("Requested to confirm email");
+
+        var dto = confirmEmailRequest.ToDto();
+
+        var result = await _userManagerService.ConfirmEmail(dto);
+
+        if (result.IsFailure)
+        {
+            if (result.Error is UserAuthError.EmailVerificationInvalid or UserAuthError.EmailVerificationExpired)
+            {
+                return Result(StatusCodes.Status400BadRequest, result.Error.ToString());
+            }
+            else
+            {
+                return Result(StatusCodes.Status500InternalServerError);
+            }
+        }
+        else
+        {
+            return Result(StatusCodes.Status200OK);
         }
     }
 }

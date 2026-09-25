@@ -19,6 +19,7 @@ public class VerificationEmailSenderOptionsTests
     {
         //ARRANGE
         var options = _fixture.Build<VerificationEmailSenderOptions>()
+            .With(x => x.YglUrl, "http://127.0.0.1")
             .WithAutoProperties()
             .Create();
 
@@ -29,6 +30,29 @@ public class VerificationEmailSenderOptionsTests
 
         //ASSERT
         Assert.That(res.IsValid, Is.True);
+    }
+    
+    [Test]
+    [TestCase("")]
+    [TestCase(" ")]
+    [TestCase("htt:wrong/address")]
+    public void Validate_InvalidYglUrl_ReturnsFalse(string url)
+    {
+        //ARRANGE
+        var options = _fixture.Build<VerificationEmailSenderOptions>()
+            .With(x => x.YglUrl, url)
+            .WithAutoProperties()
+            .Create();
+
+        var validator = new VerificationEmailSenderOptionsValidator();
+
+        //ACT
+        var res = validator.TestValidate(options);
+
+        //ASSERT
+        Assert.That(res.IsValid, Is.False);
+        Assert.That(res.Errors, Is.Not.Null);
+        res.ShouldHaveValidationErrorFor(x => x.YglUrl);
     }
 
     [Test]

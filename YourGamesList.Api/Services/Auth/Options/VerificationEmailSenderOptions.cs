@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using YourGamesList.Common.Options.Validators;
 
 namespace YourGamesList.Api.Services.Auth.Options;
 
@@ -6,6 +7,7 @@ public class VerificationEmailSenderOptions
 {
     public const string SectionName = "VerificationEmailSender";
 
+    public required string YglUrl { get; set; }
     public required string Address { get; set; }
     public required string Username { get; set; }
     public required string Password { get; set; }
@@ -17,6 +19,9 @@ public class VerificationEmailSenderOptionsValidator : AbstractValidator<Verific
 {
     public VerificationEmailSenderOptionsValidator()
     {
+        RuleFor(x => x.YglUrl)
+            .NotEmpty()
+            .IsValidAbsoluteUrl();;
         RuleFor(x => x.Password)
             .NotEmpty();
         RuleFor(x => x.Address)

@@ -8,12 +8,16 @@ public enum UserAuthError
     InternalServerError,
     NoUserFound,
     UnauthorizedUser,
+    UserNotActiveEmailActivation,
 
     #region Email
 
     InvalidEmail,
     EmailIsTooLong,
     EmailAlreadyTaken,
+    
+    EmailVerificationInvalid,
+    EmailVerificationExpired,
 
     #endregion
 

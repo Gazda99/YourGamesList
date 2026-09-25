@@ -18,6 +18,7 @@ public interface IUserManagerService
     Task<CombinedResult<Guid, UserAuthError>> Register(UserRegisterDto userRegisterDto);
     Task<CombinedResult<string, UserAuthError>> Login(UserLoginDto userLoginDto);
     Task<ErrorResult<UserAuthError>> Delete(UserDeleteDto userDeleteDto);
+    Task<ErrorResult<UserAuthError>> ConfirmEmail(ConfirmEmailDto confirmEmailDto);
 }
 
 public class UserManagerService : IUserManagerService
@@ -63,6 +64,12 @@ public class UserManagerService : IUserManagerService
         {
             _logger.LogInformation("Not user found.");
             return CombinedResult<string, UserAuthError>.Failure(UserAuthError.NoUserFound);
+        }
+
+        if (user.UserStatus == UserStatus.Pending)
+        {
+            _logger.LogInformation("User status is {UserStatus}.", nameof(UserStatus.Pending));
+            return CombinedResult<string, UserAuthError>.Failure(UserAuthError.UserNotActiveEmailActivation);
         }
 
         var hashedPassword = user.PasswordHash;
@@ -237,6 +244,44 @@ public class UserManagerService : IUserManagerService
         _yglDbContext.Users.Remove(user);
         await _yglDbContext.SaveChangesAsync();
         _logger.LogInformation("Removed user from database.");
+
+        return ErrorResult<UserAuthError>.Success();
+    }
+
+    public async Task<ErrorResult<UserAuthError>> ConfirmEmail(ConfirmEmailDto confirmEmailDto)
+    {
+        var token = confirmEmailDto.Token.ToLower();
+        var hashToken = _verificationTokenHasher.HashToken(token);
+        var emailVerification = await _yglDbContext.EmailVerifications.FirstOrDefaultAsync(x => x.Token == hashToken);
+        if (emailVerification == null)
+        {
+            _logger.LogInformation("Email verification not found.");
+            return ErrorResult<UserAuthError>.Failure(UserAuthError.EmailVerificationInvalid);
+        }
+
+        var now = _timeProvider.GetUtcNow();
+        if (now > emailVerification.ExpiryAt)
+        {
+            _logger.LogInformation("Email verification expired.");
+            _yglDbContext.EmailVerifications.Remove(emailVerification);
+            await _yglDbContext.SaveChangesAsync();
+            return ErrorResult<UserAuthError>.Failure(UserAuthError.EmailVerificationExpired);
+        }
+
+        var user = await _yglDbContext.Users.FirstOrDefaultAsync(x => x.Id == emailVerification.UserId);
+        if (user == null)
+        {
+            _logger.LogInformation("User associated with email confirmation not found.");
+            return ErrorResult<UserAuthError>.Failure(UserAuthError.InternalServerError);
+        }
+
+        now = _timeProvider.GetUtcNow();
+        user.ExpiryAt = null;
+        user.UserStatus = UserStatus.Active;
+        user.ModifiedAt = now;
+
+        _yglDbContext.EmailVerifications.Remove(emailVerification);
+        await _yglDbContext.SaveChangesAsync();
 
         return ErrorResult<UserAuthError>.Success();
     }

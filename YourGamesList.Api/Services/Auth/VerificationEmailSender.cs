@@ -24,12 +24,30 @@ public class VerificationEmailSender : IVerificationEmailSender
         _options = options;
     }
 
+    private static string Body(string url, string token)
+    {
+        var confirmationUrl = $"{url.TrimEnd('/')}?token={Uri.EscapeDataString(token)}";
+
+        return $"""
+                Hi,
+
+                Thanks for signing up for Your Games List!
+
+                Please confirm your email address by visiting the following link:
+                {confirmationUrl}
+
+                If you didn't create an account, you can safely ignore this email.
+
+                Best regards,
+                Your Games List Team
+                """;
+    }
+
     public async Task<bool> SendVerificationEmail(string email, string username, string token)
     {
         const string senderName = "Your Games List - automatic email service";
-        var bodyText = $"{token}";
         var subject = $"Hello {username}, confirm your email address for newly created account in Your Games List";
-        var body = new TextPart("plain") { Text = bodyText };
+        var body = new TextPart("plain") { Text = Body(_options.Value.YglUrl, token) };
 
         try
         {
