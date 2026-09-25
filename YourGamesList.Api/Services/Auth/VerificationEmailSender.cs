@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
-using MailKit.Net.Smtp;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using YourGamesList.Api.Services.Auth.Options;
 
 namespace YourGamesList.Api.Services.Auth;
-//TODO: unit tests
+
 public interface IVerificationEmailSender
 {
     Task<bool> SendVerificationEmail(string email, string username, string token);
@@ -17,11 +16,17 @@ public class VerificationEmailSender : IVerificationEmailSender
 {
     private readonly ILogger<VerificationEmailSender> _logger;
     private readonly IOptions<VerificationEmailSenderOptions> _options;
+    private readonly ISmtpClientFactory _smtpClientFactory;
 
-    public VerificationEmailSender(ILogger<VerificationEmailSender> logger, IOptions<VerificationEmailSenderOptions> options)
+    public VerificationEmailSender(
+        ILogger<VerificationEmailSender> logger,
+        IOptions<VerificationEmailSenderOptions> options,
+        ISmtpClientFactory smtpClientFactory
+    )
     {
         _logger = logger;
         _options = options;
+        _smtpClientFactory = smtpClientFactory;
     }
 
     private static string Body(string url, string token)
@@ -61,7 +66,7 @@ public class VerificationEmailSender : IVerificationEmailSender
                 message.Body = body;
             }
 
-            using var client = new SmtpClient();
+            using var client = _smtpClientFactory.CreateClient();
             await client.ConnectAsync(_options.Value.SmtpHost, _options.Value.SmtpPort, true);
             await client.AuthenticateAsync(_options.Value.Username, _options.Value.Password);
 

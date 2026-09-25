@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace YourGamesList.Api.Services.CorrelationId;
+namespace YourGamesList.Api.Services;
 
 public interface ICorrelationIdProvider
 {

@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Middlewares;
-using YourGamesList.Api.Services.CorrelationId;
+using YourGamesList.Api.Services;
 using YourGamesList.Common.Http;
 using YourGamesList.Common.Logging;
 using YourGamesList.TestsUtils;

@@ -1,7 +1,7 @@
 ﻿using System;
-using YourGamesList.Api.Services.CorrelationId;
+using YourGamesList.Api.Services;
 
-namespace YourGamesList.Api.UnitTests.Services.CorrelationId;
+namespace YourGamesList.Api.UnitTests.Services;
 
 public class CorrelationIdProviderTests
 {
