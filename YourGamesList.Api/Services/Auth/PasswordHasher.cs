@@ -1,15 +1,15 @@
 ﻿using System;
-using System.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using YourGamesList.Api.Services.Auth.Options;
+using YourGamesList.Common;
 
 namespace YourGamesList.Api.Services.Auth;
 
 public interface IPasswordHasher
 {
-    string HashPassword(string password);
-    bool VerifyHashedPassword(string hashedPassword, string password);
+    ValueResult<string> HashPassword(string password);
+    bool VerifyHashedPassword(string password, string hashedPassword);
 }
 
 public class LibSodiumPasswordHasher : IPasswordHasher
@@ -25,28 +25,29 @@ public class LibSodiumPasswordHasher : IPasswordHasher
         sodiumInitializer.EnsureInitialized();
     }
 
-    public string HashPassword(string password)
+    public ValueResult<string> HashPassword(string password)
     {
         try
         {
             var hashedPassword = LibGazdium.LibsodiumWrapper.CryptoPwhashStr(password, _options.Value.OpsLimit, _options.Value.MemoryLimit);
-            if (string.IsNullOrEmpty(hashedPassword))
+            if (string.IsNullOrWhiteSpace(hashedPassword))
             {
                 _logger.LogWarning("LibGazdium returned an empty hashed password!");
+                return ValueResult<string>.Failure();
             }
 
-            return hashedPassword;
+            return ValueResult<string>.Success(hashedPassword);
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex.Message);
-            return string.Empty;
+            _logger.LogWarning(ex, "LibGazdium throws an exception!");
+            return ValueResult<string>.Failure();
         }
     }
 
-    public bool VerifyHashedPassword(string hashedPassword, string password)
+    public bool VerifyHashedPassword(string password, string hashedPassword)
     {
-        var result = LibGazdium.LibsodiumWrapper.CryptoPwhashStrVerify(hashedPassword, password);
+        var result = LibGazdium.LibsodiumWrapper.CryptoPwhashStrVerify(password, hashedPassword);
         if (result)
         {
             _logger.LogInformation("Password has been verified.");

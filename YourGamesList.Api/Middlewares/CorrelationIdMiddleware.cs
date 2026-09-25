@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using YourGamesList.Api.Services.CorrelationId;
+using YourGamesList.Api.Services;
 using YourGamesList.Common.Http;
 using YourGamesList.Common.Logging;
 

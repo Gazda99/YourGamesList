@@ -1,7 +1,7 @@
 ﻿using System;
-using YourGamesList.Api.Services.CorrelationId;
+using YourGamesList.Api.Services;
 
-namespace YourGamesList.Api.UnitTests.Services.CorrelationId;
+namespace YourGamesList.Api.UnitTests.Services;
 
 public class CorrelationIdProviderTests
 {
@@ -9,13 +9,13 @@ public class CorrelationIdProviderTests
     [TestCaseSource(nameof(IsValidCorrelationIdTestCases))]
     public void IsValidCorrelationId_ReturnsExpectedResult(string corId, bool expectedResult)
     {
-        // ARRANGE
+        //ARRANGE
         var provider = new CorrelationIdProvider();
 
-        // ACT
+        //ACT
         var result = provider.IsValidCorrelationId(corId);
 
-        // ASSERT
+        //ASSERT
         Assert.That(result, Is.EqualTo(expectedResult));
     }
 
@@ -31,13 +31,13 @@ public class CorrelationIdProviderTests
     [Test]
     public void GetCorrelationId_ReturnsValidCorrelationId()
     {
-        // ARRANGE
+        //ARRANGE
         var provider = new CorrelationIdProvider();
 
-        // ACT
+        //ACT
         var result = provider.GetCorrelationId();
 
-        // ASSERT
+        //ASSERT
         var assertion = Guid.TryParseExact(result, "N", out _);
         Assert.That(assertion, Is.True);
     }

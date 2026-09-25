@@ -9,30 +9,35 @@ namespace YourGamesList.Database;
 [ExcludeFromCodeCoverage]
 public class YourGamesListDbContext : DbContext
 {
-    private readonly IOptions<YourGamesListDatabaseOptions> _options;
+    private readonly IOptions<YourGamesListDatabaseOptions>? _yglOptions;
 
     public DbSet<User> Users { get; set; }
     public DbSet<GamesList> GamesLists { get; set; }
     public DbSet<GamesListEntry> GameListEntries { get; set; }
     public DbSet<OwnershipInfo> OwnershipInfos { get; set; }
 
-    public YourGamesListDbContext(IOptions<YourGamesListDatabaseOptions> options)
+    public DbSet<EmailVerification> EmailVerifications { get; set; }
+    
+    public YourGamesListDbContext(DbContextOptions<YourGamesListDbContext> options, IOptions<YourGamesListDatabaseOptions>? yglOptions = null) : base(options)
     {
-        _options = options;
+        _yglOptions = yglOptions;
     }
-
+    
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlite(
-                _options.Value.ConnectionString,
-                ob =>
-                {
-                    if (!string.IsNullOrWhiteSpace(_options.Value.MigrationAssembly))
+        if (!optionsBuilder.IsConfigured && _yglOptions?.Value != null)
+        {
+            optionsBuilder.UseSqlite(
+                    _yglOptions.Value.ConnectionString,
+                    ob =>
                     {
-                        ob.MigrationsAssembly(_options.Value.MigrationAssembly);
-                    }
-                })
-            .UseSnakeCaseNamingConvention();
+                        if (!string.IsNullOrWhiteSpace(_yglOptions.Value.MigrationAssembly))
+                        {
+                            ob.MigrationsAssembly(_yglOptions.Value.MigrationAssembly);
+                        }
+                    })
+                .UseSnakeCaseNamingConvention();
+        }
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -69,10 +74,18 @@ public class YourGamesListDbContext : DbContext
                 .HasForeignKey(x => x.GameListEntryId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
-        modelBuilder.Entity<OwnershipInfo>(entity =>
+
+        modelBuilder.Entity<OwnershipInfo>(entity => { entity.HasKey(x => x.Id); });
+
+        modelBuilder.Entity<EmailVerification>(entity =>
         {
             entity.HasKey(x => x.Id);
+
+            entity.HasIndex(x => x.Token).IsUnique();
+            entity.HasOne(x => x.User)
+                .WithOne()
+                .HasForeignKey<EmailVerification>(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         base.OnModelCreating(modelBuilder);

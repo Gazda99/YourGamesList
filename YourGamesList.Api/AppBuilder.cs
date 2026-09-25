@@ -1,13 +1,23 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
+using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Refit;
 using Serilog;
-using YourGamesList.Api.Services.CorrelationId;
+using YourGamesList.Api.Model.Requests.Users;
+using YourGamesList.Api.ModelBinders;
+using YourGamesList.Api.Services;
+using YourGamesList.Api.Services.Auth;
+using YourGamesList.Api.Services.Auth.Options;
+using YourGamesList.Api.Services.ControllerModelValidators;
 using YourGamesList.Api.Services.Igdb;
 using YourGamesList.Api.Services.Igdb.Options;
 using YourGamesList.Api.Services.Twitch;
@@ -36,6 +46,23 @@ public static class AppBuilder
         builder.Host.AddLogger(builder.Configuration);
 
         builder.Services.AddControllers();
+
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
+        {
+            o.MapInboundClaims = false;
+            o.RequireHttpsMetadata = false;
+            o.TokenValidationParameters = new TokenValidationParameters()
+            {
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                    builder.Configuration[$"{TokenAuthOptions.SectionName}:{nameof(TokenAuthOptions.JwtSecret)}"] ??
+                    throw new NullReferenceException("JwtSecret is not set in appsettings"))),
+                ValidIssuer = builder.Configuration[$"{TokenAuthOptions.SectionName}:{nameof(TokenAuthOptions.Issuer)}"],
+                ValidateAudience = false
+            };
+        });
+
+        builder.Services.Configure<ApiBehaviorOptions>(options => { options.SuppressModelStateInvalidFilter = true; });
+
         builder.Services.AddOpenApi();
 
         builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
@@ -45,19 +72,41 @@ public static class AppBuilder
         builder.Services.AddTelemetry(builder.Configuration, TelemetryCustomConfiguration.CustomTracerConfiguration, TelemetryCustomConfiguration.CustomMeterConfiguration);
 
         //YGL services
+        builder.Services.AddYourGamesListAuth();
         builder.Services.AddYourGamesListDatabase();
         builder.Services.AddSingleton<ICorrelationIdProvider, CorrelationIdProvider>();
 
         //Other services
-        builder.Services.AddKeyedSingleton<ICacheProvider, InMemoryCacheProvider>(CacheProviders.InMemory);
+        builder.Services.AddRequestModelValidators();
 
+        builder.Services.AddKeyedSingleton<ICacheProvider, InMemoryCacheProvider>(CacheProviders.InMemory);
 
         builder.Services.AddTwitchAuthService();
         builder.Services.AddIgdbService();
 
-
         var app = builder.Build();
         return app;
+    }
+
+    private static IServiceCollection AddYourGamesListAuth(this IServiceCollection services)
+    {
+        services.Configure<MvcOptions>(options => { options.ModelBinderProviders.Insert(0, new UserInformationTokenModelBinderProvider()); });
+
+        services.AddOptionsWithFluentValidation<TokenAuthOptions, TokenAuthOptionsValidator>(TokenAuthOptions.SectionName);
+        services.AddOptionsWithFluentValidation<UserValuesValidatorOptions, UserValuesValidatorOptionsValidator>(UserValuesValidatorOptions.SectionName);
+        services.AddOptionsWithFluentValidation<UserManagerServiceOptions, UserManagerServiceOptionsValidator>(UserManagerServiceOptions.SectionName);
+        services.AddOptionsWithFluentValidation<VerificationEmailSenderOptions, VerificationEmailSenderOptionsValidator>(VerificationEmailSenderOptions.SectionName);
+
+        services.AddSingleton<ITokenProvider, UserInformationTokenProvider>();
+        services.AddSingleton<IUserValuesValidator, UserValuesValidator>();
+        services.AddSingleton<ISodiumInitializer, SodiumInitializer>();
+        services.AddSingleton<IPasswordHasher, LibSodiumPasswordHasher>();
+        services.AddSingleton<IVerificationTokenHasher, VerificationTokenHasher>();
+        services.AddSingleton<ISmtpClientFactory, SmtpClientFactory>();
+        services.AddScoped<IVerificationEmailSender, VerificationEmailSender>();
+        services.AddScoped<IUserManagerService, UserManagerService>();
+        
+        return services;
     }
 
     private static IServiceCollection AddIgdbService(this IServiceCollection services)
@@ -103,8 +152,26 @@ public static class AppBuilder
     private static IServiceCollection AddYourGamesListDatabase(this IServiceCollection services)
     {
         services.AddOptionsWithFluentValidation<YourGamesListDatabaseOptions, YourGamesListDatabaseOptionsValidator>(YourGamesListDatabaseOptions.SectionName);
-      
+
         services.AddDbContextFactory<YourGamesListDbContext>();
+        return services;
+    }
+
+    private static IServiceCollection AddRequestModelValidators(this IServiceCollection services)
+    {
+        //Essentials
+        services
+            .AddScoped<IBaseRequestValidator, BaseRequestValidator>()
+            .AddScoped<IValidationFailedResultFactory, ValidationFailedResultFactory>()
+            ;
+
+        //Auth controller validators
+        services
+            .AddScoped<IValidator<UserRegisterRequest>, UserRegisterRequestValidator>()
+            .AddScoped<IValidator<UserLoginRequest>, UserLoginRequestValidator>()
+            .AddScoped<IValidator<UserDeleteRequest>, UserDeleteRequestValidator>()
+            ;
+
         return services;
     }
 
