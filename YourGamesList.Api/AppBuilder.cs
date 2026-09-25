@@ -102,6 +102,7 @@ public static class AppBuilder
         services.AddSingleton<ISodiumInitializer, SodiumInitializer>();
         services.AddSingleton<IPasswordHasher, LibSodiumPasswordHasher>();
         services.AddSingleton<IVerificationTokenHasher, VerificationTokenHasher>();
+        services.AddSingleton<ISmtpClientFactory, SmtpClientFactory>();
         services.AddScoped<IVerificationEmailSender, VerificationEmailSender>();
         services.AddScoped<IUserManagerService, UserManagerService>();
         
