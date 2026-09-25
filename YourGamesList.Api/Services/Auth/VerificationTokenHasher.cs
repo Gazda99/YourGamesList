@@ -5,6 +5,7 @@ using SQLitePCL;
 
 namespace YourGamesList.Api.Services.Auth;
 
+//TODO: unit tests
 public interface IVerificationTokenHasher
 {
     (string RawToken, string TokenHash) GenerateToken();

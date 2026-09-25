@@ -7,7 +7,7 @@ using MimeKit;
 using YourGamesList.Api.Services.Auth.Options;
 
 namespace YourGamesList.Api.Services.Auth;
-
+//TODO: unit tests
 public interface IVerificationEmailSender
 {
     Task<bool> SendVerificationEmail(string email, string username, string token);
