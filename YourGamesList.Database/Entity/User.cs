@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace YourGamesList.Database.Entity;
 
+[ExcludeFromCodeCoverage]
 public class User
 {
     public Guid Id { get; set; }
@@ -22,7 +24,7 @@ public class User
     /// </summary>
     [StringLength(128)]
     public required string PasswordHash { get; set; }
-    
+
     public required UserStatus UserStatus { get; set; }
 
     [StringLength(64)] public required string Username { get; set; }

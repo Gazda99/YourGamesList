@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 
@@ -9,6 +10,7 @@ public interface ISodiumInitializer
     void EnsureInitialized();
 }
 
+[ExcludeFromCodeCoverage]
 public class SodiumInitializer : ISodiumInitializer
 {
     private static readonly Lock InitializationLock = new();

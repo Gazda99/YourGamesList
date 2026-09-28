@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace YourGamesList.Database.Entity;
 
+[ExcludeFromCodeCoverage]
 public class OwnershipInfo
 {
     public Guid Id { get; set; }
