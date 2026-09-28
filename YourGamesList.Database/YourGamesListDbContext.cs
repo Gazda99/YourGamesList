@@ -15,7 +15,6 @@ public class YourGamesListDbContext : DbContext
     public DbSet<GamesList> GamesLists { get; set; }
     public DbSet<GamesListEntry> GameListEntries { get; set; }
     public DbSet<OwnershipInfo> OwnershipInfos { get; set; }
-
     public DbSet<EmailVerification> EmailVerifications { get; set; }
     
     public YourGamesListDbContext(DbContextOptions<YourGamesListDbContext> options, IOptions<YourGamesListDatabaseOptions>? yglOptions = null) : base(options)
