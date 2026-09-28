@@ -29,7 +29,7 @@ public class UserInformationTokenTests
             User = new ClaimsPrincipal(new ClaimsIdentity())
         };
 
-        // ACT
+        //ACT
         var result = UserInformationToken.FromHttpContext(httpContext);
 
         //ASSERT
@@ -61,7 +61,7 @@ public class UserInformationTokenTests
             httpContext.Request.Headers.Authorization = authHeader;
         }
 
-        // ACT
+        //ACT
         var result = UserInformationToken.FromHttpContext(httpContext);
 
         //ASSERT
@@ -92,7 +92,7 @@ public class UserInformationTokenTests
         };
         httpContext.Request.Headers.Authorization = "Bearer sample.raw.jwt";
 
-        // ACT
+        //ACT
         var result = UserInformationToken.FromHttpContext(httpContext);
 
         //ASSERT
@@ -126,7 +126,7 @@ public class UserInformationTokenTests
         };
         httpContext.Request.Headers.Authorization = "Bearer sample.raw.jwt";
 
-        // ACT
+        //ACT
         var result = UserInformationToken.FromHttpContext(httpContext);
 
         //ASSERT
@@ -154,7 +154,7 @@ public class UserInformationTokenTests
         };
         httpContext.Request.Headers.Authorization = $"Bearer {expectedRawToken}";
 
-        // ACT
+        //ACT
         var result = UserInformationToken.FromHttpContext(httpContext);
 
         //ASSERT

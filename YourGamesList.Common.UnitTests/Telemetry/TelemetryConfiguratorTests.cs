@@ -9,17 +9,17 @@ public class TelemetryConfiguratorTests
     [Test]
     public void HttpClientInstrumentationTracingEnrichWithBetterDisplayName_AppliesName()
     {
-        // Arrange
+        //ARRANGE
         using var activity = new Activity("TestActivity");
         
         using var request = new HttpRequestMessage(HttpMethod.Get, "https://api.yourgameslist.com/v1/games");
 
         var expectedDisplayName = "GET:https://api.yourgameslist.com/v1/games";
 
-        // Act
+        //ACT
         TelemetryConfigurator.HttpClientInstrumentationTracingEnrichWithBetterDisplayName(activity, request);
 
-        // Assert
+        //ASSERT
         Assert.That(activity.DisplayName, Is.EqualTo(expectedDisplayName));
     }
 }

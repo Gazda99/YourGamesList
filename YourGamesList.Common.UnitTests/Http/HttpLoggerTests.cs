@@ -25,13 +25,13 @@ public class HttpLoggerTests
     [Test]
     public void LogRequestStart_LogsInformationMessageAndCreatesScopes()
     {
-        // Arrange
+        //ARRANGE
         using var request = new HttpRequestMessage(HttpMethod.Get, "https://api.yourgameslist.com/v1/games?page=1");
 
-        // Act
+        //ACT
         var result = _httpLogger.LogRequestStart(request);
 
-        // Assert
+        //ASSERT
         Assert.That(result, Is.Null);
 
         _logger.ReceivedLog(LogLevel.Information, "Sending 'GET' to 'https://api.yourgameslist.com/v1/games?page=1'");
@@ -46,7 +46,7 @@ public class HttpLoggerTests
     [Test]
     public void LogRequestStart_WithCustomHeaders_LogsHeaderScopes()
     {
-        // Arrange
+        //ARRANGE
         using var request = new HttpRequestMessage(HttpMethod.Get, "https://api.yourgameslist.com/v1/games");
         request.Headers.Add("X-Correlation-ID", "12345");
 
@@ -58,10 +58,10 @@ public class HttpLoggerTests
             }
         };
 
-        // Act
+        //ACT
         _httpLogger.LogRequestStart(request);
 
-        // Assert
+        //ASSERT
         _logger.ReceivedBeginScope(new Dictionary<string, object>
         {
             ["CorrelationId"] = "12345"
@@ -71,15 +71,15 @@ public class HttpLoggerTests
     [Test]
     public void LogRequestStop_LogsInformationMessageAndCreatesScopes()
     {
-        // Arrange
+        //ARRANGE
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.yourgameslist.com/v1/games");
         using var response = new HttpResponseMessage(HttpStatusCode.OK);
         var elapsed = TimeSpan.FromMilliseconds(150.47);
 
-        // Act
+        //ACT
         _httpLogger.LogRequestStop(null, request, response, elapsed);
 
-        // Assert
+        //ASSERT
         _logger.ReceivedLog(LogLevel.Information, "Received '200 OK' after 150.5ms");
         _logger.ReceivedBeginScope(new Dictionary<string, object>
         {
@@ -92,7 +92,7 @@ public class HttpLoggerTests
     [Test]
     public void LogRequestStop_WithCustomResponseHeaders_LogsHeaderScopes()
     {
-        // Arrange
+        //ARRANGE
         using var request = new HttpRequestMessage(HttpMethod.Get, "https://api.yourgameslist.com/v1/games");
         using var response = new HttpResponseMessage(HttpStatusCode.OK);
         response.Headers.Add("X-Trace-ID", "99999");
@@ -105,10 +105,10 @@ public class HttpLoggerTests
             }
         };
 
-        // Act
+        //ACT
         _httpLogger.LogRequestStop(null, request, response, TimeSpan.FromMilliseconds(50));
 
-        // Assert
+        //ASSERT
         _logger.ReceivedBeginScope(new Dictionary<string, object>
         {
             ["TraceId"] = "99999"
@@ -118,15 +118,15 @@ public class HttpLoggerTests
     [Test]
     public void LogRequestFailed_LogsWarningMessageWithExceptionAndScopes()
     {
-        // Arrange
+        //ARRANGE
         using var request = new HttpRequestMessage(HttpMethod.Get, "https://api.yourgameslist.com/v1/games");
         var exception = new HttpRequestException("Timeout error");
         var elapsed = TimeSpan.FromMilliseconds(500.12);
 
-        // Act
+        //ACT
         _httpLogger.LogRequestFailed(null, request, null, exception, elapsed);
 
-        // Assert
+        //ASSERT
         _logger.ReceivedLog(LogLevel.Warning, "Request 'GET' towards 'https://api.yourgameslist.com/v1/games' failed after 500.1ms", (ex) => ex == exception);
         _logger.ReceivedBeginScope(new Dictionary<string, object>
         {
