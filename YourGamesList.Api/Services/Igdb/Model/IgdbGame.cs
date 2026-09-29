@@ -8,9 +8,12 @@ public class IgdbGame
 
     [JsonPropertyName("cover")] public IgdbCover Cover { get; init; } = new IgdbCover();
     [JsonPropertyName("first_release_date")] public long FirstReleaseDate { get; init; }
+    [JsonPropertyName("game_engines")] public IgdbGameEngine[] GameEngines { get; init; } = [];
     [JsonPropertyName("game_type")] public IgdbGameType GameType { get; init; } = new IgdbGameType();
     [JsonPropertyName("genres")] public IgdbGenre[] Genres { get; init; } = [];
+    [JsonPropertyName("involved_companies")] public IgdbInvolvedCompanies[] InvolvedCompanies { get; init; } = [];
     [JsonPropertyName("name")] public string Name { get; init; } = string.Empty;
+    [JsonPropertyName("release_dates")] public IgdbReleaseDate[] ReleaseDates { get; init; } = [];
     [JsonPropertyName("storyline")] public string StoryLine { get; init; } = string.Empty;
     [JsonPropertyName("summary")] public string Summary { get; init; } = string.Empty;
     [JsonPropertyName("themes")] public IgdbTheme[] Themes { get; init; } = [];
