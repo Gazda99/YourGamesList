@@ -5,7 +5,7 @@ using YourGamesList.Common.Refit;
 
 namespace YourGamesList.Api.Services.Igdb;
 
-public interface IIgdbApi : IHandlesHttpRefitException
+public interface IIgdbApi : IHandlesRefitFailure
 {
     [Post("/{endpointName}")]
     [Headers($"Accept: {ContentTypes.ApplicationJson}", $"Content-Type: {ContentTypes.ApplicationJson}")]

@@ -7,7 +7,7 @@ using YourGamesList.Common.Refit;
 
 namespace YourGamesList.Api.Services.Twitch;
 
-public interface ITwitchAuthApi : IHandlesHttpRefitException
+public interface ITwitchAuthApi : IHandlesRefitFailure
 {
     [Post("/oauth2/token")]
     [Headers($"Accept: {ContentTypes.ApplicationJson}", $"Content-Type: {ContentTypes.FormUrlEncoded}")]
