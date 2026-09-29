@@ -27,6 +27,8 @@ public class IgdbGamesServiceTests
                                              involved_companies.publisher,
                                              name,
                                              rating_count,
+                                             release_dates.date,
+                                             release_dates.platform.name,
                                              storyline,
                                              summary,
                                              themes.name;

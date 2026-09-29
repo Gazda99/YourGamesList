@@ -13,6 +13,7 @@ public class IgdbGame
     [JsonPropertyName("genres")] public IgdbGenre[] Genres { get; init; } = [];
     [JsonPropertyName("involved_companies")] public IgdbInvolvedCompanies[] InvolvedCompanies { get; init; } = [];
     [JsonPropertyName("name")] public string Name { get; init; } = string.Empty;
+    [JsonPropertyName("release_dates")] public IgdbReleaseDate[] ReleaseDates { get; init; } = [];
     [JsonPropertyName("storyline")] public string StoryLine { get; init; } = string.Empty;
     [JsonPropertyName("summary")] public string Summary { get; init; } = string.Empty;
     [JsonPropertyName("themes")] public IgdbTheme[] Themes { get; init; } = [];
