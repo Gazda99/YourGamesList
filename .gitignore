@@ -10,7 +10,9 @@ dotnet-tools.json
 ###########################
 # Custom files
 
+/local
 TODOs
+/database
 launchSettings.json
 appsettings.json
 appsettings.dev.json
