@@ -138,11 +138,13 @@ public class UserManagerService : IUserManagerService
 
         if (doesEmailExists.Result)
         {
+            _logger.LogInformation("Email already registered.");
             return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.EmailAlreadyTaken);
         }
 
         if (doesUsernameExists.Result)
         {
+            _logger.LogInformation("Username already registered.");
             return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.UsernameAlreadyTaken);
         }
 
@@ -193,9 +195,10 @@ public class UserManagerService : IUserManagerService
             var wasEmailSent = await _verificationEmailSender.SendVerificationEmail(email, username, emailVerificationTokens.RawToken);
             if (!wasEmailSent)
             {
-                _logger.LogWarning("Email verification email was not sent!");
+                _logger.LogWarning("Email verification was not sent!");
                 return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.InternalServerError);
             }
+            _logger.LogInformation("Email verification sent!");
 
             _yglDbContext.Users.Add(user);
             
