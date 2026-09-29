@@ -194,9 +194,9 @@ public class UserManagerServiceTests
     public async Task Register_InvalidEmail_ReturnsEmailError()
     {
         //ARRANGE
+        const UserAuthError error = UserAuthError.InvalidEmail;
         var dto = _fixture.Create<UserRegisterDto>();
-        _userValuesValidator.ValidateEmail(Arg.Any<string>())
-            .Returns(ErrorResult<UserAuthError>.Failure(UserAuthError.InvalidEmail));
+        _userValuesValidator.ValidateEmail(Arg.Any<string>()).Returns(ErrorResult<UserAuthError>.Failure(error));
 
         var service = CreateService();
 
@@ -205,16 +205,17 @@ public class UserManagerServiceTests
 
         //ASSERT
         Assert.That(res.IsSuccess, Is.False);
-        Assert.That(res.Error, Is.EqualTo(UserAuthError.InvalidEmail));
+        Assert.That(res.Error, Is.EqualTo(error));
+        _logger.ReceivedLog(LogLevel.Information,  $"Cannot register user due to email being invalid. Error: {error.ToString()}");
     }
 
     [Test]
     public async Task Register_InvalidUsername_ReturnsUsernameError()
     {
         //ARRANGE
+        const UserAuthError error = UserAuthError.UsernameIsTooShort;
         var dto = _fixture.Create<UserRegisterDto>();
-        _userValuesValidator.ValidateUsername(Arg.Any<string>())
-            .Returns(ErrorResult<UserAuthError>.Failure(UserAuthError.UsernameIsTooShort));
+        _userValuesValidator.ValidateUsername(Arg.Any<string>()).Returns(ErrorResult<UserAuthError>.Failure(error));
 
         var service = CreateService();
 
@@ -223,16 +224,17 @@ public class UserManagerServiceTests
 
         //ASSERT
         Assert.That(res.IsSuccess, Is.False);
-        Assert.That(res.Error, Is.EqualTo(UserAuthError.UsernameIsTooShort));
+        Assert.That(res.Error, Is.EqualTo(error));
+        _logger.ReceivedLog(LogLevel.Information,  $"Cannot register user due to username being invalid. Error: {error.ToString()}");
     }
 
     [Test]
     public async Task Register_InvalidPassword_ReturnsPasswordError()
     {
         //ARRANGE
+        const UserAuthError error = UserAuthError.PasswordIsTooShort;
         var dto = _fixture.Create<UserRegisterDto>();
-        _userValuesValidator.ValidatePassword(Arg.Any<string>())
-            .Returns(ErrorResult<UserAuthError>.Failure(UserAuthError.PasswordIsTooShort));
+        _userValuesValidator.ValidatePassword(Arg.Any<string>()).Returns(ErrorResult<UserAuthError>.Failure(error));
 
         var service = CreateService();
 
@@ -241,16 +243,17 @@ public class UserManagerServiceTests
 
         //ASSERT
         Assert.That(res.IsSuccess, Is.False);
-        Assert.That(res.Error, Is.EqualTo(UserAuthError.PasswordIsTooShort));
+        Assert.That(res.Error, Is.EqualTo(error));
+        _logger.ReceivedLog(LogLevel.Information,  $"Cannot register user due to password being invalid. Error: {error.ToString()}");
     }
 
     [Test]
     public async Task Register_InvalidDateOfBirth_ReturnsDateOfBirthError()
     {
         //ARRANGE
+        const UserAuthError error = UserAuthError.UnderMinimumAge;
         var dto = _fixture.Create<UserRegisterDto>();
-        _userValuesValidator.ValidateDateOfBirth(Arg.Any<DateOnly>())
-            .Returns(ErrorResult<UserAuthError>.Failure(UserAuthError.UnderMinimumAge));
+        _userValuesValidator.ValidateDateOfBirth(Arg.Any<DateOnly>()).Returns(ErrorResult<UserAuthError>.Failure(error));
 
         var service = CreateService();
 
@@ -259,7 +262,8 @@ public class UserManagerServiceTests
 
         //ASSERT
         Assert.That(res.IsSuccess, Is.False);
-        Assert.That(res.Error, Is.EqualTo(UserAuthError.UnderMinimumAge));
+        Assert.That(res.Error, Is.EqualTo(error));
+        _logger.ReceivedLog(LogLevel.Information,  $"Cannot register user due to date of birth being invalid. Error: {error.ToString()}");
     }
 
     [Test]
@@ -285,6 +289,7 @@ public class UserManagerServiceTests
         //ASSERT
         Assert.That(res.IsSuccess, Is.False);
         Assert.That(res.Error, Is.EqualTo(UserAuthError.EmailAlreadyTaken));
+        _logger.ReceivedLog(LogLevel.Information, "Email already registered.");
     }
 
     [Test]
@@ -310,6 +315,7 @@ public class UserManagerServiceTests
         //ASSERT
         Assert.That(res.IsSuccess, Is.False);
         Assert.That(res.Error, Is.EqualTo(UserAuthError.UsernameAlreadyTaken));
+        _logger.ReceivedLog(LogLevel.Information, "Username already registered.");
     }
 
     [Test]
@@ -327,6 +333,7 @@ public class UserManagerServiceTests
         //ASSERT
         Assert.That(res.IsSuccess, Is.False);
         Assert.That(res.Error, Is.EqualTo(UserAuthError.InternalServerError));
+        _logger.ReceivedLog(LogLevel.Error, "Hashing of password failed.");
     }
 
     [Test]
@@ -363,6 +370,9 @@ public class UserManagerServiceTests
         Assert.That(dbUser.UserStatus, Is.EqualTo(UserStatus.Active));
         Assert.That(dbUser.CreatedAt, Is.EqualTo(now));
         Assert.That(dbUser.ExpiryAt, Is.Null);
+        
+        _logger.ReceivedLog(LogLevel.Information, $"Email confirmation is disabled. Proceeding with adding the User with status {nameof(UserStatus.Active)}");
+        _logger.ReceivedLog(LogLevel.Information, "Added user to database");
     }
 
     [Test]
@@ -397,6 +407,9 @@ public class UserManagerServiceTests
 
         var dbUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == "newuser");
         Assert.That(dbUser, Is.Null);
+
+        _logger.ReceivedLog(LogLevel.Information, $"Email confirmation is enabled. Proceeding with adding the User with status {nameof(UserStatus.Pending)}");
+        _logger.ReceivedLog(LogLevel.Warning, "Email verification was not sent!");
     }
 
     [Test]
@@ -445,6 +458,10 @@ public class UserManagerServiceTests
         Assert.That(dbVerification, Is.Not.Null);
         Assert.That(dbVerification.Token, Is.EqualTo("hashed_token_123"));
         Assert.That(dbVerification.ExpiryAt, Is.EqualTo(now + TimeSpan.FromMinutes(30)));
+
+        _logger.ReceivedLog(LogLevel.Information, $"Email confirmation is enabled. Proceeding with adding the User with status {nameof(UserStatus.Pending)}");
+        _logger.ReceivedLog(LogLevel.Information, "Email verification sent!");
+        _logger.ReceivedLog(LogLevel.Information, "Added user to database");
     }
 
     #endregion
