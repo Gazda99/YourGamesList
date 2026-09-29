@@ -189,8 +189,6 @@ public class UserManagerService : IUserManagerService
                 ExpiryAt = userExpiration
             };
 
-            _yglDbContext.Users.Add(user);
-
             var emailVerificationTokens = _verificationTokenHasher.GenerateToken();
             now = _timeProvider.GetUtcNow();
 
@@ -198,10 +196,11 @@ public class UserManagerService : IUserManagerService
             if (!wasEmailSent)
             {
                 _logger.LogWarning("Email verification email was not sent!");
-                _yglDbContext.Users.Remove(user);
                 return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.InternalServerError);
             }
 
+            _yglDbContext.Users.Add(user);
+            
             var emailVerificationExpiration = now + TimeSpan.FromMinutes(_options.Value.DefaultEmailVerificationExpiryInMinutes);
             var emailVerification = new EmailVerification()
             {
