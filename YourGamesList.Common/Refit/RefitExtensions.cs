@@ -2,14 +2,18 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Refit;
 
 namespace YourGamesList.Common.Refit;
 
 public static class RefitExtensions
 {
-    public static async Task<CombinedResult<T, HttpFailureReason>> TryRefit<T>(
-        this IHandlesHttpRefitException refitApi,
-        Func<Task<T>> refitCall,
+    /// <summary>
+    /// IApiResponse&lt;T&gt; overload that handles Refit JSON parsing exceptions
+    /// </summary>
+    public static async Task<CombinedResult<IApiResponse<T>, RefitFailureReason>> TryRefit<T>(
+        this IHandlesRefitFailure refitApi,
+        Func<Task<IApiResponse<T>>> refitCall,
         ILogger? logger = null,
         string? destinationServiceName = null
     ) where T : notnull
@@ -17,21 +21,44 @@ public static class RefitExtensions
         try
         {
             var result = await refitCall();
-            return CombinedResult<T, HttpFailureReason>.Success(result);
+
+            if (result.Error is ApiException { InnerException: System.Text.Json.JsonException jsonEx })
+            {
+                const RefitFailureReason reason = RefitFailureReason.Deserialization;
+                LogWarning(logger, destinationServiceName, reason, jsonEx, true);
+                return CombinedResult<IApiResponse<T>, RefitFailureReason>.Failure(reason);
+            }
+
+            return CombinedResult<IApiResponse<T>, RefitFailureReason>.Success(result);
         }
         catch (Exception ex)
         {
             var enumValue = ex switch
             {
-                TaskCanceledException => HttpFailureReason.Timeout,
-                HttpRequestException => HttpFailureReason.Network,
-                _ => HttpFailureReason.General,
+                TaskCanceledException => RefitFailureReason.Timeout,
+                HttpRequestException => RefitFailureReason.Network,
+                _ => RefitFailureReason.General,
             };
 
-            logger?.LogWarning(ex,
-                $"Http related exception occured while making http request with refit to '{destinationServiceName ?? "N/A"}', results in network error '{enumValue.ToString()}'");
+            LogWarning(logger, destinationServiceName, enumValue, ex, false);
 
-            return CombinedResult<T, HttpFailureReason>.Failure(enumValue);
+            return CombinedResult<IApiResponse<T>, RefitFailureReason>.Failure(enumValue);
+        }
+    }
+
+    private static void LogWarning(ILogger? logger, string? destinationServiceName, RefitFailureReason reason, Exception? ex = null, bool exceptionContainsSensitiveData = true)
+    {
+        var destLog = destinationServiceName ?? "N/A";
+        var isDebugEnabled = logger?.IsEnabled(LogLevel.Debug) ?? false;
+
+        // If exception contains sensitive data, log it only if logging debug mode is on 
+        if (ex != null && exceptionContainsSensitiveData && isDebugEnabled)
+        {
+            logger?.LogWarning(ex, "Exception occurred while making HTTP request with Refit to {DestinationServiceName}, resulting in error {RefitFailureReason}", destLog, reason);
+        }
+        else
+        {
+            logger?.LogWarning("Exception occurred while making HTTP request with Refit to {DestinationServiceName}, resulting in error {RefitFailureReason}", destLog, reason);
         }
     }
 }

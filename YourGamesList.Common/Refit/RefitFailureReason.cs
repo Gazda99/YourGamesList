@@ -1,8 +1,9 @@
 ﻿namespace YourGamesList.Common.Refit;
 
-public enum HttpFailureReason
+public enum RefitFailureReason
 {
     Timeout,
     Network,
-    General
+    General,
+    Deserialization
 }

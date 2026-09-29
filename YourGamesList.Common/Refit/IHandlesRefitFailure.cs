@@ -1,6 +1,6 @@
 ﻿namespace YourGamesList.Common.Refit;
 
-public interface IHandlesHttpRefitException
+public interface IHandlesRefitFailure
 {
     
 }
