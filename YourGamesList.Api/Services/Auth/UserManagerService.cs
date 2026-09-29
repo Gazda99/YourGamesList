@@ -170,8 +170,6 @@ public class UserManagerService : IUserManagerService
                 ExpiryAt = null
             };
             _yglDbContext.Users.Add(user);
-            await _yglDbContext.SaveChangesAsync();
-            _logger.LogInformation("Added user to database");
         }
         else
         {
@@ -211,9 +209,10 @@ public class UserManagerService : IUserManagerService
             };
 
             _yglDbContext.EmailVerifications.Add(emailVerification);
-            await _yglDbContext.SaveChangesAsync();
-            _logger.LogInformation("Added user to database");
         }
+
+        await _yglDbContext.SaveChangesAsync();
+        _logger.LogInformation("Added user to database");
 
         return CombinedResult<Guid, UserAuthError>.Success(Guid.NewGuid());
     }
