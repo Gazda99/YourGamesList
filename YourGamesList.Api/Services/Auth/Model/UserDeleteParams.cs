@@ -2,17 +2,17 @@
 
 namespace YourGamesList.Api.Services.Auth.Model;
 
-public class UserLoginDto
+public class UserDeleteParams
 {
     public required string Username { get; set; }
     public required string Password { get; set; }
 }
 
-public static class UserLoginDtoMappingExtensions
+public static class UserDeleteParamsMappingExtensions
 {
-    public static UserLoginDto ToDto(this UserLoginRequest request)
+    public static UserDeleteParams ToParams(this UserDeleteRequest request)
     {
-        return new UserLoginDto
+        return new UserDeleteParams
         {
             Username = request.Body.Username,
             Password = request.Body.Password

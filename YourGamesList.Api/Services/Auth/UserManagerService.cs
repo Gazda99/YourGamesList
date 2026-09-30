@@ -13,10 +13,10 @@ namespace YourGamesList.Api.Services.Auth;
 
 public interface IUserManagerService
 {
-    Task<CombinedResult<Guid, UserAuthError>> Register(UserRegisterDto userRegisterDto);
-    Task<CombinedResult<string, UserAuthError>> Login(UserLoginDto userLoginDto);
-    Task<ErrorResult<UserAuthError>> Delete(UserDeleteDto userDeleteDto);
-    Task<ErrorResult<UserAuthError>> ConfirmEmail(ConfirmEmailDto confirmEmailDto);
+    Task<CombinedResult<Guid, UserAuthError>> Register(UserRegisterParams userRegisterParams);
+    Task<CombinedResult<string, UserAuthError>> Login(UserLoginParams userLoginParams);
+    Task<ErrorResult<UserAuthError>> Delete(UserDeleteParams userDeleteParams);
+    Task<ErrorResult<UserAuthError>> ConfirmEmail(ConfirmEmailParams confirmEmailParams);
 }
 
 public class UserManagerService : IUserManagerService
@@ -53,9 +53,9 @@ public class UserManagerService : IUserManagerService
         _yglDbContext = yglDbContext.CreateDbContext();
     }
 
-    public async Task<CombinedResult<string, UserAuthError>> Login(UserLoginDto userLoginDto)
+    public async Task<CombinedResult<string, UserAuthError>> Login(UserLoginParams userLoginParams)
     {
-        var username = userLoginDto.Username.ToLowerInvariant().Trim();
+        var username = userLoginParams.Username.ToLowerInvariant().Trim();
         var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
 
         if (user == null)
@@ -71,7 +71,7 @@ public class UserManagerService : IUserManagerService
         }
 
         var hashedPassword = user.PasswordHash;
-        var passwordMatch = _passwordHasher.VerifyHashedPassword(userLoginDto.Password, hashedPassword);
+        var passwordMatch = _passwordHasher.VerifyHashedPassword(userLoginParams.Password, hashedPassword);
 
         if (!passwordMatch)
         {
@@ -89,11 +89,11 @@ public class UserManagerService : IUserManagerService
         return CombinedResult<string, UserAuthError>.Success(newToken);
     }
 
-    public async Task<CombinedResult<Guid, UserAuthError>> Register(UserRegisterDto userRegisterDto)
+    public async Task<CombinedResult<Guid, UserAuthError>> Register(UserRegisterParams userRegisterParams)
     {
-        var username = userRegisterDto.Username.ToLowerInvariant().Trim();
-        var email = userRegisterDto.Email.ToLowerInvariant().Trim();
-        var dob = userRegisterDto.DateOfBirth;
+        var username = userRegisterParams.Username.ToLowerInvariant().Trim();
+        var email = userRegisterParams.Email.ToLowerInvariant().Trim();
+        var dob = userRegisterParams.DateOfBirth;
 
         var validateEmail = _userValuesValidator.ValidateEmail(email);
         if (validateEmail.IsFailure)
@@ -109,7 +109,7 @@ public class UserManagerService : IUserManagerService
             return CombinedResult<Guid, UserAuthError>.Failure(validateUsername.Error);
         }
 
-        var validatePasswordResult = _userValuesValidator.ValidatePassword(userRegisterDto.Password);
+        var validatePasswordResult = _userValuesValidator.ValidatePassword(userRegisterParams.Password);
         if (validatePasswordResult.IsFailure)
         {
             _logger.LogInformation("Cannot register user due to password being invalid. Error: {UserRegisterError}", validatePasswordResult.Error.ToString());
@@ -148,7 +148,7 @@ public class UserManagerService : IUserManagerService
             return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.UsernameAlreadyTaken);
         }
 
-        var hashedPassword = _passwordHasher.HashPassword(userRegisterDto.Password);
+        var hashedPassword = _passwordHasher.HashPassword(userRegisterParams.Password);
         if (hashedPassword.IsFailure)
         {
             _logger.LogError("Hashing of password failed.");
@@ -220,9 +220,9 @@ public class UserManagerService : IUserManagerService
         return CombinedResult<Guid, UserAuthError>.Success(Guid.NewGuid());
     }
 
-    public async Task<ErrorResult<UserAuthError>> Delete(UserDeleteDto userDeleteDto)
+    public async Task<ErrorResult<UserAuthError>> Delete(UserDeleteParams userDeleteParams)
     {
-        var username = userDeleteDto.Username.ToLowerInvariant().Trim();
+        var username = userDeleteParams.Username.ToLowerInvariant().Trim();
         var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
 
         if (user == null)
@@ -232,7 +232,7 @@ public class UserManagerService : IUserManagerService
         }
 
         var hashedPassword = user.PasswordHash;
-        var passwordMatch = _passwordHasher.VerifyHashedPassword(userDeleteDto.Password, hashedPassword);
+        var passwordMatch = _passwordHasher.VerifyHashedPassword(userDeleteParams.Password, hashedPassword);
 
         if (!passwordMatch)
         {
@@ -247,9 +247,9 @@ public class UserManagerService : IUserManagerService
         return ErrorResult<UserAuthError>.Success();
     }
 
-    public async Task<ErrorResult<UserAuthError>> ConfirmEmail(ConfirmEmailDto confirmEmailDto)
+    public async Task<ErrorResult<UserAuthError>> ConfirmEmail(ConfirmEmailParams confirmEmailParams)
     {
-        var token = confirmEmailDto.Token.ToLower();
+        var token = confirmEmailParams.Token.ToLower();
         if (string.IsNullOrWhiteSpace(token))
         {
             return ErrorResult<UserAuthError>.Failure(UserAuthError.EmailVerificationInvalid);

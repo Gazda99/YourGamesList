@@ -77,7 +77,7 @@ public class UserManagerServiceTests
     public async Task Login_UserNotFound_ReturnsNoUserFoundError()
     {
         //ARRANGE
-        var dto = _fixture.Create<UserLoginDto>();
+        var dto = _fixture.Create<UserLoginParams>();
         var service = CreateService();
 
         //ACT
@@ -98,7 +98,7 @@ public class UserManagerServiceTests
         await _dbContext.Users.AddAsync(user);
         await _dbContext.SaveChangesAsync();
 
-        var dto = new UserLoginDto()
+        var dto = new UserLoginParams()
         {
             Username = username,
             Password = "password123"
@@ -128,7 +128,7 @@ public class UserManagerServiceTests
 
         _passwordHasher.VerifyHashedPassword(password, hashedPassword).Returns(false);
 
-        var dto = new UserLoginDto()
+        var dto = new UserLoginParams()
         {
             Username = username,
             Password = password
@@ -166,7 +166,7 @@ public class UserManagerServiceTests
         _passwordHasher.VerifyHashedPassword(password, hashedPassword).Returns(true);
         _tokenProvider.CreateToken(username, userId).Returns(expectedToken);
 
-        var dto = new UserLoginDto()
+        var dto = new UserLoginParams()
         {
             Username = username,
             Password = password
@@ -195,7 +195,7 @@ public class UserManagerServiceTests
     {
         //ARRANGE
         const UserAuthError error = UserAuthError.InvalidEmail;
-        var dto = _fixture.Create<UserRegisterDto>();
+        var dto = _fixture.Create<UserRegisterParams>();
         _userValuesValidator.ValidateEmail(Arg.Any<string>()).Returns(ErrorResult<UserAuthError>.Failure(error));
 
         var service = CreateService();
@@ -214,7 +214,7 @@ public class UserManagerServiceTests
     {
         //ARRANGE
         const UserAuthError error = UserAuthError.UsernameIsTooShort;
-        var dto = _fixture.Create<UserRegisterDto>();
+        var dto = _fixture.Create<UserRegisterParams>();
         _userValuesValidator.ValidateUsername(Arg.Any<string>()).Returns(ErrorResult<UserAuthError>.Failure(error));
 
         var service = CreateService();
@@ -233,7 +233,7 @@ public class UserManagerServiceTests
     {
         //ARRANGE
         const UserAuthError error = UserAuthError.PasswordIsTooShort;
-        var dto = _fixture.Create<UserRegisterDto>();
+        var dto = _fixture.Create<UserRegisterParams>();
         _userValuesValidator.ValidatePassword(Arg.Any<string>()).Returns(ErrorResult<UserAuthError>.Failure(error));
 
         var service = CreateService();
@@ -252,7 +252,7 @@ public class UserManagerServiceTests
     {
         //ARRANGE
         const UserAuthError error = UserAuthError.UnderMinimumAge;
-        var dto = _fixture.Create<UserRegisterDto>();
+        var dto = _fixture.Create<UserRegisterParams>();
         _userValuesValidator.ValidateDateOfBirth(Arg.Any<DateOnly>()).Returns(ErrorResult<UserAuthError>.Failure(error));
 
         var service = CreateService();
@@ -274,7 +274,7 @@ public class UserManagerServiceTests
         await _dbContext.Users.AddAsync(CreateUser(username: "otheruser", email: email));
         await _dbContext.SaveChangesAsync();
 
-        var dto = new UserRegisterDto()
+        var dto = new UserRegisterParams()
         {
             Username = "newUser",
             Email = email,
@@ -300,7 +300,7 @@ public class UserManagerServiceTests
         await _dbContext.Users.AddAsync(CreateUser(username: username, email: "other@example.com"));
         await _dbContext.SaveChangesAsync();
 
-        var dto = new UserRegisterDto()
+        var dto = new UserRegisterParams()
         {
             Username = username,
             Email = "new@example.com",
@@ -322,7 +322,7 @@ public class UserManagerServiceTests
     public async Task Register_PasswordHashingFails_ReturnsInternalServerError()
     {
         //ARRANGE
-        var dto = _fixture.Create<UserRegisterDto>();
+        var dto = _fixture.Create<UserRegisterParams>();
         _passwordHasher.HashPassword(Arg.Any<string>()).Returns(ValueResult<string>.Failure());
 
         var service = CreateService();
@@ -350,7 +350,7 @@ public class UserManagerServiceTests
 
         _passwordHasher.HashPassword(Arg.Any<string>()).Returns(ValueResult<string>.Success("hashed_password"));
 
-        var dto = new UserRegisterDto()
+        var dto = new UserRegisterParams()
         {
             Username = "newuser",
             Email = "new@example.com",
@@ -389,7 +389,7 @@ public class UserManagerServiceTests
         _verificationTokenHasher.GenerateToken().Returns(("raw_token", "hashed_token"));
         _verificationEmailSender.SendVerificationEmail(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>()).Returns(Task.FromResult(false));
 
-        var dto = new UserRegisterDto()
+        var dto = new UserRegisterParams()
         {
             Username = "newuser",
             Email = "new@example.com",
@@ -434,7 +434,7 @@ public class UserManagerServiceTests
         _verificationTokenHasher.GenerateToken().Returns((rawToken, "hashed_token_123"));
         _verificationEmailSender.SendVerificationEmail(email, username, rawToken).Returns(Task.FromResult(true));
 
-        var dto = new UserRegisterDto()
+        var dto = new UserRegisterParams()
         {
             Username = username,
             Email = email,
@@ -472,7 +472,7 @@ public class UserManagerServiceTests
     public async Task Delete_UserNotFound_ReturnsNoUserFoundError()
     {
         //ARRANGE
-        var dto = _fixture.Create<UserDeleteDto>();
+        var dto = _fixture.Create<UserDeleteParams>();
         var service = CreateService();
 
         //ACT
@@ -498,7 +498,7 @@ public class UserManagerServiceTests
 
         _passwordHasher.VerifyHashedPassword(password, hashedPassword).Returns(false);
 
-        var dto = new UserDeleteDto()
+        var dto = new UserDeleteParams()
         {
             Username = username,
             Password = password
@@ -528,7 +528,7 @@ public class UserManagerServiceTests
 
         _passwordHasher.VerifyHashedPassword(password, hashedPassword).Returns(true);
 
-        var dto = new UserDeleteDto()
+        var dto = new UserDeleteParams()
         {
             Username = username,
             Password = password
@@ -559,7 +559,7 @@ public class UserManagerServiceTests
 
         _verificationTokenHasher.HashToken(rawToken.ToLower()).Returns(hashedToken);
 
-        var dto = new ConfirmEmailDto()
+        var dto = new ConfirmEmailParams()
         {
             Token = rawToken
         };
@@ -597,7 +597,7 @@ public class UserManagerServiceTests
         await _dbContext.EmailVerifications.AddAsync(emailVerification);
         await _dbContext.SaveChangesAsync();
 
-        var dto = new ConfirmEmailDto()
+        var dto = new ConfirmEmailParams()
         {
             Token = rawToken
         };
@@ -638,7 +638,7 @@ public class UserManagerServiceTests
         await _dbContext.EmailVerifications.AddAsync(emailVerification);
         await _dbContext.SaveChangesAsync();
 
-        var dto = new ConfirmEmailDto()
+        var dto = new ConfirmEmailParams()
         {
             Token = rawToken
         };
@@ -680,7 +680,7 @@ public class UserManagerServiceTests
         await _dbContext.EmailVerifications.AddAsync(emailVerification);
         await _dbContext.SaveChangesAsync();
 
-        var dto = new ConfirmEmailDto()
+        var dto = new ConfirmEmailParams()
         {
             Token = rawToken
         };

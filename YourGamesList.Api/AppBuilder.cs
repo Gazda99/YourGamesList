@@ -22,6 +22,7 @@ using YourGamesList.Api.Services.Igdb;
 using YourGamesList.Api.Services.Igdb.Options;
 using YourGamesList.Api.Services.Twitch;
 using YourGamesList.Api.Services.Twitch.Options;
+using YourGamesList.Api.Services.YourGamesList;
 using YourGamesList.Api.Telemetry;
 using YourGamesList.Common.Caching;
 using YourGamesList.Common.Http;
@@ -73,6 +74,7 @@ public static class AppBuilder
 
         //YGL services
         builder.Services.AddYourGamesListAuth();
+        builder.Services.AddYourGamesListUsersServices();
         builder.Services.AddYourGamesListDatabase();
         builder.Services.AddSingleton<ICorrelationIdProvider, CorrelationIdProvider>();
 
@@ -108,7 +110,14 @@ public static class AppBuilder
         
         return services;
     }
-
+    
+    private static IServiceCollection AddYourGamesListUsersServices(this IServiceCollection services)
+    {
+        services.AddScoped<IUsersService, UsersService>();
+        
+        return services;
+    }
+    
     private static IServiceCollection AddIgdbService(this IServiceCollection services)
     {
         services.AddOptionsWithFluentValidation<IgdbHttpClientOptions, IgdbHttpClientOptionsValidator>(IgdbHttpClientOptions.SectionName);
@@ -170,6 +179,11 @@ public static class AppBuilder
             .AddScoped<IValidator<UserRegisterRequest>, UserRegisterRequestValidator>()
             .AddScoped<IValidator<UserLoginRequest>, UserLoginRequestValidator>()
             .AddScoped<IValidator<UserDeleteRequest>, UserDeleteRequestValidator>()
+            ;
+        
+        //Users controller validators
+        services
+            .AddScoped<IValidator<UserGetSelfRequest>, UserGetSelfRequestValidator>()
             ;
 
         return services;
