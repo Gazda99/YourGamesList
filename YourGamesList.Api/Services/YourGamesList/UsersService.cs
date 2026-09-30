@@ -43,8 +43,11 @@ public class UsersService : IUsersService
         var user = getUserRes.Value;
         var userDto = new UserDto()
         {
+            CreatedAt =  user.CreatedAt,
             Id = user.Id,
-            Username = user.Username
+            Username = user.Username,
+            Description = user.Description,
+            DateOfBirth =  user.DateOfBirth
         };
         return CombinedResult<UserDto, UsersError>.Success(userDto);
     }
