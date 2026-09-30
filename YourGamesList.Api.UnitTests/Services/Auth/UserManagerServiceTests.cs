@@ -9,6 +9,7 @@ using NSubstitute;
 using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Model;
 using YourGamesList.Api.Services.Auth.Options;
+using YourGamesList.Api.Services.Lists;
 using YourGamesList.Common;
 using YourGamesList.Database;
 using YourGamesList.Database.Entity;
@@ -28,6 +29,7 @@ public class UserManagerServiceTests
     private IVerificationTokenHasher _verificationTokenHasher;
     private IVerificationEmailSender _verificationEmailSender;
     private ITokenProvider _tokenProvider;
+    private IDefaultListsCreator _defaultListsCreator;
     private YourGamesListDbContext _dbContext;
 
     [SetUp]
@@ -44,6 +46,7 @@ public class UserManagerServiceTests
         _verificationTokenHasher = Substitute.For<IVerificationTokenHasher>();
         _verificationEmailSender = Substitute.For<IVerificationEmailSender>();
         _tokenProvider = Substitute.For<ITokenProvider>();
+        _defaultListsCreator = Substitute.For<IDefaultListsCreator>();
 
         var optionsBuilder = new DbContextOptionsBuilder<YourGamesListDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString());
@@ -370,6 +373,7 @@ public class UserManagerServiceTests
         Assert.That(dbUser.UserStatus, Is.EqualTo(UserStatus.Active));
         Assert.That(dbUser.CreatedAt, Is.EqualTo(now));
         Assert.That(dbUser.ExpiryAt, Is.Null);
+        await _defaultListsCreator.Received(1).AddDefaultListsToGivenUser(_dbContext, dbUser);
         
         _logger.ReceivedLog(LogLevel.Information, $"Email confirmation is disabled. Proceeding with adding the User with status {nameof(UserStatus.Active)}");
         _logger.ReceivedLog(LogLevel.Information, "Added user to database");
@@ -407,6 +411,7 @@ public class UserManagerServiceTests
 
         var dbUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == "newuser");
         Assert.That(dbUser, Is.Null);
+        await _defaultListsCreator.DidNotReceive().AddDefaultListsToGivenUser(Arg.Any<YourGamesListDbContext>(), Arg.Any<User>());
 
         _logger.ReceivedLog(LogLevel.Information, $"Email confirmation is enabled. Proceeding with adding the User with status {nameof(UserStatus.Pending)}");
         _logger.ReceivedLog(LogLevel.Warning, "Email verification was not sent!");
@@ -458,6 +463,7 @@ public class UserManagerServiceTests
         Assert.That(dbVerification, Is.Not.Null);
         Assert.That(dbVerification.Token, Is.EqualTo("hashed_token_123"));
         Assert.That(dbVerification.ExpiryAt, Is.EqualTo(now + TimeSpan.FromMinutes(30)));
+        await _defaultListsCreator.Received(1).AddDefaultListsToGivenUser(_dbContext, dbUser);
 
         _logger.ReceivedLog(LogLevel.Information, $"Email confirmation is enabled. Proceeding with adding the User with status {nameof(UserStatus.Pending)}");
         _logger.ReceivedLog(LogLevel.Information, "Email verification sent!");
@@ -734,7 +740,8 @@ public class UserManagerServiceTests
             _timeProvider,
             _verificationTokenHasher,
             _verificationEmailSender,
-            _tokenProvider
+            _tokenProvider,
+            _defaultListsCreator
         );
     }
 }

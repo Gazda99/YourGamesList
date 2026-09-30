@@ -12,6 +12,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Refit;
 using Serilog;
+using YourGamesList.Api.Model.Requests.Lists;
 using YourGamesList.Api.Model.Requests.Users;
 using YourGamesList.Api.ModelBinders;
 using YourGamesList.Api.Services;
@@ -20,6 +21,7 @@ using YourGamesList.Api.Services.Auth.Options;
 using YourGamesList.Api.Services.ControllerModelValidators;
 using YourGamesList.Api.Services.Igdb;
 using YourGamesList.Api.Services.Igdb.Options;
+using YourGamesList.Api.Services.Lists;
 using YourGamesList.Api.Services.Twitch;
 using YourGamesList.Api.Services.Twitch.Options;
 using YourGamesList.Api.Telemetry;
@@ -72,7 +74,8 @@ public static class AppBuilder
         builder.Services.AddTelemetry(builder.Configuration, TelemetryCustomConfiguration.CustomTracerConfiguration, TelemetryCustomConfiguration.CustomMeterConfiguration);
 
         //YGL services
-        builder.Services.AddYourGamesListAuth();
+        builder.Services.AddYourGamesListAuthServices();
+        builder.Services.AddYourGamesListListsServices();
         builder.Services.AddYourGamesListDatabase();
         builder.Services.AddSingleton<ICorrelationIdProvider, CorrelationIdProvider>();
 
@@ -88,7 +91,7 @@ public static class AppBuilder
         return app;
     }
 
-    private static IServiceCollection AddYourGamesListAuth(this IServiceCollection services)
+    private static IServiceCollection AddYourGamesListAuthServices(this IServiceCollection services)
     {
         services.Configure<MvcOptions>(options => { options.ModelBinderProviders.Insert(0, new UserInformationTokenModelBinderProvider()); });
 
@@ -106,6 +109,14 @@ public static class AppBuilder
         services.AddScoped<IVerificationEmailSender, VerificationEmailSender>();
         services.AddScoped<IUserManagerService, UserManagerService>();
         
+        return services;
+    }
+
+    private static IServiceCollection AddYourGamesListListsServices(this IServiceCollection services)
+    {
+        services.AddScoped<IListsManagerService, ListsManagerService>();
+        services.AddSingleton<IDefaultListsCreator, DefaultListsCreator>();
+
         return services;
     }
 
@@ -170,6 +181,12 @@ public static class AppBuilder
             .AddScoped<IValidator<UserRegisterRequest>, UserRegisterRequestValidator>()
             .AddScoped<IValidator<UserLoginRequest>, UserLoginRequestValidator>()
             .AddScoped<IValidator<UserDeleteRequest>, UserDeleteRequestValidator>()
+            ;
+
+        //Lists controller validators
+        services
+            .AddScoped<IValidator<CreateListRequest>, CreateListRequestValidator>()
+            .AddScoped<IValidator<DeleteListRequest>, DeleteListRequestValidator>()
             ;
 
         return services;

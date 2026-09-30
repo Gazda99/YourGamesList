@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using YourGamesList.Api.Services.Auth.Model;
 using YourGamesList.Api.Services.Auth.Options;
+using YourGamesList.Api.Services.Lists;
 using YourGamesList.Common;
 using YourGamesList.Database;
 using YourGamesList.Database.Entity;
@@ -29,6 +30,7 @@ public class UserManagerService : IUserManagerService
     private readonly IVerificationTokenHasher _verificationTokenHasher;
     private readonly IVerificationEmailSender _verificationEmailSender;
     private readonly ITokenProvider _tokenProvider;
+    private readonly IDefaultListsCreator _defaultListsCreator;
     private readonly YourGamesListDbContext _yglDbContext;
 
     public UserManagerService(ILogger<UserManagerService> logger,
@@ -39,7 +41,8 @@ public class UserManagerService : IUserManagerService
         TimeProvider timeProvider,
         IVerificationTokenHasher verificationTokenHasher,
         IVerificationEmailSender verificationEmailSender,
-        ITokenProvider tokenProvider
+        ITokenProvider tokenProvider,
+        IDefaultListsCreator defaultListsCreator
     )
     {
         _logger = logger;
@@ -50,6 +53,7 @@ public class UserManagerService : IUserManagerService
         _verificationTokenHasher = verificationTokenHasher;
         _verificationEmailSender = verificationEmailSender;
         _tokenProvider = tokenProvider;
+        _defaultListsCreator = defaultListsCreator;
         _yglDbContext = yglDbContext.CreateDbContext();
     }
 
@@ -157,11 +161,13 @@ public class UserManagerService : IUserManagerService
 
         var now = _timeProvider.GetUtcNow();
 
+        User user;
+        
         if (!_options.Value.EnableEmailConfirmation)
         {
             _logger.LogInformation("Email confirmation is disabled. Proceeding with adding the User with status {UserStatus}", nameof(UserStatus.Active));
 
-            var user = new User()
+            user = new User()
             {
                 CreatedAt = now,
                 DateOfBirth = dob,
@@ -178,7 +184,7 @@ public class UserManagerService : IUserManagerService
             _logger.LogInformation("Email confirmation is enabled. Proceeding with adding the User with status {UserStatus}", nameof(UserStatus.Pending));
 
             var userExpiration = now + TimeSpan.FromMinutes(_options.Value.DefaultPendingUserExpiryInMinutes);
-            var user = new User()
+            user = new User()
             {
                 CreatedAt = now,
                 DateOfBirth = dob,
@@ -214,6 +220,7 @@ public class UserManagerService : IUserManagerService
             _yglDbContext.EmailVerifications.Add(emailVerification);
         }
 
+        await _defaultListsCreator.AddDefaultListsToGivenUser(_yglDbContext, user);
         await _yglDbContext.SaveChangesAsync();
         _logger.LogInformation("Added user to database");
 
