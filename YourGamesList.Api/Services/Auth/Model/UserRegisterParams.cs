@@ -3,7 +3,7 @@ using YourGamesList.Api.Model.Requests.Users;
 
 namespace YourGamesList.Api.Services.Auth.Model;
 
-public class UserRegisterDto
+public class UserRegisterParams
 {
     public required string Email { get; set; }
     public required string Username { get; set; }
@@ -11,11 +11,11 @@ public class UserRegisterDto
     public required DateOnly DateOfBirth { get; set; }
 }
 
-public static class UserRegisterDtoMappingExtensions
+public static class UserRegisterParamsMappingExtensions
 {
-    public static UserRegisterDto ToDto(this UserRegisterRequest request)
+    public static UserRegisterParams ToParams(this UserRegisterRequest request)
     {
-        return new UserRegisterDto
+        return new UserRegisterParams
         {
             Email = request.Body.Email,
             Username = request.Body.Username,

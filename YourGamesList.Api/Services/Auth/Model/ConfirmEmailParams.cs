@@ -2,16 +2,16 @@
 
 namespace YourGamesList.Api.Services.Auth.Model;
 
-public class ConfirmEmailDto
+public class ConfirmEmailParams
 {
     public required string Token { get; set; }
 }
 
-public static class ConfirmEmailDtoMappingExtensions
+public static class ConfirmEmailParamsMappingExtensions
 {
-    public static ConfirmEmailDto ToDto(this ConfirmEmailRequest request)
+    public static ConfirmEmailParams ToParams(this ConfirmEmailRequest request)
     {
-        return new ConfirmEmailDto
+        return new ConfirmEmailParams
         {
             Token = request.Token
         };

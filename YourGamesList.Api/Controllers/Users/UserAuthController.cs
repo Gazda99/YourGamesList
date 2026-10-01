@@ -33,9 +33,9 @@ public class UserAuthController : YourGamesListBaseController
     {
         _logger.LogInformation("Requested to register user {Username}", userRegisterRequest.Body.Username);
 
-        var dto = userRegisterRequest.ToDto();
+        var userRegisterParams = userRegisterRequest.ToParams();
 
-        var result = await _userManagerService.Register(dto);
+        var result = await _userManagerService.Register(userRegisterParams);
 
         if (result.IsFailure)
         {
@@ -75,9 +75,9 @@ public class UserAuthController : YourGamesListBaseController
     {
         _logger.LogInformation("Requested to login user {Username}", userLoginRequest.Body.Username);
 
-        var dto = userLoginRequest.ToDto();
+        var userLoginParams = userLoginRequest.ToParams();
 
-        var result = await _userManagerService.Login(dto);
+        var result = await _userManagerService.Login(userLoginParams);
 
         if (result.IsFailure)
         {
@@ -116,9 +116,9 @@ public class UserAuthController : YourGamesListBaseController
     {
         _logger.LogInformation("Requested to delete user {Username}", userDeleteRequest.Body.Username);
 
-        var dto = userDeleteRequest.ToDto();
+        var userDeleteParams = userDeleteRequest.ToParams();
 
-        var result = await _userManagerService.Delete(dto);
+        var result = await _userManagerService.Delete(userDeleteParams);
 
         if (result.IsFailure)
         {
@@ -148,9 +148,9 @@ public class UserAuthController : YourGamesListBaseController
     {
         _logger.LogInformation("Requested to confirm email");
 
-        var dto = confirmEmailRequest.ToDto();
+        var confirmEmailParams = confirmEmailRequest.ToParams();
 
-        var result = await _userManagerService.ConfirmEmail(dto);
+        var result = await _userManagerService.ConfirmEmail(confirmEmailParams);
 
         if (result.IsFailure)
         {
