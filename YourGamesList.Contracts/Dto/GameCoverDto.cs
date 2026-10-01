@@ -2,7 +2,7 @@
 
 public class GameCoverDto
 {
-    public required string ImageId { get; init; }
-    public required string ImageType { get; init; }
-    public required string Url { get; init; }
+    public required string ImageId { get; set; }
+    public required string ImageType { get; set; }
+    public required string Url { get; set; }
 }

@@ -2,7 +2,7 @@
 
 public class GameCompanyDto
 {
-    public required string CompanyName { get; init; }
-    public required bool Developer { get; init; }
-    public required bool Publisher { get; init; }
+    public required string CompanyName { get; set; }
+    public required bool Developer { get; set; }
+    public required bool Publisher { get; set; }
 }

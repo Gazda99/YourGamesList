@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -46,6 +47,9 @@ public class UsersServiceTests
         var dateOfBirth = new DateOnly(1995, 3, 14);
         const string username = "testuser";
         const string description = "A test description";
+        var gamesListCreatedAt = createdAt.AddMinutes(1);
+        const string gamesListName = "Completed games";
+        const string gamesListDescription = "Games I finished";
         _dbContext.Users.Add(new User
         {
             Id = userId,
@@ -56,6 +60,16 @@ public class UsersServiceTests
             PasswordHash = "password-hash",
             UserStatus = UserStatus.Active,
             Username = username
+        });
+        _dbContext.GamesLists.Add(new GamesList
+        {
+            Id = Guid.NewGuid(),
+            CreatedAt = gamesListCreatedAt,
+            CanBeDeleted = true,
+            Description = gamesListDescription,
+            IsPrivate = false,
+            Name = gamesListName,
+            UserId = userId
         });
         await _dbContext.SaveChangesAsync();
 
@@ -73,6 +87,13 @@ public class UsersServiceTests
         Assert.That(result.Value.Username, Is.EqualTo(username));
         Assert.That(result.Value.Description, Is.EqualTo(description));
         Assert.That(result.Value.DateOfBirth, Is.EqualTo(dateOfBirth));
+
+        var gamesList = result.Value.GamesLists.Single();
+        Assert.That(gamesList.CreatedAt, Is.EqualTo(gamesListCreatedAt));
+        Assert.That(gamesList.Description, Is.EqualTo(gamesListDescription));
+        Assert.That(gamesList.IsPrivate, Is.False);
+        Assert.That(gamesList.Name, Is.EqualTo(gamesListName));
+        Assert.That(gamesList.GameListEntries, Is.Empty);
     }
 
     [Test]

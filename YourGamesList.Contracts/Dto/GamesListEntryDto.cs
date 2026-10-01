@@ -8,6 +8,6 @@ public class GamesListEntryDto
     public string? Description { get; set; }
     public required long IgdbId { get; set; }
     public byte? Rating { get; set; }
-    public IEnumerable<OwnershipInfoDto> OwnershipInfos { get; } = [];
+    public IEnumerable<OwnershipInfoDto> OwnershipInfos { get; set; }= [];
     public GameDto? Game { get; set; }
 }

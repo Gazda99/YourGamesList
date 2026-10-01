@@ -10,5 +10,5 @@ public class UserDto
     public required string Username { get; set; }
     public required string? Description { get; set; }
     public required DateOnly DateOfBirth { get; set; }
-    public IEnumerable<GamesListDto> GamesList { get; } = [];
+    public IEnumerable<GamesListDto> GamesLists { get; set; } = [];
 }

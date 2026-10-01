@@ -2,16 +2,16 @@
 
 public class GameDto
 {
-    public required long IgdbId { get; init; }
-    public GameCoverDto? Cover { get; init; }
-    public required long FirstReleaseDate { get; init; }
-    public required string[] GameEngines { get; init; }
-    public required string GameType { get; init; }
-    public required string[] Genres { get; init; }
-    public required GameCompanyDto[] GameCompanies { get; init; }
-    public required string Name { get; init; }
-    public required GameReleaseDateDto[] ReleaseDates { get; init; }
-    public required string StoryLine { get; init; }
-    public required string Summary { get; init; }
-    public required string[] Themes { get; init; }
+    public required long IgdbId { get; set; }
+    public GameCoverDto? Cover { get; set; }
+    public required long FirstReleaseDate { get; set; }
+    public required string[] GameEngines { get; set; }
+    public required string GameType { get; set; }
+    public required string[] Genres { get; set; }
+    public required GameCompanyDto[] GameCompanies { get; set; }
+    public required string Name { get; set; }
+    public required GameReleaseDateDto[] ReleaseDates { get; set; }
+    public required string StoryLine { get; set; }
+    public required string Summary { get; set; }
+    public required string[] Themes { get; set; }
 }
