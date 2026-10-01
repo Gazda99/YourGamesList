@@ -48,7 +48,7 @@ public class UsersService : IUsersService
             Description = x.Description,
             IsPrivate = x.IsPrivate,
             Name = x.Name,
-        });
+        }).ToList();
 
         var userDto = new UserDto()
         {
