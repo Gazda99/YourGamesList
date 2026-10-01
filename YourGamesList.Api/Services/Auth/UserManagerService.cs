@@ -157,11 +157,13 @@ public class UserManagerService : IUserManagerService
 
         var now = _timeProvider.GetUtcNow();
 
+
+        User user;
         if (!_options.Value.EnableEmailConfirmation)
         {
             _logger.LogInformation("Email confirmation is disabled. Proceeding with adding the User with status {UserStatus}", nameof(UserStatus.Active));
 
-            var user = new User()
+            user = new User()
             {
                 CreatedAt = now,
                 DateOfBirth = dob,
@@ -178,7 +180,7 @@ public class UserManagerService : IUserManagerService
             _logger.LogInformation("Email confirmation is enabled. Proceeding with adding the User with status {UserStatus}", nameof(UserStatus.Pending));
 
             var userExpiration = now + TimeSpan.FromMinutes(_options.Value.DefaultPendingUserExpiryInMinutes);
-            var user = new User()
+            user = new User()
             {
                 CreatedAt = now,
                 DateOfBirth = dob,
@@ -217,7 +219,7 @@ public class UserManagerService : IUserManagerService
         await _yglDbContext.SaveChangesAsync();
         _logger.LogInformation("Added user to database");
 
-        return CombinedResult<Guid, UserAuthError>.Success(Guid.NewGuid());
+        return CombinedResult<Guid, UserAuthError>.Success(user.Id);
     }
 
     public async Task<ErrorResult<UserAuthError>> Delete(UserDeleteDto userDeleteDto)
