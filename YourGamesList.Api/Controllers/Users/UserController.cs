@@ -40,7 +40,7 @@ public class UserController : YourGamesListBaseController
         {
             if (result.Error == UsersError.UserNotFound)
             {
-                Result(StatusCodes.Status404NotFound);
+                return Result(StatusCodes.Status404NotFound);
             }
 
             return Result(StatusCodes.Status500InternalServerError);
