@@ -2,16 +2,16 @@
 
 namespace YourGamesList.Api.Services.Lists.Model;
 
-public class CreateListDto
+public class CreateListParams
 {
     public required string Name { get; set; }
 }
 
-public static class CreateListDtoMappingExtensions
+public static class CreateListParamsMappingExtensions
 {
-    public static CreateListDto ToDto(this CreateListRequest request)
+    public static CreateListParams ToParams(this CreateListRequest request)
     {
-        return new CreateListDto
+        return new CreateListParams
         {
             Name = request.Body.Name,
         };

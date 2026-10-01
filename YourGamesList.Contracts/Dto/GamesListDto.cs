@@ -9,5 +9,5 @@ public class GamesListDto
     public string? Description { get; set; }
     public required bool IsPrivate { get; set; }
     public required string Name { get; set; }
-    public IEnumerable<GamesListEntryDto> GameListEntries { get; set; } = [];
+    public List<GamesListEntryDto> GameListEntries { get; set; } = [];
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +8,7 @@ using YourGamesList.Api.Attributes;
 using YourGamesList.Api.Model.Requests.Lists;
 using YourGamesList.Api.Services.Lists;
 using YourGamesList.Api.Services.Lists.Model;
+using YourGamesList.Contracts.Dto;
 
 namespace YourGamesList.Api.Controllers.Lists;
 
@@ -24,14 +26,42 @@ public class ListsController : YourGamesListBaseController
         _listsManagerService = listsManagerService;
     }
 
+    [HttpGet("getSelf")]
+    [ProducesResponseType(typeof(List<GamesListDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetSelf(GetSelfListRequest getSelfListRequest)
+    {
+        _logger.LogInformation("Requested to get self lists");
+
+        var dto = getSelfListRequest.ToParams();
+
+        var result = await _listsManagerService.GetSelf(dto);
+
+        if (result.IsFailure)
+        {
+            if (result.Error is ListsError.InternalServerError)
+            {
+                return Result(StatusCodes.Status400BadRequest, result.Error.ToString());
+            }
+            else
+            {
+                return Result(StatusCodes.Status500InternalServerError);
+            }
+        }
+        else
+        {
+            return Result(StatusCodes.Status200OK, result.Value);
+        }
+    }
+    
     [HttpPost("create")]
     [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Guid), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create(CreateListRequest createListRequest)
     {
         _logger.LogInformation("Requested to create list");
 
-        var dto = createListRequest.ToDto();
+        var dto = createListRequest.ToParams();
 
         var result = await _listsManagerService.Create(dto);
 
@@ -48,7 +78,7 @@ public class ListsController : YourGamesListBaseController
         }
         else
         {
-            return Result(StatusCodes.Status200OK);
+            return Result(StatusCodes.Status200OK, result.Value);
         }
     }
 
@@ -59,7 +89,7 @@ public class ListsController : YourGamesListBaseController
     {
         _logger.LogInformation("Requested to delete list with id: {GamesListId}", deleteListRequest.Body.Id);
 
-        var dto = deleteListRequest.ToDto();
+        var dto = deleteListRequest.ToParams();
 
         var result = await _listsManagerService.Delete(dto);
 

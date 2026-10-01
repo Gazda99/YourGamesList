@@ -199,6 +199,7 @@ public static class AppBuilder
 
         //Lists controller validators
         services
+            .AddScoped<IValidator<GetSelfListRequest>, GetSelfListRequestValidator>()
             .AddScoped<IValidator<CreateListRequest>, CreateListRequestValidator>()
             .AddScoped<IValidator<DeleteListRequest>, DeleteListRequestValidator>()
             ;
