@@ -448,9 +448,11 @@ public class UserManagerServiceTests
 
         //ASSERT
         Assert.That(res.IsSuccess, Is.True);
-
         var dbUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
         Assert.That(dbUser, Is.Not.Null);
+        
+        Assert.That(res.Value, Is.EqualTo(dbUser.Id));
+
         Assert.That(dbUser.UserStatus, Is.EqualTo(UserStatus.Pending));
         Assert.That(dbUser.ExpiryAt, Is.EqualTo(now + TimeSpan.FromMinutes(60)));
 
