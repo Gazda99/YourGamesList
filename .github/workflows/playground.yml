@@ -1,38 +1,12 @@
-﻿name: .NET Unit Tests
+﻿name: Playground
 
 on:
-  pull_request:
-    branches: [ main, master ]
-  workflow_dispatch: # Keeps manual trigger active
+  workflow_dispatch:
 
 jobs:
-  test:
+  say-hello:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      checks: write # Required if using test-reporter action
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --no-restore --configuration Release
-
-      - name: Run tests
-        id: run-tests
-        run: dotnet test --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
-
-      - name: Add Test Failure Summary
-        if: failure()
-        run: |
-          echo "## ❌ Unit Test Failures" >> $GITHUB_STEP_SUMMARY
-          echo "Some tests failed. Check the run details or lower log outputs." >> $GITHUB_STEP_SUMMARY
+      - name: Print Hello
+        run: echo "Hello from GitHub Actions!"
