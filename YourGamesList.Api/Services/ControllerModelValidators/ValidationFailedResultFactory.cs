@@ -18,7 +18,10 @@ public class ValidationFailedResultFactory : IValidationFailedResultFactory
 
         var errorResponse = new ErrorResponse()
         {
-            Errors = errors
+            Errors = errors.Select(x => new Error()
+            {
+                Code = x
+            })
         };
 
         return new ObjectResult(errorResponse)

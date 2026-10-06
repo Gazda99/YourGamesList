@@ -5,5 +5,11 @@ namespace YourGamesList.Contracts.Responses;
 
 public class ErrorResponse
 {
-    [JsonPropertyName("errors")] public IEnumerable<string> Errors { get; init; } = [];
+    [JsonPropertyName("errors")] public IEnumerable<Error> Errors { get; init; } = [];
+}
+
+public class Error
+{
+    [JsonPropertyName("code")] public required string Code { get; init; }
+    [JsonPropertyName("description")] public string? Description { get; init; }
 }

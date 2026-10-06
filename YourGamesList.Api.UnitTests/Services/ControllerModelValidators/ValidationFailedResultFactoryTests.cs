@@ -34,6 +34,6 @@ public class ValidationFailedResultFactoryTests
         Assert.That(objectResult?.StatusCode, Is.EqualTo(400));
         Assert.That(objectResult?.Value, Is.TypeOf<ErrorResponse>());
         var errorResponse = objectResult?.Value as ErrorResponse;
-        Assert.That(errorResponse.Errors, Is.EquivalentTo(expectedErrors));
+        Assert.That(errorResponse.Errors.Select(x=>x.Code), Is.EquivalentTo(expectedErrors));
     }
 }
