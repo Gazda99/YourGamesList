@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -27,6 +28,7 @@ public class ListsController : YourGamesListBaseController
     }
 
     [HttpGet("getSelf")]
+    [Authorize]
     [ProducesResponseType(typeof(List<GamesListDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetSelf(GetSelfListRequest getSelfListRequest)
@@ -59,6 +61,7 @@ public class ListsController : YourGamesListBaseController
     }
     
     [HttpPost("create")]
+    [Authorize]
     [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
@@ -101,6 +104,7 @@ public class ListsController : YourGamesListBaseController
     }
 
     [HttpDelete("delete")]
+    [Authorize]
     [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(void), StatusCodes.Status409Conflict)]

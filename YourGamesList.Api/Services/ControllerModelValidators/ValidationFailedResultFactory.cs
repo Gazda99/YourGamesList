@@ -14,13 +14,13 @@ public class ValidationFailedResultFactory : IValidationFailedResultFactory
 {
     public IActionResult CreateValidationFailedResult(ValidationResult? validationResult)
     {
-        var errors = validationResult?.Errors.Select(x => x.ErrorMessage) ?? [];
-
+        var errors = validationResult?.Errors ?? [];
         var errorResponse = new ErrorResponse()
         {
             Errors = errors.Select(x => new Error()
             {
-                Code = x
+                Code = x.ErrorCode,
+                Description = x.ErrorMessage
             })
         };
 
