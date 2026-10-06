@@ -1,4 +1,4 @@
-﻿name: Manual Hello
+﻿name: Playground
 
 on:
   workflow_dispatch:
