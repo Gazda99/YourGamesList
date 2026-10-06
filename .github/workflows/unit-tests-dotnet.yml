@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      checks: write
 
     steps:
       - name: Checkout repository
@@ -27,11 +28,13 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Run tests
-        id: run-tests
         run: dotnet test --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
 
-      - name: Add Test Failure Summary
-        if: failure()
-        run: |
-          echo "## ❌ Unit Test Failures" >> $GITHUB_STEP_SUMMARY
-          echo "Some tests failed. Check the run details or lower log outputs." >> $GITHUB_STEP_SUMMARY
+      # Generate GitHub Step Summary on failure or success
+      - name: Publish Test Summary
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: .NET Test Report
+          path: '**/test-results.trx'
+          reporter: dotnet-trx
