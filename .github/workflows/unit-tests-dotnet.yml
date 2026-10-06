@@ -30,7 +30,6 @@ jobs:
       - name: Run tests
         run: dotnet test --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
 
-      # Generate GitHub Step Summary on failure or success
       - name: Publish Test Summary
         if: always()
         uses: dorny/test-reporter@v3
@@ -38,4 +37,5 @@ jobs:
           name: .NET Test Report
           path: '**/test-results.trx'
           reporter: dotnet-trx
-          only-summary: 'true'
+          list-suites: 'failed'
+          fail-on-error: 'true'
