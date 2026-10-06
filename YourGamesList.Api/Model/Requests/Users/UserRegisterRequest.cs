@@ -58,7 +58,7 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     .WithMessage("Invalid email address.")
                     .Must(email => email.Length <= validatorOptions.Email.MaximumEmailLength)
                     .WithErrorCode(ErrorCodes.UserAuth.EmailIsTooLong)
-                    .WithMessage($"Username must be between {validatorOptions.Username.MinimumUsernameLength} and {validatorOptions.Username.MaximumUsernameLength} characters long.")
+                    .WithMessage($"Email must be max {validatorOptions.Email.MaximumEmailLength} characters long.")
                     .Must(email =>
                     {
                         var localPart = email.Split("@").FirstOrDefault();
@@ -79,15 +79,13 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     .NotEmpty()
                     .WithErrorCode(ErrorCodes.UserAuth.InvalidPassword)
                     .WithMessage("Password is required.")
-                    .Must(username => username.Length >= validatorOptions.Username.MinimumUsernameLength)
+                    .Must(password => password.Length >= validatorOptions.Password.MinimumPasswordLength)
                     .WithErrorCode(ErrorCodes.UserAuth.PasswordIsTooShort)
-                    .WithMessage($"Password must be between {validatorOptions.Username.MinimumUsernameLength} and {validatorOptions.Username.MaximumUsernameLength} characters long.")
-                    .Must(username => username.Length <= validatorOptions.Username.MaximumUsernameLength)
+                    .WithMessage($"Password must be between {validatorOptions.Password.MinimumPasswordLength} and {validatorOptions.Password.MaximumPasswordLength} characters long.")
+                    .Must(password => password.Length <= validatorOptions.Password.MaximumPasswordLength)
                     .WithErrorCode(ErrorCodes.UserAuth.PasswordIsTooLong)
-                    .WithMessage($"Password must be between {validatorOptions.Username.MinimumUsernameLength} and {validatorOptions.Username.MaximumUsernameLength} characters long.")
+                    .WithMessage($"Password must be between {validatorOptions.Password.MinimumPasswordLength} and {validatorOptions.Password.MaximumPasswordLength} characters long.")
                     ;
-                
-                var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
                 
                 body.RuleFor(x => x.DateOfBirth)
                     .Cascade(CascadeMode.Stop)
@@ -96,6 +94,7 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     .WithMessage("Date of birth is required.")
                     .Must(dob =>
                     {
+                        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
                         if (dob > today)
                         {
                             logger.LogInformation("date of birth is in the future.");
@@ -108,6 +107,7 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     .WithMessage("Invalid date of birth.")
                     .Must(dob =>
                     {
+                        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
                         var minimumAge = validatorOptions.DateOfBirth.MinimumAge;
                         var cutoffDate = today.AddYears(-minimumAge);
 
@@ -123,6 +123,7 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     .WithMessage("Under minimum age.")
                     .Must(dob =>
                     {
+                        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
                         var maximumAge = validatorOptions.DateOfBirth.MaximumAge;
 
                         var oldestAllowedDate = today.AddYears(-maximumAge);
