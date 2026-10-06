@@ -33,8 +33,9 @@ jobs:
       # Generate GitHub Step Summary on failure or success
       - name: Publish Test Summary
         if: always()
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v3
         with:
           name: .NET Test Report
           path: '**/test-results.trx'
           reporter: dotnet-trx
+          only-summary: 'true'
