@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
+using YourGamesList.Database;
 
 namespace YourGamesList.Database.Entity;
 
@@ -14,12 +15,12 @@ public class GamesList
     public DateTimeOffset? ModifiedAt { get; set; }
 
     public required bool CanBeDeleted { get; set; }
-    [StringLength(500)] public string? Description { get; set; }
+    [StringLength(ValidationConstants.GamesList.MaximumDescriptionLength)] public string? Description { get; set; }
     public required bool IsPrivate { get; set; }
-    [StringLength(50)] public required string Name { get; set; }
+    [StringLength(ValidationConstants.GamesList.MaximumNameLength)] public required string Name { get; set; }
 
     public Guid UserId { get; set; }
     public virtual User User { get; set; } = null!;
 
-    public virtual ICollection<GamesListEntry> GameListEntries { get; } = [];
+    public virtual ICollection<GamesListEntry> GamesListEntries { get; } = [];
 }

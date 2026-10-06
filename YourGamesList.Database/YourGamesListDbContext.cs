@@ -58,7 +58,7 @@ public class YourGamesListDbContext : DbContext
         {
             entity.HasKey(x => x.Id);
 
-            entity.HasMany(x => x.GameListEntries)
+            entity.HasMany(x => x.GamesListEntries)
                 .WithOne(x => x.GamesList)
                 .HasForeignKey(x => x.GamesListId)
                 .OnDelete(DeleteBehavior.Cascade);

@@ -12,6 +12,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Refit;
 using Serilog;
+using YourGamesList.Api.Model.Requests.Lists;
 using YourGamesList.Api.Model.Requests.Users;
 using YourGamesList.Api.ModelBinders;
 using YourGamesList.Api.Services;
@@ -20,6 +21,7 @@ using YourGamesList.Api.Services.Auth.Options;
 using YourGamesList.Api.Services.ControllerModelValidators;
 using YourGamesList.Api.Services.Igdb;
 using YourGamesList.Api.Services.Igdb.Options;
+using YourGamesList.Api.Services.Lists;
 using YourGamesList.Api.Services.Twitch;
 using YourGamesList.Api.Services.Twitch.Options;
 using YourGamesList.Api.Services.YourGamesList;
@@ -73,8 +75,9 @@ public static class AppBuilder
         builder.Services.AddTelemetry(builder.Configuration, TelemetryCustomConfiguration.CustomTracerConfiguration, TelemetryCustomConfiguration.CustomMeterConfiguration);
 
         //YGL services
-        builder.Services.AddYourGamesListAuth();
+        builder.Services.AddYourGamesListAuthServices();
         builder.Services.AddYourGamesListUsersServices();
+        builder.Services.AddYourGamesListListsServices();
         builder.Services.AddYourGamesListDatabase();
         builder.Services.AddSingleton<ICorrelationIdProvider, CorrelationIdProvider>();
 
@@ -90,7 +93,7 @@ public static class AppBuilder
         return app;
     }
 
-    private static IServiceCollection AddYourGamesListAuth(this IServiceCollection services)
+    private static IServiceCollection AddYourGamesListAuthServices(this IServiceCollection services)
     {
         services.Configure<MvcOptions>(options => { options.ModelBinderProviders.Insert(0, new UserInformationTokenModelBinderProvider()); });
 
@@ -110,14 +113,22 @@ public static class AppBuilder
         
         return services;
     }
+
+    private static IServiceCollection AddYourGamesListListsServices(this IServiceCollection services)
+    {
+        services.AddScoped<IListsManagerService, ListsManagerService>();
+        services.AddSingleton<IDefaultListsCreator, DefaultListsCreator>();
+
+        return services;
+    }
     
     private static IServiceCollection AddYourGamesListUsersServices(this IServiceCollection services)
     {
         services.AddScoped<IUsersService, UsersService>();
-        
+
         return services;
     }
-    
+
     private static IServiceCollection AddIgdbService(this IServiceCollection services)
     {
         services.AddOptionsWithFluentValidation<IgdbHttpClientOptions, IgdbHttpClientOptionsValidator>(IgdbHttpClientOptions.SectionName);
@@ -184,6 +195,13 @@ public static class AppBuilder
         //Users controller validators
         services
             .AddScoped<IValidator<UserGetSelfRequest>, UserGetSelfRequestValidator>()
+            ;
+
+        //Lists controller validators
+        services
+            .AddScoped<IValidator<GetSelfListRequest>, GetSelfListRequestValidator>()
+            .AddScoped<IValidator<CreateListRequest>, CreateListRequestValidator>()
+            .AddScoped<IValidator<DeleteListRequest>, DeleteListRequestValidator>()
             ;
 
         return services;

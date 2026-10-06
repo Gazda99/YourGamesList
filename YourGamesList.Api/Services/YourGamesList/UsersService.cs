@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -41,20 +42,34 @@ public class UsersService : IUsersService
         }
 
         var user = getUserRes.Value;
+        var gamesLists = user.GamesLists.Select(x => new GamesListDto()
+        {
+            CreatedAt = x.CreatedAt,
+            Description = x.Description,
+            IsPrivate = x.IsPrivate,
+            Name = x.Name,
+        }).ToList();
+
         var userDto = new UserDto()
         {
-            CreatedAt =  user.CreatedAt,
+            CreatedAt = user.CreatedAt,
             Id = user.Id,
             Username = user.Username,
             Description = user.Description,
-            DateOfBirth =  user.DateOfBirth
+            DateOfBirth = user.DateOfBirth,
+            GamesLists = gamesLists
         };
         return CombinedResult<UserDto, UsersError>.Success(userDto);
     }
 
     private async Task<CombinedResult<User, UsersError>> FindUser(Guid userId)
     {
-        var user = await _yglDbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
+        var user = await _yglDbContext.Users
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Include(user => user.GamesLists)
+            .FirstOrDefaultAsync(x => x.Id == userId);
+
         if (user == null)
         {
             return CombinedResult<User, UsersError>.Failure(UsersError.UserNotFound);

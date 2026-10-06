@@ -67,7 +67,7 @@ public class UserAuthController : YourGamesListBaseController
     }
 
     [HttpPost("login")]
-    [ProducesResponseType<AuthLoginResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AuthLoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(void), StatusCodes.Status403Forbidden)]
@@ -142,6 +142,7 @@ public class UserAuthController : YourGamesListBaseController
     }
 
     [HttpGet("confirmEmail")]
+    [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ConfirmEmail(ConfirmEmailRequest confirmEmailRequest)
     {
