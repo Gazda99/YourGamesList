@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Attributes;
 using YourGamesList.Api.Services.ControllerModelValidators;
+using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.Attributes;
 
@@ -136,6 +137,7 @@ public class ValidateRequestFilterTests
         //ASSERT
         Assert.That(nextCalled, Is.True);
         Assert.That(filterContext.Result, Is.Null);
+        _logger.ReceivedLog(LogLevel.Information, $"Validation of model {typeof(TestClass)} passed.");
     }
 
     [Test]
@@ -173,6 +175,7 @@ public class ValidateRequestFilterTests
         //ASSERT
         Assert.That(nextCalled, Is.False);
         Assert.That(filterContext.Result, Is.EqualTo(expectedFailedResult));
+        _logger.ReceivedLog(LogLevel.Information, $"Validation of model {typeof(TestClass)} failed.");
     }
 
     [Test]

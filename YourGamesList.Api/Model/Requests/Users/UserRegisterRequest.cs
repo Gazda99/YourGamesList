@@ -27,7 +27,7 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
         var validatorOptions = options.Value;
         
         RuleFor(x => x.Body)
-            .NotEmpty()
+            .NotNull()
             .WithErrorCode(ErrorCodes.Validation.RequestBodyRequired)
             .WithMessage("Proper request body is required.")
             .ChildRules(body =>
@@ -37,13 +37,38 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     .NotEmpty()
                     .WithErrorCode(ErrorCodes.UserAuth.InvalidUsername)
                     .WithMessage("Username is required.")
-                    .Must(username => username.Length >= validatorOptions.Username.MinimumUsernameLength)
+                    .Must(username =>
+                    {
+                        if (username.Length < validatorOptions.Username.MinimumUsernameLength)
+                        {
+                            logger.LogInformation("Username {Username} is too short. {UsernameLength} < {UsernameMinimumLength} ", username, username.Length, validatorOptions.Username.MinimumUsernameLength);
+                            return false;
+                        }
+                        return true;
+                    })
                     .WithErrorCode(ErrorCodes.UserAuth.UsernameIsTooShort)
                     .WithMessage($"Username must be between {validatorOptions.Username.MinimumUsernameLength} and {validatorOptions.Username.MaximumUsernameLength} characters long.")
-                    .Must(username => username.Length <= validatorOptions.Username.MaximumUsernameLength)
+                    .Must(username =>
+                    {
+                        if (username.Length > validatorOptions.Username.MaximumUsernameLength)
+                        {
+                            logger.LogInformation("Username {Username} is too long. {UsernameLength} > {UsernameMaximumLength} ", username, username.Length, validatorOptions.Username.MaximumUsernameLength);
+                            return false;
+                        }
+                        return true;
+                    })
                     .WithErrorCode(ErrorCodes.UserAuth.UsernameIsTooLong)
                     .WithMessage($"Username must be between {validatorOptions.Username.MinimumUsernameLength} and {validatorOptions.Username.MaximumUsernameLength} characters long.")
-                    .Must(username => Regex.IsMatch(username, validatorOptions.Username.AllowedCharactersRegex))
+                    .Must(username =>
+                    {
+                        if (!Regex.IsMatch(username, validatorOptions.Username.AllowedCharactersRegex))
+                        {
+                            logger.LogInformation("Username {Username} doesn't match allowed characters regex.", username);
+                            return false;
+                        }
+                        return true;
+                     
+                    })
                     .WithErrorCode(ErrorCodes.UserAuth.InvalidUsername)
                     .WithMessage("Username contains invalid characters.")
                     ;
@@ -56,7 +81,15 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     .EmailAddress()
                     .WithErrorCode(ErrorCodes.UserAuth.InvalidEmail)
                     .WithMessage("Invalid email address.")
-                    .Must(email => email.Length <= validatorOptions.Email.MaximumEmailLength)
+                    .Must(email =>
+                    {
+                        if (email.Length > validatorOptions.Email.MaximumEmailLength)
+                        {
+                            logger.LogInformation("Email {Email} is too long. {EmailLength} > {EmailMaximumLength} ", email, email.Length, validatorOptions.Email.MaximumEmailLength);
+                            return false;
+                        }
+                        return true;
+                    })
                     .WithErrorCode(ErrorCodes.UserAuth.EmailIsTooLong)
                     .WithMessage($"Email must be max {validatorOptions.Email.MaximumEmailLength} characters long.")
                     .Must(email =>
@@ -79,17 +112,33 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     .NotEmpty()
                     .WithErrorCode(ErrorCodes.UserAuth.InvalidPassword)
                     .WithMessage("Password is required.")
-                    .Must(password => password.Length >= validatorOptions.Password.MinimumPasswordLength)
+                    .Must(password =>
+                    {
+                        if (password.Length < validatorOptions.Password.MinimumPasswordLength)
+                        {
+                            logger.LogInformation("Password {Password} is too short. {PasswordLength} < {PasswordMinimumLength} ", password, password.Length, validatorOptions.Password.MinimumPasswordLength);
+                            return false;
+                        }
+                        return true;
+                    })
                     .WithErrorCode(ErrorCodes.UserAuth.PasswordIsTooShort)
                     .WithMessage($"Password must be between {validatorOptions.Password.MinimumPasswordLength} and {validatorOptions.Password.MaximumPasswordLength} characters long.")
-                    .Must(password => password.Length <= validatorOptions.Password.MaximumPasswordLength)
+                    .Must(password =>
+                    {
+                        if (password.Length > validatorOptions.Password.MaximumPasswordLength)
+                        {
+                            logger.LogInformation("Password {Password} is too long. {PasswordLength} > {PasswordMaximumLength} ", password, password.Length, validatorOptions.Password.MaximumPasswordLength);
+                            return false;
+                        }
+                        return true;
+                    })
                     .WithErrorCode(ErrorCodes.UserAuth.PasswordIsTooLong)
                     .WithMessage($"Password must be between {validatorOptions.Password.MinimumPasswordLength} and {validatorOptions.Password.MaximumPasswordLength} characters long.")
                     ;
                 
                 body.RuleFor(x => x.DateOfBirth)
                     .Cascade(CascadeMode.Stop)
-                    .NotEmpty()
+                    .NotNull()
                     .WithErrorCode(ErrorCodes.UserAuth.InvalidDateOfBirth)
                     .WithMessage("Date of birth is required.")
                     .Must(dob =>
@@ -104,7 +153,7 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                         return true;
                     })
                     .WithErrorCode(ErrorCodes.UserAuth.InvalidDateOfBirth)
-                    .WithMessage("Invalid date of birth.")
+                    .WithMessage("Invalid Date of birth.")
                     .Must(dob =>
                     {
                         var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
@@ -113,7 +162,7 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
 
                         if (dob > cutoffDate)
                         {
-                            logger.LogInformation("date of birth does not meet minimum age restrictions.");
+                            logger.LogInformation("Date of birth does not meet minimum age restrictions.");
                             return false;
                         }
 
@@ -129,7 +178,7 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                         var oldestAllowedDate = today.AddYears(-maximumAge);
                         if (dob < oldestAllowedDate) 
                         {
-                            logger.LogInformation("date of birth exceeds maximum age restrictions.");
+                            logger.LogInformation("Date of birth exceeds maximum age restrictions.");
                             return false;
                         }
 

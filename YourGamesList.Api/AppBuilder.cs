@@ -196,7 +196,6 @@ public static class AppBuilder
     {
         //Essentials
         services
-            .AddScoped<IBaseRequestValidator, BaseRequestValidator>()
             .AddScoped<IValidationFailedResultFactory, ValidationFailedResultFactory>()
             ;
 
