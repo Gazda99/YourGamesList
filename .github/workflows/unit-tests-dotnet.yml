@@ -2,12 +2,13 @@
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [ opened, synchronize, reopened, ready_for_review ]
     branches: [ main ]
   workflow_dispatch:
 
 jobs:
   test:
+    name: .NET Unit Tests
     runs-on: ubuntu-latest
     permissions:
       contents: read
