@@ -4,7 +4,7 @@ namespace LibGazdium;
 
 internal static partial class LibsodiumInternal
 {
-    private const string LibsodiumDll = "libsodium.dll";
+    private const string LibsodiumDll = "libsodium";
 
     [DllImport(LibsodiumDll, CallingConvention = CallingConvention.Cdecl)]
     public static extern int sodium_init();
