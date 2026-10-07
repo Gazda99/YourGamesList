@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using YourGamesList.Api.Attributes;
 using YourGamesList.Contracts.Requests.Lists;
+using YourGamesList.Contracts.Responses;
 
 namespace YourGamesList.Api.Model.Requests.Lists;
 
@@ -16,7 +17,8 @@ public class CreateListRequestValidator : AbstractValidator<CreateListRequest>
     public CreateListRequestValidator()
     {
         RuleFor(x => x.Body)
-            .NotEmpty()
+            .NotNull()
+            .WithErrorCode(ErrorCodes.Validation.RequestBodyRequired)
             .WithMessage("Proper request body is required.")
             .ChildRules(body =>
             {
