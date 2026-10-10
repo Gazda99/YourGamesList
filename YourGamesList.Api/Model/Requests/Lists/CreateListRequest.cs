@@ -25,5 +25,8 @@ public class CreateListRequestValidator : AbstractValidator<CreateListRequest>
                 body.RuleFor(x => x.Name)
                     .NotEmpty();
             });
+        
+        RuleFor(x => x.UserInformation)
+            .NotEmpty();
     }
 }

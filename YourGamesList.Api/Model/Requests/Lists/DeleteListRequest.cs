@@ -25,5 +25,8 @@ public class DeleteListRequestValidator : AbstractValidator<DeleteListRequest>
                 body.RuleFor(x => x.Id)
                     .NotNull();
             });
+        
+        RuleFor(x => x.UserInformation)
+            .NotEmpty();
     }
 }
