@@ -116,7 +116,7 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     {
                         if (password.Length < validatorOptions.Password.MinimumPasswordLength)
                         {
-                            logger.LogInformation("Password {Password} is too short. {PasswordLength} < {PasswordMinimumLength} ", password, password.Length, validatorOptions.Password.MinimumPasswordLength);
+                            logger.LogInformation("Password is too short. {PasswordLength} < {PasswordMinimumLength}", password.Length, validatorOptions.Password.MinimumPasswordLength);
                             return false;
                         }
                         return true;
@@ -127,7 +127,7 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     {
                         if (password.Length > validatorOptions.Password.MaximumPasswordLength)
                         {
-                            logger.LogInformation("Password {Password} is too long. {PasswordLength} > {PasswordMaximumLength} ", password, password.Length, validatorOptions.Password.MaximumPasswordLength);
+                            logger.LogInformation("Password is too long. {PasswordLength} > {PasswordMaximumLength}", password.Length, validatorOptions.Password.MaximumPasswordLength);
                             return false;
                         }
                         return true;

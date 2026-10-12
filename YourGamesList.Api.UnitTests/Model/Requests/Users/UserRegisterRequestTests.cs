@@ -9,6 +9,7 @@ using YourGamesList.Api.Model.Requests.Users;
 using YourGamesList.Api.Services.Auth.Options;
 using YourGamesList.Contracts.Requests.Users;
 using YourGamesList.Contracts.Responses;
+using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Users;
 
@@ -160,6 +161,20 @@ public class UserRegisterRequestTests
         //ASSERT
         result.ShouldHaveValidationErrorFor(x => x.Body.Password)
             .WithErrorCode(errorCode);
+    }
+
+    [TestCase("short-secret")]
+    [TestCase("this-password-is-too-long-secret")]
+    public void Validate_InvalidPassword_DoesNotLogPassword(string password)
+    {
+        //ARRANGE
+        var validator = new UserRegisterRequestValidator(_logger, _usernameValidatorOptions, _timeProvider);
+
+        //ACT
+        validator.TestValidate(CreateRequest(password: password));
+
+        //ASSERT
+        _logger.NotReceivedLog(LogLevel.Information, message => message.Contains(password));
     }
 
     [Test]
