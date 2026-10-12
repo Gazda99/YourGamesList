@@ -23,7 +23,6 @@ public class UserManagerServiceTests
     private ILogger<UserManagerService> _logger;
     private IOptions<UserManagerServiceOptions> _options;
     private IUserValuesValidator _userValuesValidator;
-    private IDbContextFactory<YourGamesListDbContext> _dbContextFactory;
     private IPasswordHasher _passwordHasher;
     private FakeTimeProvider _timeProvider;
     private IVerificationTokenHasher _verificationTokenHasher;
@@ -40,7 +39,6 @@ public class UserManagerServiceTests
         _logger = Substitute.For<ILogger<UserManagerService>>();
         _options = Substitute.For<IOptions<UserManagerServiceOptions>>();
         _userValuesValidator = Substitute.For<IUserValuesValidator>();
-        _dbContextFactory = Substitute.For<IDbContextFactory<YourGamesListDbContext>>();
         _passwordHasher = Substitute.For<IPasswordHasher>();
         _timeProvider = new FakeTimeProvider();
         _verificationTokenHasher = Substitute.For<IVerificationTokenHasher>();
@@ -52,7 +50,6 @@ public class UserManagerServiceTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString());
 
         _dbContext = new YourGamesListDbContext(optionsBuilder.Options);
-        _dbContextFactory.CreateDbContext().Returns(_dbContext);
 
         _options.Value.Returns(new UserManagerServiceOptions
         {
@@ -737,7 +734,7 @@ public class UserManagerServiceTests
             _logger,
             _options,
             _userValuesValidator,
-            _dbContextFactory,
+            _dbContext,
             _passwordHasher,
             _timeProvider,
             _verificationTokenHasher,

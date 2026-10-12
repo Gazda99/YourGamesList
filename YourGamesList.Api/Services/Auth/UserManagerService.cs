@@ -36,7 +36,7 @@ public class UserManagerService : IUserManagerService
     public UserManagerService(ILogger<UserManagerService> logger,
         IOptions<UserManagerServiceOptions> options,
         IUserValuesValidator userValuesValidator,
-        IDbContextFactory<YourGamesListDbContext> yglDbContext,
+        YourGamesListDbContext yglDbContext,
         IPasswordHasher passwordHasher,
         TimeProvider timeProvider,
         IVerificationTokenHasher verificationTokenHasher,
@@ -54,7 +54,7 @@ public class UserManagerService : IUserManagerService
         _verificationEmailSender = verificationEmailSender;
         _tokenProvider = tokenProvider;
         _defaultListsCreator = defaultListsCreator;
-        _yglDbContext = yglDbContext.CreateDbContext();
+        _yglDbContext = yglDbContext;
     }
 
     public async Task<CombinedResult<string, UserAuthError>> Login(UserLoginParams userLoginParams)

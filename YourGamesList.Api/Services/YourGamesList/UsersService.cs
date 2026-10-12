@@ -23,11 +23,11 @@ public class UsersService : IUsersService
 
     public UsersService(
         ILogger<UsersService> logger,
-        IDbContextFactory<YourGamesListDbContext> yglDbContext
+        YourGamesListDbContext yglDbContext
     )
     {
         _logger = logger;
-        _yglDbContext = yglDbContext.CreateDbContext();
+        _yglDbContext = yglDbContext;
     }
 
     public async Task<CombinedResult<UserDto, UsersError>> GetSelfUser(UserGetSelfParams userGetSelfParams)

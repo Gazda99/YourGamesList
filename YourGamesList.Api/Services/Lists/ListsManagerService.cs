@@ -28,11 +28,11 @@ public class ListsManagerService : IListsManagerService
 
     public ListsManagerService(
         ILogger<ListsManagerService> logger,
-        IDbContextFactory<YourGamesListDbContext> yglDbContext,
+        YourGamesListDbContext yglDbContext,
         TimeProvider timeProvider)
     {
         _logger = logger;
-        _yglDbContext = yglDbContext.CreateDbContext();
+        _yglDbContext = yglDbContext;
         _timeProvider = timeProvider;
     }
 

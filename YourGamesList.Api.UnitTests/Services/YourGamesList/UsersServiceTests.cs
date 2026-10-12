@@ -16,20 +16,17 @@ namespace YourGamesList.Api.UnitTests.Services.YourGamesList;
 public class UsersServiceTests
 {
     private ILogger<UsersService> _logger = null!;
-    private IDbContextFactory<YourGamesListDbContext> _dbContextFactory = null!;
     private YourGamesListDbContext _dbContext = null!;
 
     [SetUp]
     public void Setup()
     {
         _logger = Substitute.For<ILogger<UsersService>>();
-        _dbContextFactory = Substitute.For<IDbContextFactory<YourGamesListDbContext>>();
 
         var options = new DbContextOptionsBuilder<YourGamesListDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         _dbContext = new YourGamesListDbContext(options);
-        _dbContextFactory.CreateDbContext().Returns(_dbContext);
     }
 
     [TearDown]
@@ -114,7 +111,7 @@ public class UsersServiceTests
 
     private UsersService CreateService()
     {
-        return new UsersService(_logger, _dbContextFactory);
+        return new UsersService(_logger, _dbContext);
     }
 
     private static UserInformationToken CreateUserInformation(Guid userId)
