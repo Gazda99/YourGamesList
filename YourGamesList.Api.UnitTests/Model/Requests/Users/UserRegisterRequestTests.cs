@@ -8,6 +8,7 @@ using NSubstitute;
 using YourGamesList.Api.Model.Requests.Users;
 using YourGamesList.Api.Services.Auth.Options;
 using YourGamesList.Contracts.Requests.Users;
+using YourGamesList.Contracts.Responses;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Users;
 
@@ -74,15 +75,16 @@ public class UserRegisterRequestTests
         var result = validator.TestValidate(new UserRegisterRequest { Body = null! });
 
         //ASSERT
-        result.ShouldHaveValidationErrorFor(x => x.Body);
+        result.ShouldHaveValidationErrorFor(x => x.Body)
+            .WithErrorCode(ErrorCodes.Validation.RequestBodyRequired);
     }
 
     [Test]
-    [TestCase("")]
-    [TestCase("ab")]
-    [TestCase("abcdefghijkl")]
-    [TestCase("bad-name")]
-    public void Validate_InvalidUsername_ReturnsValidationError(string username)
+    [TestCase("", ErrorCodes.UserAuth.InvalidUsername)]
+    [TestCase("ab", ErrorCodes.UserAuth.UsernameIsTooShort)]
+    [TestCase("abcdefghijkl", ErrorCodes.UserAuth.UsernameIsTooLong)]
+    [TestCase("bad-name", ErrorCodes.UserAuth.InvalidUsername)]
+    public void Validate_InvalidUsername_ReturnsValidationError(string username, string errorCode)
     {
         //ARRANGE
         var validator = new UserRegisterRequestValidator(_logger, _usernameValidatorOptions, _timeProvider);
@@ -91,7 +93,8 @@ public class UserRegisterRequestTests
         var result = validator.TestValidate(CreateRequest(username: username));
 
         //ASSERT
-        result.ShouldHaveValidationErrorFor(x => x.Body.Username);
+        result.ShouldHaveValidationErrorFor(x => x.Body.Username)
+            .WithErrorCode(errorCode);
     }
 
     [Test]
@@ -106,7 +109,8 @@ public class UserRegisterRequestTests
         var result = validator.TestValidate(CreateRequest(email: email));
 
         //ASSERT
-        result.ShouldHaveValidationErrorFor(x => x.Body.Email);
+        result.ShouldHaveValidationErrorFor(x => x.Body.Email)
+            .WithErrorCode(ErrorCodes.UserAuth.InvalidEmail);
     }
 
     [Test]
@@ -121,7 +125,8 @@ public class UserRegisterRequestTests
         var result = validator.TestValidate(CreateRequest(email: email));
 
         //ASSERT
-        result.ShouldHaveValidationErrorFor(x => x.Body.Email);
+        result.ShouldHaveValidationErrorFor(x => x.Body.Email)
+            .WithErrorCode(ErrorCodes.UserAuth.EmailIsTooLong);
     }
 
     [Test]
@@ -136,14 +141,15 @@ public class UserRegisterRequestTests
         var result = validator.TestValidate(CreateRequest(email: email));
 
         //ASSERT
-        result.ShouldHaveValidationErrorFor(x => x.Body.Email);
+        result.ShouldHaveValidationErrorFor(x => x.Body.Email)
+            .WithErrorCode(ErrorCodes.UserAuth.InvalidEmail);
     }
 
     [Test]
-    [TestCase("")]
-    [TestCase("short")]
-    [TestCase("this-password-is-too-long")]
-    public void Validate_InvalidPassword_ReturnsValidationError(string password)
+    [TestCase("", ErrorCodes.UserAuth.InvalidPassword)]
+    [TestCase("short", ErrorCodes.UserAuth.PasswordIsTooShort)]
+    [TestCase("this-password-is-too-long", ErrorCodes.UserAuth.PasswordIsTooLong)]
+    public void Validate_InvalidPassword_ReturnsValidationError(string password, string errorCode)
     {
         //ARRANGE
         var validator = new UserRegisterRequestValidator(_logger, _usernameValidatorOptions, _timeProvider);
@@ -152,7 +158,8 @@ public class UserRegisterRequestTests
         var result = validator.TestValidate(CreateRequest(password: password));
 
         //ASSERT
-        result.ShouldHaveValidationErrorFor(x => x.Body.Password);
+        result.ShouldHaveValidationErrorFor(x => x.Body.Password)
+            .WithErrorCode(errorCode);
     }
 
     [Test]
@@ -166,7 +173,8 @@ public class UserRegisterRequestTests
         var result = validator.TestValidate(CreateRequest(dateOfBirth: tomorrow));
 
         //ASSERT
-        result.ShouldHaveValidationErrorFor(x => x.Body.DateOfBirth);
+        result.ShouldHaveValidationErrorFor(x => x.Body.DateOfBirth)
+            .WithErrorCode(ErrorCodes.UserAuth.InvalidDateOfBirth);
     }
 
     [Test]
@@ -179,7 +187,8 @@ public class UserRegisterRequestTests
         var result = validator.TestValidate(CreateRequest(dateOfBirth: new DateOnly(2009, 1, 2)));
 
         //ASSERT
-        result.ShouldHaveValidationErrorFor(x => x.Body.DateOfBirth);
+        result.ShouldHaveValidationErrorFor(x => x.Body.DateOfBirth)
+            .WithErrorCode(ErrorCodes.UserAuth.UnderMinimumAge);
     }
 
     [Test]
@@ -192,7 +201,8 @@ public class UserRegisterRequestTests
         var result = validator.TestValidate(CreateRequest(dateOfBirth: new DateOnly(1905, 1, 1)));
 
         //ASSERT
-        result.ShouldHaveValidationErrorFor(x => x.Body.DateOfBirth);
+        result.ShouldHaveValidationErrorFor(x => x.Body.DateOfBirth)
+            .WithErrorCode(ErrorCodes.UserAuth.ExceedsMaximumAge);
     }
 
     private static UserRegisterRequest CreateRequest(

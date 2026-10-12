@@ -3,6 +3,7 @@ using FluentValidation.TestHelper;
 using YourGamesList.Api.Model;
 using YourGamesList.Api.Model.Requests.Lists;
 using YourGamesList.Contracts.Requests.Lists;
+using YourGamesList.Contracts.Responses;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Lists;
 
@@ -76,7 +77,8 @@ public class CreateListRequestTests
 
         //ASSERT
         Assert.That(result.IsValid, Is.False);
-        result.ShouldHaveValidationErrorFor(x => x.Body);
+        result.ShouldHaveValidationErrorFor(x => x.Body)
+            .WithErrorCode(ErrorCodes.Validation.RequestBodyRequired);
     }
 
     [Test]
