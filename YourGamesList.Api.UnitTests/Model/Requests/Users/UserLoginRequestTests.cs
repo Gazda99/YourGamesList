@@ -33,6 +33,21 @@ public class UserLoginRequestTests
     }
 
     [Test]
+    public void Validate_BodyMissing_ReturnsValidationError()
+    {
+        //ARRANGE
+        var request = new UserLoginRequest { Body = null! };
+        var validator = new UserLoginRequestValidator();
+
+        //ACT
+        var result = validator.TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.False);
+        result.ShouldHaveValidationErrorFor(x => x.Body);
+    }
+
+    [Test]
     public void Validate_InvalidUsername_ReturnsFalse()
     {
         //ARRANGE

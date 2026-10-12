@@ -11,6 +11,7 @@ public class DeleteListRequestTests
     [Test]
     public void Validate_ValidRequest_ReturnsValid()
     {
+        //ARRANGE
         var request = new DeleteListRequest
         {
             UserInformation = new UserInformationToken
@@ -23,14 +24,17 @@ public class DeleteListRequestTests
         };
         var validator = new DeleteListRequestValidator();
 
+        //ACT
         var result = validator.TestValidate(request);
 
+        //ASSERT
         Assert.That(result.IsValid, Is.True);
     }
 
     [Test]
     public void Validate_BodyMissing_ReturnsValidationError()
     {
+        //ARRANGE
         var request = new DeleteListRequest
         {
             UserInformation = new UserInformationToken
@@ -43,9 +47,30 @@ public class DeleteListRequestTests
         };
         var validator = new DeleteListRequestValidator();
 
+        //ACT
         var result = validator.TestValidate(request);
 
+        //ASSERT
         Assert.That(result.IsValid, Is.False);
         result.ShouldHaveValidationErrorFor(x => x.Body);
+    }
+
+    [Test]
+    public void Validate_UserInformationMissing_ReturnsValidationError()
+    {
+        //ARRANGE
+        var request = new DeleteListRequest
+        {
+            UserInformation = null!,
+            Body = new DeleteListRequestBody(Guid.NewGuid())
+        };
+        var validator = new DeleteListRequestValidator();
+
+        //ACT
+        var result = validator.TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.False);
+        result.ShouldHaveValidationErrorFor(x => x.UserInformation);
     }
 }

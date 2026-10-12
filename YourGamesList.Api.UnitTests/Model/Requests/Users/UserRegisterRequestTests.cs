@@ -1,7 +1,12 @@
-﻿using System;
+using System;
 using AutoFixture;
 using FluentValidation.TestHelper;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Time.Testing;
+using NSubstitute;
 using YourGamesList.Api.Model.Requests.Users;
+using YourGamesList.Api.Services.Auth.Options;
 using YourGamesList.Contracts.Requests.Users;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Users;
@@ -9,107 +14,201 @@ namespace YourGamesList.Api.UnitTests.Model.Requests.Users;
 public class UserRegisterRequestTests
 {
     private IFixture _fixture;
+    private ILogger<UserRegisterRequestValidator> _logger;
+    private IOptions<UserValuesValidatorOptions> _usernameValidatorOptions;
+    private FakeTimeProvider _timeProvider;
 
     [SetUp]
     public void Setup()
     {
         _fixture = new Fixture();
-        _fixture.Customize<DateOnly>(composer => composer.FromFactory(() => DateOnly.FromDateTime(_fixture.Create<DateTime>())));
+        _logger = Substitute.For<ILogger<UserRegisterRequestValidator>>();
+        _usernameValidatorOptions = Substitute.For<IOptions<UserValuesValidatorOptions>>();
+
+        var options = new UserValuesValidatorOptions
+        {
+            Email = new EmailValidatorOptions { MaximumEmailLength = 254 },
+            Username = new UsernameValidatorOptions
+            {
+                AllowedCharactersRegex = "^[a-zA-Z0-9]+$",
+                MinimumUsernameLength = 3,
+                MaximumUsernameLength = 11
+            },
+            Password = new PasswordValidatorOptions
+            {
+                MinimumPasswordLength = 8,
+                MaximumPasswordLength = 20
+            },
+            DateOfBirth = new DateOfBirthValidatorOptions
+            {
+                MinimumAge = 18,
+                MaximumAge = 120
+            }
+        };
+
+        _usernameValidatorOptions.Value.Returns(options);
+        _timeProvider = new FakeTimeProvider();
+        _timeProvider.SetUtcNow(DateTimeOffset.UtcNow);
     }
 
     [Test]
-    public void Validate_ValidOptions_ReturnsTrue()
+    public void Validate_ValidRequest_ReturnsValid()
     {
         //ARRANGE
-        var options = _fixture.Build<UserRegisterRequest>()
-            .With(x => x.Body,
-                _fixture.Build<AuthUserRegisterRequestBody>()
-                    .With(x => x.Email, "some@email.com")
-                    .WithAutoProperties()
-                    .Create()
-            )
-            .WithAutoProperties()
-            .Create();
-
-        var validator = new UserRegisterRequestValidator();
+        var validator = new UserRegisterRequestValidator(_logger, _usernameValidatorOptions, _timeProvider);
 
         //ACT
-        var res = validator.TestValidate(options);
+        var result = validator.TestValidate(CreateRequest());
 
         //ASSERT
-        Assert.That(res.IsValid, Is.True);
+        Assert.That(result.IsValid, Is.True);
     }
 
     [Test]
-    public void Validate_InvalidUsername_ReturnsFalse()
+    public void Validate_BodyMissing_ReturnsValidationError()
     {
         //ARRANGE
-        var options = _fixture.Build<UserRegisterRequest>()
-            .With(x => x.Body, _fixture.Build<AuthUserRegisterRequestBody>()
-                .With(x => x.Username, string.Empty)
-                .WithAutoProperties()
-                .Create()
-            )
-            .WithAutoProperties()
-            .Create();
-        var validator = new UserRegisterRequestValidator();
+        var validator = new UserRegisterRequestValidator(_logger, _usernameValidatorOptions, _timeProvider);
 
         //ACT
-        var res = validator.TestValidate(options);
+        var result = validator.TestValidate(new UserRegisterRequest { Body = null! });
 
         //ASSERT
-        Assert.That(res.IsValid, Is.False);
-        Assert.That(res.Errors, Is.Not.Null);
-        res.ShouldHaveValidationErrorFor(x => x.Body.Username);
+        result.ShouldHaveValidationErrorFor(x => x.Body);
     }
-
 
     [Test]
     [TestCase("")]
-    [TestCase("not_email")]
-    public void Validate_InvalidEmail_ReturnsFalse(string invalidEmail)
+    [TestCase("ab")]
+    [TestCase("abcdefghijkl")]
+    [TestCase("bad-name")]
+    public void Validate_InvalidUsername_ReturnsValidationError(string username)
     {
         //ARRANGE
-        var options = _fixture.Build<UserRegisterRequest>()
-            .With(x => x.Body, _fixture.Build<AuthUserRegisterRequestBody>()
-                .With(x => x.Email, invalidEmail)
-                .WithAutoProperties()
-                .Create()
-            )
-            .WithAutoProperties()
-            .Create();
-        var validator = new UserRegisterRequestValidator();
+        var validator = new UserRegisterRequestValidator(_logger, _usernameValidatorOptions, _timeProvider);
 
         //ACT
-        var res = validator.TestValidate(options);
+        var result = validator.TestValidate(CreateRequest(username: username));
 
         //ASSERT
-        Assert.That(res.IsValid, Is.False);
-        Assert.That(res.Errors, Is.Not.Null);
-        res.ShouldHaveValidationErrorFor(x => x.Body.Email);
+        result.ShouldHaveValidationErrorFor(x => x.Body.Username);
     }
 
     [Test]
-    public void Validate_InvalidPassword_ReturnsFalse()
+    [TestCase("")]
+    [TestCase("not_an_email")]
+    public void Validate_InvalidEmail_ReturnsValidationError(string email)
     {
         //ARRANGE
-        var options = _fixture.Build<UserRegisterRequest>()
-            .With(x => x.Body, _fixture.Build<AuthUserRegisterRequestBody>()
-                .With(x => x.Password, string.Empty)
-                .WithAutoProperties()
-                .Create()
-            )
-            .WithAutoProperties()
-            .Create();
-
-        var validator = new UserRegisterRequestValidator();
+        var validator = new UserRegisterRequestValidator(_logger, _usernameValidatorOptions, _timeProvider);
 
         //ACT
-        var res = validator.TestValidate(options);
+        var result = validator.TestValidate(CreateRequest(email: email));
 
         //ASSERT
-        Assert.That(res.IsValid, Is.False);
-        Assert.That(res.Errors, Is.Not.Null);
-        res.ShouldHaveValidationErrorFor(x => x.Body.Password);
+        result.ShouldHaveValidationErrorFor(x => x.Body.Email);
+    }
+
+    [Test]
+    public void Validate_EmailTooLong_ReturnsValidationError()
+    {
+        //ARRANGE
+        var email = $"{new string('a', 250)}@b.com";
+
+        var validator = new UserRegisterRequestValidator(_logger, _usernameValidatorOptions, _timeProvider);
+
+        //ACT
+        var result = validator.TestValidate(CreateRequest(email: email));
+
+        //ASSERT
+        result.ShouldHaveValidationErrorFor(x => x.Body.Email);
+    }
+
+    [Test]
+    public void Validate_EmailLocalPartTooLong_ReturnsValidationError()
+    {
+        //ARRANGE
+        var email = $"{new string('a', 65)}@example.com";
+
+        var validator = new UserRegisterRequestValidator(_logger, _usernameValidatorOptions, _timeProvider);
+
+        //ACT
+        var result = validator.TestValidate(CreateRequest(email: email));
+
+        //ASSERT
+        result.ShouldHaveValidationErrorFor(x => x.Body.Email);
+    }
+
+    [Test]
+    [TestCase("")]
+    [TestCase("short")]
+    [TestCase("this-password-is-too-long")]
+    public void Validate_InvalidPassword_ReturnsValidationError(string password)
+    {
+        //ARRANGE
+        var validator = new UserRegisterRequestValidator(_logger, _usernameValidatorOptions, _timeProvider);
+
+        //ACT
+        var result = validator.TestValidate(CreateRequest(password: password));
+
+        //ASSERT
+        result.ShouldHaveValidationErrorFor(x => x.Body.Password);
+    }
+
+    [Test]
+    public void Validate_DateOfBirthInFuture_ReturnsValidationError()
+    {
+        //ARRANGE
+        var tomorrow = DateOnly.FromDateTime(_timeProvider.GetUtcNow().UtcDateTime).AddDays(1);
+        var validator = new UserRegisterRequestValidator(_logger, _usernameValidatorOptions, _timeProvider);
+
+        //ACT
+        var result = validator.TestValidate(CreateRequest(dateOfBirth: tomorrow));
+
+        //ASSERT
+        result.ShouldHaveValidationErrorFor(x => x.Body.DateOfBirth);
+    }
+
+    [Test]
+    public void Validate_UnderMinimumAge_ReturnsValidationError()
+    {
+        //ARRANGE
+        var validator = new UserRegisterRequestValidator(_logger, _usernameValidatorOptions, _timeProvider);
+
+        //ACT
+        var result = validator.TestValidate(CreateRequest(dateOfBirth: new DateOnly(2009, 1, 2)));
+
+        //ASSERT
+        result.ShouldHaveValidationErrorFor(x => x.Body.DateOfBirth);
+    }
+
+    [Test]
+    public void Validate_ExceedsMaximumAge_ReturnsValidationError()
+    {
+        //ARRANGE
+        var validator = new UserRegisterRequestValidator(_logger, _usernameValidatorOptions, _timeProvider);
+
+        //ACT
+        var result = validator.TestValidate(CreateRequest(dateOfBirth: new DateOnly(1905, 1, 1)));
+
+        //ASSERT
+        result.ShouldHaveValidationErrorFor(x => x.Body.DateOfBirth);
+    }
+
+    private static UserRegisterRequest CreateRequest(
+        string username = "validuser",
+        string email = "user@example.com",
+        string password = "valid-password",
+        DateOnly? dateOfBirth = null)
+    {
+        return new UserRegisterRequest
+        {
+            Body = new AuthUserRegisterRequestBody(
+                username,
+                email,
+                password,
+                dateOfBirth ?? DateOnly.FromDateTime((DateTimeOffset.UtcNow - TimeSpan.FromDays(19 * 365)).DateTime)
+            )
+        };
     }
 }

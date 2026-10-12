@@ -11,6 +11,7 @@ public class CreateListRequestTests
     [Test]
     public void Validate_ValidRequest_ReturnsValid()
     {
+        //ARRANGE
         var request = new CreateListRequest
         {
             UserInformation = new UserInformationToken
@@ -23,14 +24,17 @@ public class CreateListRequestTests
         };
         var validator = new CreateListRequestValidator();
 
+        //ACT
         var result = validator.TestValidate(request);
 
+        //ASSERT
         Assert.That(result.IsValid, Is.True);
     }
 
     [Test]
     public void Validate_EmptyName_ReturnsValidationError()
     {
+        //ARRANGE
         var request = new CreateListRequest
         {
             UserInformation = new UserInformationToken
@@ -43,8 +47,10 @@ public class CreateListRequestTests
         };
         var validator = new CreateListRequestValidator();
 
+        //ACT
         var result = validator.TestValidate(request);
 
+        //ASSERT
         Assert.That(result.IsValid, Is.False);
         result.ShouldHaveValidationErrorFor(x => x.Body.Name);
     }
@@ -52,6 +58,7 @@ public class CreateListRequestTests
     [Test]
     public void Validate_BodyMissing_ReturnsValidationError()
     {
+        //ARRANGE
         var request = new CreateListRequest
         {
             UserInformation = new UserInformationToken
@@ -64,9 +71,30 @@ public class CreateListRequestTests
         };
         var validator = new CreateListRequestValidator();
 
+        //ACT
         var result = validator.TestValidate(request);
 
+        //ASSERT
         Assert.That(result.IsValid, Is.False);
         result.ShouldHaveValidationErrorFor(x => x.Body);
+    }
+
+    [Test]
+    public void Validate_UserInformationMissing_ReturnsValidationError()
+    {
+        //ARRANGE
+        var request = new CreateListRequest
+        {
+            UserInformation = null!,
+            Body = new CreateListRequestBody("My games")
+        };
+        var validator = new CreateListRequestValidator();
+
+        //ACT
+        var result = validator.TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.False);
+        result.ShouldHaveValidationErrorFor(x => x.UserInformation);
     }
 }
