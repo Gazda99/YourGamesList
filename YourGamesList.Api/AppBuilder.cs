@@ -106,7 +106,6 @@ public static class AppBuilder
         services.AddOptionsWithFluentValidation<VerificationEmailSenderOptions, VerificationEmailSenderOptionsValidator>(VerificationEmailSenderOptions.SectionName);
 
         services.AddSingleton<ITokenProvider, UserInformationTokenProvider>();
-        services.AddSingleton<IUserValuesValidator, UserValuesValidator>();
         services.AddSingleton<ISodiumInitializer, SodiumInitializer>();
         services.AddSingleton<IPasswordHasher, LibSodiumPasswordHasher>();
         services.AddSingleton<IVerificationTokenHasher, VerificationTokenHasher>();

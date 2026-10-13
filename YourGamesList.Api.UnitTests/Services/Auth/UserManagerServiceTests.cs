@@ -22,7 +22,6 @@ public class UserManagerServiceTests
     private IFixture _fixture;
     private ILogger<UserManagerService> _logger;
     private IOptions<UserManagerServiceOptions> _options;
-    private IUserValuesValidator _userValuesValidator;
     private IPasswordHasher _passwordHasher;
     private FakeTimeProvider _timeProvider;
     private IVerificationTokenHasher _verificationTokenHasher;
@@ -38,7 +37,6 @@ public class UserManagerServiceTests
         _fixture.Customize<DateOnly>(composer => composer.FromFactory(() => DateOnly.FromDateTime(_fixture.Create<DateTime>())));
         _logger = Substitute.For<ILogger<UserManagerService>>();
         _options = Substitute.For<IOptions<UserManagerServiceOptions>>();
-        _userValuesValidator = Substitute.For<IUserValuesValidator>();
         _passwordHasher = Substitute.For<IPasswordHasher>();
         _timeProvider = new FakeTimeProvider();
         _verificationTokenHasher = Substitute.For<IVerificationTokenHasher>();
@@ -57,11 +55,6 @@ public class UserManagerServiceTests
             DefaultPendingUserExpiryInMinutes = 1440,
             DefaultEmailVerificationExpiryInMinutes = 1440
         });
-
-        _userValuesValidator.ValidateEmail(Arg.Any<string>()).Returns(ErrorResult<UserAuthError>.Success());
-        _userValuesValidator.ValidateUsername(Arg.Any<string>()).Returns(ErrorResult<UserAuthError>.Success());
-        _userValuesValidator.ValidatePassword(Arg.Any<string>()).Returns(ErrorResult<UserAuthError>.Success());
-        _userValuesValidator.ValidateDateOfBirth(Arg.Any<DateOnly>()).Returns(ErrorResult<UserAuthError>.Success());
     }
 
     [TearDown]
@@ -189,82 +182,6 @@ public class UserManagerServiceTests
     #endregion
 
     #region Register
-
-    [Test]
-    public async Task Register_InvalidEmail_ReturnsEmailError()
-    {
-        //ARRANGE
-        const UserAuthError error = UserAuthError.InvalidEmail;
-        var dto = _fixture.Create<UserRegisterParams>();
-        _userValuesValidator.ValidateEmail(Arg.Any<string>()).Returns(ErrorResult<UserAuthError>.Failure(error));
-
-        var service = CreateService();
-
-        //ACT
-        var res = await service.Register(dto);
-
-        //ASSERT
-        Assert.That(res.IsSuccess, Is.False);
-        Assert.That(res.Error, Is.EqualTo(error));
-        _logger.ReceivedLog(LogLevel.Information,  $"Cannot register user due to email being invalid. Error: {error.ToString()}");
-    }
-
-    [Test]
-    public async Task Register_InvalidUsername_ReturnsUsernameError()
-    {
-        //ARRANGE
-        const UserAuthError error = UserAuthError.UsernameIsTooShort;
-        var dto = _fixture.Create<UserRegisterParams>();
-        _userValuesValidator.ValidateUsername(Arg.Any<string>()).Returns(ErrorResult<UserAuthError>.Failure(error));
-
-        var service = CreateService();
-
-        //ACT
-        var res = await service.Register(dto);
-
-        //ASSERT
-        Assert.That(res.IsSuccess, Is.False);
-        Assert.That(res.Error, Is.EqualTo(error));
-        _logger.ReceivedLog(LogLevel.Information,  $"Cannot register user due to username being invalid. Error: {error.ToString()}");
-    }
-
-    [Test]
-    public async Task Register_InvalidPassword_ReturnsPasswordError()
-    {
-        //ARRANGE
-        const UserAuthError error = UserAuthError.PasswordIsTooShort;
-        var dto = _fixture.Create<UserRegisterParams>();
-        _userValuesValidator.ValidatePassword(Arg.Any<string>()).Returns(ErrorResult<UserAuthError>.Failure(error));
-
-        var service = CreateService();
-
-        //ACT
-        var res = await service.Register(dto);
-
-        //ASSERT
-        Assert.That(res.IsSuccess, Is.False);
-        Assert.That(res.Error, Is.EqualTo(error));
-        _logger.ReceivedLog(LogLevel.Information,  $"Cannot register user due to password being invalid. Error: {error.ToString()}");
-    }
-
-    [Test]
-    public async Task Register_InvalidDateOfBirth_ReturnsDateOfBirthError()
-    {
-        //ARRANGE
-        const UserAuthError error = UserAuthError.UnderMinimumAge;
-        var dto = _fixture.Create<UserRegisterParams>();
-        _userValuesValidator.ValidateDateOfBirth(Arg.Any<DateOnly>()).Returns(ErrorResult<UserAuthError>.Failure(error));
-
-        var service = CreateService();
-
-        //ACT
-        var res = await service.Register(dto);
-
-        //ASSERT
-        Assert.That(res.IsSuccess, Is.False);
-        Assert.That(res.Error, Is.EqualTo(error));
-        _logger.ReceivedLog(LogLevel.Information,  $"Cannot register user due to date of birth being invalid. Error: {error.ToString()}");
-    }
 
     [Test]
     public async Task Register_EmailAlreadyExists_ReturnsEmailAlreadyTaken()
@@ -733,7 +650,6 @@ public class UserManagerServiceTests
         return new UserManagerService(
             _logger,
             _options,
-            _userValuesValidator,
             _dbContext,
             _passwordHasher,
             _timeProvider,
