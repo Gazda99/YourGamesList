@@ -57,18 +57,6 @@ public static class AppBuilder
         {
             o.MapInboundClaims = false;
             o.RequireHttpsMetadata = false;
-            o.Events = new JwtBearerEvents
-            {
-                OnMessageReceived = context =>
-                {
-                    if (context.HttpContext.GetEndpoint()?.Metadata.GetMetadata<IAllowAnonymous>() is not null)
-                    {
-                        context.NoResult();
-                    }
-
-                    return Task.CompletedTask;
-                }
-            };
             o.TokenValidationParameters = new TokenValidationParameters()
             {
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
