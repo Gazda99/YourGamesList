@@ -11,7 +11,7 @@ public class UserDeleteParamsTests
     {
         var request = new UserDeleteRequest
         {
-            Body = new AuthUserDeleteRequestBody("testuser", "password")
+            Body = new AuthUserDeleteRequestBody(" testuser ", "password")
         };
 
         var result = request.ToParams();

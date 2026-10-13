@@ -14,7 +14,7 @@ public static class UserLoginParamsMappingExtensions
     {
         return new UserLoginParams
         {
-            Username = request.Body.Username,
+            Username = request.Body.Username.Trim(),
             Password = request.Body.Password
         };
     }

@@ -59,7 +59,7 @@ public class UserManagerService : IUserManagerService
 
     public async Task<CombinedResult<string, UserAuthError>> Login(UserLoginParams userLoginParams)
     {
-        var username = userLoginParams.Username.ToLowerInvariant().Trim();
+        var username = userLoginParams.Username;
         var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
 
         if (user == null)
@@ -95,8 +95,8 @@ public class UserManagerService : IUserManagerService
 
     public async Task<CombinedResult<Guid, UserAuthError>> Register(UserRegisterParams userRegisterParams)
     {
-        var username = userRegisterParams.Username.ToLowerInvariant().Trim();
-        var email = userRegisterParams.Email.ToLowerInvariant().Trim();
+        var username = userRegisterParams.Username;
+        var email = userRegisterParams.Email;
         var dob = userRegisterParams.DateOfBirth;
 
         var validateEmail = _userValuesValidator.ValidateEmail(email);
@@ -228,7 +228,7 @@ public class UserManagerService : IUserManagerService
 
     public async Task<ErrorResult<UserAuthError>> Delete(UserDeleteParams userDeleteParams)
     {
-        var username = userDeleteParams.Username.ToLowerInvariant().Trim();
+        var username = userDeleteParams.Username;
         var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
 
         if (user == null)

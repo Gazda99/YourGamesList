@@ -39,9 +39,10 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     .WithMessage("Username is required.")
                     .Must(username =>
                     {
-                        if (username.Length < validatorOptions.Username.MinimumUsernameLength)
+                        var usernameNormalized = NormalizeUsername(username);
+                        if (usernameNormalized.Length < validatorOptions.Username.MinimumUsernameLength)
                         {
-                            logger.LogInformation("Username {Username} is too short. {UsernameLength} < {UsernameMinimumLength} ", username, username.Length, validatorOptions.Username.MinimumUsernameLength);
+                            logger.LogInformation("Username {Username} is too short. {UsernameLength} < {UsernameMinimumLength} ", usernameNormalized, usernameNormalized.Length, validatorOptions.Username.MinimumUsernameLength);
                             return false;
                         }
                         return true;
@@ -50,9 +51,10 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     .WithMessage($"Username must be between {validatorOptions.Username.MinimumUsernameLength} and {validatorOptions.Username.MaximumUsernameLength} characters long.")
                     .Must(username =>
                     {
-                        if (username.Length > validatorOptions.Username.MaximumUsernameLength)
+                        var usernameNormalized = NormalizeUsername(username);
+                        if (usernameNormalized.Length > validatorOptions.Username.MaximumUsernameLength)
                         {
-                            logger.LogInformation("Username {Username} is too long. {UsernameLength} > {UsernameMaximumLength} ", username, username.Length, validatorOptions.Username.MaximumUsernameLength);
+                            logger.LogInformation("Username {Username} is too long. {UsernameLength} > {UsernameMaximumLength} ", usernameNormalized, usernameNormalized.Length, validatorOptions.Username.MaximumUsernameLength);
                             return false;
                         }
                         return true;
@@ -61,9 +63,10 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     .WithMessage($"Username must be between {validatorOptions.Username.MinimumUsernameLength} and {validatorOptions.Username.MaximumUsernameLength} characters long.")
                     .Must(username =>
                     {
-                        if (!Regex.IsMatch(username, validatorOptions.Username.AllowedCharactersRegex))
+                        var usernameNormalized = NormalizeUsername(username);
+                        if (!Regex.IsMatch(usernameNormalized, validatorOptions.Username.AllowedCharactersRegex))
                         {
-                            logger.LogInformation("Username {Username} doesn't match allowed characters regex.", username);
+                            logger.LogInformation("Username {Username} doesn't match allowed characters regex.", usernameNormalized);
                             return false;
                         }
                         return true;
@@ -83,9 +86,10 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     .WithMessage("Invalid email address.")
                     .Must(email =>
                     {
-                        if (email.Length > validatorOptions.Email.MaximumEmailLength)
+                        var normalizedEmail = NormalizeEmail(email);
+                        if (normalizedEmail.Length > validatorOptions.Email.MaximumEmailLength)
                         {
-                            logger.LogInformation("Email {Email} is too long. {EmailLength} > {EmailMaximumLength} ", email, email.Length, validatorOptions.Email.MaximumEmailLength);
+                            logger.LogInformation("Email {Email} is too long. {EmailLength} > {EmailMaximumLength} ", normalizedEmail, normalizedEmail.Length, validatorOptions.Email.MaximumEmailLength);
                             return false;
                         }
                         return true;
@@ -94,7 +98,8 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     .WithMessage($"Email must be max {validatorOptions.Email.MaximumEmailLength} characters long.")
                     .Must(email =>
                     {
-                        var localPart = email.Split("@").FirstOrDefault();
+                        var normalizedEmail = NormalizeEmail(email);
+                        var localPart = normalizedEmail.Split("@").FirstOrDefault();
                         if (string.IsNullOrWhiteSpace(localPart) || localPart.Length > 64)
                         {
                             logger.LogInformation("{EmailLocalPart} is invalid email local part.", localPart);
@@ -188,5 +193,17 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     .WithMessage("Invalid date of birth.")
                     ;
             });
+
+        return;
+            
+        static string NormalizeUsername(string username)
+        {
+            return username.Trim();
+        }
+        
+        static string NormalizeEmail(string email)
+        {
+            return email.Trim().ToLowerInvariant();
+        }
     }
 }

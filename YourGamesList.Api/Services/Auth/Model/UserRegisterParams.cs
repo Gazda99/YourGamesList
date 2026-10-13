@@ -17,8 +17,8 @@ public static class UserRegisterParamsMappingExtensions
     {
         return new UserRegisterParams
         {
-            Email = request.Body.Email,
-            Username = request.Body.Username,
+            Email = request.Body.Email.ToLowerInvariant().Trim(),
+            Username = request.Body.Username.Trim(),
             Password = request.Body.Password,
             DateOfBirth = request.Body.DateOfBirth
         };

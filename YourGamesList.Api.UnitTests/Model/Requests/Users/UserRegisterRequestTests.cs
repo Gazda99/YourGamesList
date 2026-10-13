@@ -67,6 +67,19 @@ public class UserRegisterRequestTests
     }
 
     [Test]
+    public void Validate_UsernameWithWhitespace_ReturnsValid()
+    {
+        //ARRANGE
+        var validator = new UserRegisterRequestValidator(_logger, _usernameValidatorOptions, _timeProvider);
+        
+        //ACT
+        var result = validator.TestValidate(CreateRequest(username: "  validuser  "));
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.True);
+    }
+
+    [Test]
     public void Validate_BodyMissing_ReturnsValidationError()
     {
         //ARRANGE
@@ -83,6 +96,7 @@ public class UserRegisterRequestTests
     [Test]
     [TestCase("", ErrorCodes.UserAuth.InvalidUsername)]
     [TestCase("ab", ErrorCodes.UserAuth.UsernameIsTooShort)]
+    [TestCase("  ab  ", ErrorCodes.UserAuth.UsernameIsTooShort)]
     [TestCase("abcdefghijkl", ErrorCodes.UserAuth.UsernameIsTooLong)]
     [TestCase("bad-name", ErrorCodes.UserAuth.InvalidUsername)]
     public void Validate_InvalidUsername_ReturnsValidationError(string username, string errorCode)
