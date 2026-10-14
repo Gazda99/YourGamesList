@@ -14,7 +14,7 @@ public class CreateListParamsTests
         var request = new CreateListRequest
         {
             UserInformation = CreateUserInformation(),
-            Body = new CreateListRequestBody("My games")
+            Body = new CreateListRequestBody(" My games")
         };
 
         var result = request.ToParams();

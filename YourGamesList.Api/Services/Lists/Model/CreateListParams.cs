@@ -16,7 +16,7 @@ public static class CreateListParamsMappingExtensions
         return new CreateListParams
         {
             UserInformation = request.UserInformation,
-            Name = request.Body.Name,
+            Name = request.Body.Name.Trim()
         };
     }
 }
