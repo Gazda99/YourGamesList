@@ -31,6 +31,11 @@ public static class ErrorCodes
         public const string ExceedsMaximumAge = "ExceedsMaximumAge";
     }
 
+    public static class Users
+    {
+        public const string UserNotFound = "UserNotFound";
+    }
+
     public static class Lists
     {
         public const string UserNotFound = "UserNotFound";

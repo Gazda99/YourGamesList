@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Services.Auth.Model;
 using YourGamesList.Api.Services.Lists.Model;
+using YourGamesList.Api.Services.YourGamesList.Model;
 using YourGamesList.Contracts.Responses;
 
 namespace YourGamesList.Api.Services;
@@ -10,6 +11,8 @@ public interface IDomainErrorMapper
     Error Map(UserAuthError userAuthError);
 
     Error Map(ListsError listsError);
+
+    Error Map(UsersError usersError);
 }
 
 public class DomainErrorMapper : IDomainErrorMapper
@@ -69,6 +72,19 @@ public class DomainErrorMapper : IDomainErrorMapper
                 return Create(ErrorCodes.Lists.ListCannotBeDeleted, "This list cannot be deleted.");
             default:
                 _logger.LogInformation("Domain level error {DomainError} was not mapped. Defaulting to {ErrorCode}", listsError.ToString(),
+                    ErrorCodes.General.InternalServerError);
+                return CreateInternalServerError();
+        }
+    }
+
+    public Error Map(UsersError usersError)
+    {
+        switch (usersError)
+        {
+            case UsersError.UserNotFound:
+                return Create(ErrorCodes.Users.UserNotFound, "User was not found.");
+            default:
+                _logger.LogInformation("Domain level error {DomainError} was not mapped. Defaulting to {ErrorCode}", usersError.ToString(),
                     ErrorCodes.General.InternalServerError);
                 return CreateInternalServerError();
         }

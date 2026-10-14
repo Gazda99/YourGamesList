@@ -3,6 +3,7 @@ using NSubstitute;
 using YourGamesList.Api.Services;
 using YourGamesList.Api.Services.Auth.Model;
 using YourGamesList.Api.Services.Lists.Model;
+using YourGamesList.Api.Services.YourGamesList.Model;
 using YourGamesList.Contracts.Responses;
 using YourGamesList.TestsUtils;
 
@@ -90,5 +91,18 @@ public class DomainErrorMapperTests
         _logger.ReceivedLog(
             LogLevel.Information,
             $"Domain level error {listsError} was not mapped. Defaulting to {ErrorCodes.General.InternalServerError}");
+    }
+
+    [Test]
+    public void Map_UserNotFound_ReturnsMappedError()
+    {
+        //ARRANGE
+
+        //ACT
+        var result = _mapper.Map(UsersError.UserNotFound);
+
+        //ASSERT
+        Assert.That(result.Code, Is.EqualTo(ErrorCodes.Users.UserNotFound));
+        Assert.That(result.Description, Is.EqualTo("User was not found."));
     }
 }
