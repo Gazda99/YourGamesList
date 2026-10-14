@@ -1,8 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿namespace YourGamesList.Api.Services.Auth.Model;
 
-namespace YourGamesList.Api.Services.Auth.Model;
-
-[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum UserAuthError
 {
     InternalServerError,
