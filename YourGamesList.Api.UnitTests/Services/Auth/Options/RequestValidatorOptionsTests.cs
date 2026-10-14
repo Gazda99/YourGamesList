@@ -27,6 +27,7 @@ public class RequestValidatorOptionsTests
                 .With(x => x.MaximumListNameLength, 100)
                 .Create())
             .With(x => x.Username, _fixture.Build<UsernameValidatorOptions>()
+                .With(x => x.AllowedCharactersRegex, "^[a-zA-Z0-9]+$")
                 .With(x => x.MinimumUsernameLength, 1)
                 .With(x => x.MaximumUsernameLength, 100)
                 .Create())
@@ -36,6 +37,7 @@ public class RequestValidatorOptionsTests
                 .Create())
             .With(x => x.DateOfBirth, _fixture.Build<DateOfBirthValidatorOptions>()
                 .With(x => x.MinimumAge, 18)
+                .With(x => x.MaximumAge, 120)
                 .Create())
             .Create();
 
