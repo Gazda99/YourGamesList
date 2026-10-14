@@ -75,8 +75,7 @@ public class UserAuthControllerTests
         var request = _fixture.Create<UserRegisterRequest>();
         var serviceResult = CombinedResult<Guid, UserAuthError>.Failure(authError);
 
-        _userManagerService.Register(Arg.Any<UserRegisterParams>())
-            .Returns(serviceResult);
+        _userManagerService.Register(Arg.Any<UserRegisterParams>()).Returns(serviceResult);
 
         var controller = CreateController();
 
@@ -96,8 +95,7 @@ public class UserAuthControllerTests
         var request = _fixture.Create<UserRegisterRequest>();
         var serviceResult = CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.InternalServerError);
 
-        _userManagerService.Register(Arg.Any<UserRegisterParams>())
-            .Returns(serviceResult);
+        _userManagerService.Register(Arg.Any<UserRegisterParams>()).Returns(serviceResult);
 
         var controller = CreateController();
 
@@ -122,8 +120,7 @@ public class UserAuthControllerTests
         const string token = "sample_jwt_token";
         var serviceResult = CombinedResult<string, UserAuthError>.Success(token);
 
-        _userManagerService.Login(Arg.Any<UserLoginParams>())
-            .Returns(serviceResult);
+        _userManagerService.Login(Arg.Any<UserLoginParams>()).Returns(serviceResult);
 
         var controller = CreateController();
 
@@ -148,8 +145,7 @@ public class UserAuthControllerTests
         var request = _fixture.Create<UserLoginRequest>();
         var serviceResult = CombinedResult<string, UserAuthError>.Failure(UserAuthError.NoUserFound);
 
-        _userManagerService.Login(Arg.Any<UserLoginParams>())
-            .Returns(serviceResult);
+        _userManagerService.Login(Arg.Any<UserLoginParams>()).Returns(serviceResult);
 
         var controller = CreateController();
 
@@ -169,8 +165,7 @@ public class UserAuthControllerTests
         var request = _fixture.Create<UserLoginRequest>();
         var serviceResult = CombinedResult<string, UserAuthError>.Failure(UserAuthError.UserNotActiveEmailActivation);
 
-        _userManagerService.Login(Arg.Any<UserLoginParams>())
-            .Returns(serviceResult);
+        _userManagerService.Login(Arg.Any<UserLoginParams>()).Returns(serviceResult);
 
         var controller = CreateController();
 
@@ -190,8 +185,7 @@ public class UserAuthControllerTests
         var request = _fixture.Create<UserLoginRequest>();
         var serviceResult = CombinedResult<string, UserAuthError>.Failure(UserAuthError.UnauthorizedUser);
 
-        _userManagerService.Login(Arg.Any<UserLoginParams>())
-            .Returns(serviceResult);
+        _userManagerService.Login(Arg.Any<UserLoginParams>()).Returns(serviceResult);
 
         var controller = CreateController();
 
@@ -211,8 +205,7 @@ public class UserAuthControllerTests
         var request = _fixture.Create<UserLoginRequest>();
         var serviceResult = CombinedResult<string, UserAuthError>.Failure(UserAuthError.InvalidEmail);
 
-        _userManagerService.Login(Arg.Any<UserLoginParams>())
-            .Returns(serviceResult);
+        _userManagerService.Login(Arg.Any<UserLoginParams>()).Returns(serviceResult);
 
         var controller = CreateController();
 
@@ -236,8 +229,7 @@ public class UserAuthControllerTests
         var request = _fixture.Create<UserDeleteRequest>();
         var serviceResult = ErrorResult<UserAuthError>.Success();
 
-        _userManagerService.Delete(Arg.Any<UserDeleteParams>())
-            .Returns(serviceResult);
+        _userManagerService.Delete(Arg.Any<UserDeleteParams>()).Returns(serviceResult);
 
         var controller = CreateController();
 
@@ -258,8 +250,7 @@ public class UserAuthControllerTests
         var request = _fixture.Create<UserDeleteRequest>();
         var serviceResult = ErrorResult<UserAuthError>.Failure(UserAuthError.NoUserFound);
 
-        _userManagerService.Delete(Arg.Any<UserDeleteParams>())
-            .Returns(serviceResult);
+        _userManagerService.Delete(Arg.Any<UserDeleteParams>()).Returns(serviceResult);
 
         var controller = CreateController();
 
@@ -279,8 +270,7 @@ public class UserAuthControllerTests
         var request = _fixture.Create<UserDeleteRequest>();
         var serviceResult = ErrorResult<UserAuthError>.Failure(UserAuthError.UnauthorizedUser);
 
-        _userManagerService.Delete(Arg.Any<UserDeleteParams>())
-            .Returns(serviceResult);
+        _userManagerService.Delete(Arg.Any<UserDeleteParams>()).Returns(serviceResult);
 
         var controller = CreateController();
 
@@ -300,8 +290,7 @@ public class UserAuthControllerTests
         var request = _fixture.Create<UserDeleteRequest>();
         var serviceResult = ErrorResult<UserAuthError>.Failure(UserAuthError.InvalidEmail);
 
-        _userManagerService.Delete(Arg.Any<UserDeleteParams>())
-            .Returns(serviceResult);
+        _userManagerService.Delete(Arg.Any<UserDeleteParams>()).Returns(serviceResult);
 
         var controller = CreateController();
 
@@ -325,8 +314,7 @@ public class UserAuthControllerTests
         var request = _fixture.Create<ConfirmEmailRequest>();
         var serviceResult = ErrorResult<UserAuthError>.Success();
 
-        _userManagerService.ConfirmEmail(Arg.Any<ConfirmEmailParams>())
-            .Returns(serviceResult);
+        _userManagerService.ConfirmEmail(Arg.Any<ConfirmEmailParams>()).Returns(serviceResult);
 
         var controller = CreateController();
 
@@ -348,8 +336,7 @@ public class UserAuthControllerTests
         var request = _fixture.Create<ConfirmEmailRequest>();
         var serviceResult = ErrorResult<UserAuthError>.Failure(authError);
 
-        _userManagerService.ConfirmEmail(Arg.Any<ConfirmEmailParams>())
-            .Returns(serviceResult);
+        _userManagerService.ConfirmEmail(Arg.Any<ConfirmEmailParams>()).Returns(serviceResult);
 
         var controller = CreateController();
 
@@ -369,8 +356,7 @@ public class UserAuthControllerTests
         var request = _fixture.Create<ConfirmEmailRequest>();
         var serviceResult = ErrorResult<UserAuthError>.Failure(UserAuthError.NoUserFound);
 
-        _userManagerService.ConfirmEmail(Arg.Any<ConfirmEmailParams>())
-            .Returns(serviceResult);
+        _userManagerService.ConfirmEmail(Arg.Any<ConfirmEmailParams>()).Returns(serviceResult);
 
         var controller = CreateController();
 
