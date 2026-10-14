@@ -39,7 +39,7 @@ public class ListsController : YourGamesListBaseController
     [Authorize]
     [ProducesResponseType(typeof(List<GamesListDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetSelf(GetSelfListRequest getSelfListRequest)
     {
         _logger.LogInformation("Requested to get self lists");
@@ -52,7 +52,10 @@ public class ListsController : YourGamesListBaseController
         {
             if (result.Error is ListsError.UserNotFound)
             {
-                return Result(StatusCodes.Status404NotFound);
+                return Result(StatusCodes.Status404NotFound, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
             }
             else if (result.Error is ListsError.InternalServerError)
             {
@@ -76,7 +79,7 @@ public class ListsController : YourGamesListBaseController
     [Authorize]
     [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create(CreateListRequest createListRequest)
     {
@@ -97,7 +100,10 @@ public class ListsController : YourGamesListBaseController
             }
             else if (result.Error is ListsError.UserNotFound)
             {
-                return Result(StatusCodes.Status404NotFound);
+                return Result(StatusCodes.Status404NotFound, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
             }
             else if (result.Error is ListsError.InternalServerError)
             {
@@ -118,7 +124,7 @@ public class ListsController : YourGamesListBaseController
     [Authorize]
     [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete(DeleteListRequest deleteListRequest)
     {
@@ -132,7 +138,10 @@ public class ListsController : YourGamesListBaseController
         {
             if (result.Error is ListsError.ListNotFound)
             {
-                return Result(StatusCodes.Status404NotFound);
+                return Result(StatusCodes.Status404NotFound, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
             }
             else if (result.Error is ListsError.ListCannotBeDeleted)
             {
