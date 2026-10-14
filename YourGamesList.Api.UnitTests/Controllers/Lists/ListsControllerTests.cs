@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoFixture;
 using Microsoft.AspNetCore.Http;
@@ -16,6 +17,7 @@ using YourGamesList.Api.Services.Lists.Model;
 using YourGamesList.Common;
 using YourGamesList.Contracts.Dto;
 using YourGamesList.Contracts.Requests.Lists;
+using YourGamesList.Contracts.Responses;
 
 namespace YourGamesList.Api.UnitTests.Controllers.Lists;
 
@@ -107,6 +109,8 @@ public class ListsControllerTests
     {
         //ARRANGE
         var listName = _fixture.Create<string>();
+        var error = _fixture.Create<Error>();
+        _domainErrorMapper.Map(ListsError.ListAlreadyExists).Returns(error);
         _listsManagerService.Create(Arg.Any<CreateListParams>()).Returns(CombinedResult<Guid, ListsError>.Failure(ListsError.ListAlreadyExists));
 
         //ACT
@@ -117,9 +121,14 @@ public class ListsControllerTests
         });
 
         //ASSERT
-        var statusCodeResult = result as IStatusCodeActionResult;
-        Assert.That(statusCodeResult, Is.Not.Null);
-        Assert.That(statusCodeResult.StatusCode, Is.EqualTo(StatusCodes.Status409Conflict));
+        var objectResult = result as ObjectResult;
+        Assert.That(objectResult, Is.Not.Null);
+        Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status409Conflict));
+        var errorResponse = objectResult.Value as ErrorResponse;
+        Assert.That(errorResponse, Is.Not.Null);
+        var errors = errorResponse.Errors.ToArray();
+        Assert.That(errors, Has.Length.EqualTo(1));
+        Assert.That(errors[0], Is.SameAs(error));
     }
 
     [Test]
@@ -190,6 +199,8 @@ public class ListsControllerTests
     public async Task Delete_ListCannotBeDeleted_ReturnsConflict()
     {
         //ARRANGE
+        var error = _fixture.Create<Error>();
+        _domainErrorMapper.Map(ListsError.ListCannotBeDeleted).Returns(error);
         _listsManagerService.Delete(Arg.Any<DeleteListParams>()).Returns(ErrorResult<ListsError>.Failure(ListsError.ListCannotBeDeleted));
 
         //ACT
@@ -200,9 +211,14 @@ public class ListsControllerTests
         });
 
         //ASSERT
-        var statusCodeResult = result as IStatusCodeActionResult;
-        Assert.That(statusCodeResult, Is.Not.Null);
-        Assert.That(statusCodeResult.StatusCode, Is.EqualTo(StatusCodes.Status409Conflict));
+        var objectResult = result as ObjectResult;
+        Assert.That(objectResult, Is.Not.Null);
+        Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status409Conflict));
+        var errorResponse = objectResult.Value as ErrorResponse;
+        Assert.That(errorResponse, Is.Not.Null);
+        var errors = errorResponse.Errors.ToArray();
+        Assert.That(errors, Has.Length.EqualTo(1));
+        Assert.That(errors[0], Is.SameAs(error));
     }
 
     private ListsController CreateController()

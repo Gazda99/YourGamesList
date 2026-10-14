@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoFixture;
 using Microsoft.AspNetCore.Http;
@@ -34,12 +35,6 @@ public class UserAuthControllerTests
         _logger = Substitute.For<ILogger<UserAuthController>>();
         _userManagerService = Substitute.For<IUserManagerService>();
         _domainErrorMapper = Substitute.For<IDomainErrorMapper>();
-        _domainErrorMapper.Map(Arg.Any<UserAuthError>())
-            .Returns(call => new Error
-            {
-                Code = call.Arg<UserAuthError>().ToString(),
-                Description = "Mapped user auth error."
-            });
     }
 
     #region Register
@@ -74,6 +69,8 @@ public class UserAuthControllerTests
         //ARRANGE
         var request = _fixture.Create<UserRegisterRequest>();
         var serviceResult = CombinedResult<Guid, UserAuthError>.Failure(authError);
+        var error = _fixture.Create<Error>();
+        _domainErrorMapper.Map(authError).Returns(error);
 
         _userManagerService.Register(Arg.Any<UserRegisterParams>()).Returns(serviceResult);
 
@@ -86,6 +83,11 @@ public class UserAuthControllerTests
         var objectResult = res as ObjectResult;
         Assert.That(objectResult, Is.Not.Null);
         Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status409Conflict));
+        var errorResponse = objectResult.Value as ErrorResponse;
+        Assert.That(errorResponse, Is.Not.Null);
+        var errors = errorResponse.Errors.ToArray();
+        Assert.That(errors, Has.Length.EqualTo(1));
+        Assert.That(errors[0], Is.SameAs(error));
     }
 
     [Test]
@@ -164,6 +166,8 @@ public class UserAuthControllerTests
         //ARRANGE
         var request = _fixture.Create<UserLoginRequest>();
         var serviceResult = CombinedResult<string, UserAuthError>.Failure(UserAuthError.UserNotActiveEmailActivation);
+        var error = _fixture.Create<Error>();
+        _domainErrorMapper.Map(UserAuthError.UserNotActiveEmailActivation).Returns(error);
 
         _userManagerService.Login(Arg.Any<UserLoginParams>()).Returns(serviceResult);
 
@@ -176,6 +180,11 @@ public class UserAuthControllerTests
         var objectResult = res as ObjectResult;
         Assert.That(objectResult, Is.Not.Null);
         Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status403Forbidden));
+        var errorResponse = objectResult.Value as ErrorResponse;
+        Assert.That(errorResponse, Is.Not.Null);
+        var errors = errorResponse.Errors.ToArray();
+        Assert.That(errors, Has.Length.EqualTo(1));
+        Assert.That(errors[0], Is.SameAs(error));
     }
 
     [Test]
@@ -335,6 +344,8 @@ public class UserAuthControllerTests
         //ARRANGE
         var request = _fixture.Create<ConfirmEmailRequest>();
         var serviceResult = ErrorResult<UserAuthError>.Failure(authError);
+        var error = _fixture.Create<Error>();
+        _domainErrorMapper.Map(authError).Returns(error);
 
         _userManagerService.ConfirmEmail(Arg.Any<ConfirmEmailParams>()).Returns(serviceResult);
 
@@ -347,6 +358,11 @@ public class UserAuthControllerTests
         var objectResult = res as ObjectResult;
         Assert.That(objectResult, Is.Not.Null);
         Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+        var errorResponse = objectResult.Value as ErrorResponse;
+        Assert.That(errorResponse, Is.Not.Null);
+        var errors = errorResponse.Errors.ToArray();
+        Assert.That(errors, Has.Length.EqualTo(1));
+        Assert.That(errors[0], Is.SameAs(error));
     }
 
     [Test]
