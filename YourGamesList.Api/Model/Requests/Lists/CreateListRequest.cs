@@ -1,6 +1,9 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using YourGamesList.Api.Attributes;
+using YourGamesList.Api.Services.Auth.Options;
 using YourGamesList.Contracts.Requests.Lists;
 using YourGamesList.Contracts.Responses;
 
@@ -14,8 +17,13 @@ public class CreateListRequest
 
 public class CreateListRequestValidator : AbstractValidator<CreateListRequest>
 {
-    public CreateListRequestValidator()
+    public CreateListRequestValidator(
+        ILogger<CreateListRequestValidator> logger,
+        IOptions<RequestValidatorOptions> options
+        )
     {
+        var validatorOptions = options.Value;
+        
         RuleFor(x => x.Body)
             .NotNull()
             .WithErrorCode(ErrorCodes.Validation.RequestBodyRequired)
@@ -23,10 +31,34 @@ public class CreateListRequestValidator : AbstractValidator<CreateListRequest>
             .ChildRules(body =>
             {
                 body.RuleFor(x => x.Name)
-                    .NotEmpty();
+                    .Cascade(CascadeMode.Stop)
+                    .NotEmpty()
+                    .WithErrorCode(ErrorCodes.Lists.InvalidListName)
+                    .WithMessage("Invalid list name.")
+                    .Must(listName =>
+                    {
+                        var listNameNormalized = NormalizeListName(listName);
+                        if (listNameNormalized.Length > validatorOptions.Lists.MaximumListNameLength)
+                        {
+                            logger.LogInformation("List name {ListName} is too long. {ListNameLength} > {ListNameMaximumLength} ", listNameNormalized, listNameNormalized.Length, validatorOptions.Lists.MaximumListNameLength);
+                            return false;
+                        }
+                        return true;
+                    })
+                    .WithErrorCode(ErrorCodes.Lists.ListNameTooLong)
+                    .WithMessage($"List name must be no longer than {validatorOptions.Lists.MaximumListNameLength} characters.")
+                    ;
             });
         
         RuleFor(x => x.UserInformation)
             .NotEmpty();
+        
+        return;
+
+        static string NormalizeListName(string listName)
+        {
+            return listName.Trim();
+        }
+
     }
 }

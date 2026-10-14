@@ -8,6 +8,7 @@ using YourGamesList.Api.Model.Requests.Users;
 using YourGamesList.Api.Services.YourGamesList;
 using YourGamesList.Api.Services.YourGamesList.Model;
 using YourGamesList.Contracts.Dto;
+using YourGamesList.Contracts.Responses;
 
 namespace YourGamesList.Api.Controllers.Users;
 
@@ -28,6 +29,8 @@ public class UserController : YourGamesListBaseController
     [HttpGet("getSelf")]
     [Authorize]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetSelfUser(UserGetSelfRequest userGetSelfRequest)
     {
         _logger.LogInformation("Requested to get self user.");

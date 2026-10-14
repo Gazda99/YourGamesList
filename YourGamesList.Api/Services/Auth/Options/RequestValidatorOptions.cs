@@ -2,11 +2,12 @@
 
 namespace YourGamesList.Api.Services.Auth.Options;
 
-public class UserValuesValidatorOptions
+public class RequestValidatorOptions
 {
-    public const string SectionName = "UserValuesValidator";
+    public const string SectionName = "RequestValidator";
 
     public EmailValidatorOptions Email { get; set; } = new();
+    public ListsValidatorOptions Lists { get; set; } = new();
     public UsernameValidatorOptions Username { get; set; } = new();
     public PasswordValidatorOptions Password { get; set; } = new();
     public DateOfBirthValidatorOptions DateOfBirth { get; set; } = new();
@@ -15,6 +16,11 @@ public class UserValuesValidatorOptions
 public class EmailValidatorOptions
 {
     public int MaximumEmailLength { get; init; }
+}
+
+public class ListsValidatorOptions
+{
+    public int MaximumListNameLength { get; init; }
 }
 
 public class UsernameValidatorOptions
@@ -36,11 +42,12 @@ public class DateOfBirthValidatorOptions
     public int MaximumAge { get; init; }
 }
 
-public class UserValuesValidatorOptionsValidator : AbstractValidator<UserValuesValidatorOptions>
+public class UserValuesValidatorOptionsValidator : AbstractValidator<RequestValidatorOptions>
 {
     public UserValuesValidatorOptionsValidator()
     {
         RuleFor(x => x.Email).SetValidator(new EmailValidatorOptionsValidator());
+        RuleFor(x => x.Lists).SetValidator(new ListsValidatorOptionsValidator());
         RuleFor(x => x.Username).SetValidator(new UsernameValidatorOptionsValidator());
         RuleFor(x => x.Password).SetValidator(new PasswordValidatorOptionsValidator());
         RuleFor(x => x.DateOfBirth).SetValidator(new DateOfBirthValidatorOptionsValidator());
@@ -52,6 +59,16 @@ public class EmailValidatorOptionsValidator : AbstractValidator<EmailValidatorOp
     public EmailValidatorOptionsValidator()
     {
         RuleFor(x => x.MaximumEmailLength)
+            .NotEmpty()
+            .GreaterThan(0);
+    }
+}
+
+public class ListsValidatorOptionsValidator : AbstractValidator<ListsValidatorOptions>
+{
+    public ListsValidatorOptionsValidator()
+    {
+        RuleFor(x => x.MaximumListNameLength)
             .NotEmpty()
             .GreaterThan(0);
     }

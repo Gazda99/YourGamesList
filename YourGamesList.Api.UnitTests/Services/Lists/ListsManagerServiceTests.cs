@@ -127,19 +127,6 @@ public class ListsManagerServiceTests
     }
 
     [Test]
-    public async Task Create_NameExceedsSchemaLimit_ReturnsNameTooLong()
-    {
-        var result = await CreateService().Create(new CreateListParams
-        {
-            UserInformation = CreateUserInformation(Guid.NewGuid()),
-            Name = new string('x', ValidationConstants.GamesList.MaximumNameLength + 1)
-        });
-
-        Assert.That(result.IsFailure, Is.True);
-        Assert.That(result.Error, Is.EqualTo(ListsError.ListNameTooLong));
-    }
-
-    [Test]
     public async Task Delete_OwnedDeletableList_RemovesIt()
     {
         var user = CreateUser();

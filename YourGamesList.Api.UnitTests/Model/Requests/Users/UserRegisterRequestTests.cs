@@ -17,7 +17,7 @@ public class UserRegisterRequestTests
 {
     private IFixture _fixture;
     private ILogger<UserRegisterRequestValidator> _logger;
-    private IOptions<UserValuesValidatorOptions> _usernameValidatorOptions;
+    private IOptions<RequestValidatorOptions> _usernameValidatorOptions;
     private FakeTimeProvider _timeProvider;
 
     [SetUp]
@@ -25,9 +25,9 @@ public class UserRegisterRequestTests
     {
         _fixture = new Fixture();
         _logger = Substitute.For<ILogger<UserRegisterRequestValidator>>();
-        _usernameValidatorOptions = Substitute.For<IOptions<UserValuesValidatorOptions>>();
+        _usernameValidatorOptions = Substitute.For<IOptions<RequestValidatorOptions>>();
 
-        var options = new UserValuesValidatorOptions
+        var options = new RequestValidatorOptions
         {
             Email = new EmailValidatorOptions { MaximumEmailLength = 254 },
             Username = new UsernameValidatorOptions

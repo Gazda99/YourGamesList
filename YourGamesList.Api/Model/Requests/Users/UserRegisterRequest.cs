@@ -20,7 +20,7 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
 {
     public UserRegisterRequestValidator(
         ILogger<UserRegisterRequestValidator> logger,
-        IOptions<UserValuesValidatorOptions> options,
+        IOptions<RequestValidatorOptions> options,
         TimeProvider timeProvider
     )
     {

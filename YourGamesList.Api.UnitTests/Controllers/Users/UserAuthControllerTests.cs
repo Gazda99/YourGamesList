@@ -8,9 +8,11 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Controllers.Users;
 using YourGamesList.Api.Model.Requests.Users;
+using YourGamesList.Api.Services;
 using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Model;
 using YourGamesList.Common;
+using YourGamesList.Contracts.Responses;
 using YourGamesList.Contracts.Responses.Users;
 using YourGamesList.TestsUtils;
 
@@ -21,6 +23,7 @@ public class UserAuthControllerTests
     private IFixture _fixture;
     private ILogger<UserAuthController> _logger;
     private IUserManagerService _userManagerService;
+    private IDomainErrorMapper _domainErrorMapper;
 
     [SetUp]
     public void Setup()
@@ -30,6 +33,13 @@ public class UserAuthControllerTests
             composer.FromFactory(() => DateOnly.FromDateTime(_fixture.Create<DateTime>())));
         _logger = Substitute.For<ILogger<UserAuthController>>();
         _userManagerService = Substitute.For<IUserManagerService>();
+        _domainErrorMapper = Substitute.For<IDomainErrorMapper>();
+        _domainErrorMapper.Map(Arg.Any<UserAuthError>())
+            .Returns(call => new Error
+            {
+                Code = call.Arg<UserAuthError>().ToString(),
+                Description = "Mapped user auth error."
+            });
     }
 
     #region Register
@@ -44,7 +54,7 @@ public class UserAuthControllerTests
 
         _userManagerService.Register(Arg.Any<UserRegisterParams>()).Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Register(request);
@@ -68,7 +78,7 @@ public class UserAuthControllerTests
         _userManagerService.Register(Arg.Any<UserRegisterParams>())
             .Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Register(request);
@@ -77,37 +87,6 @@ public class UserAuthControllerTests
         var objectResult = res as ObjectResult;
         Assert.That(objectResult, Is.Not.Null);
         Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status409Conflict));
-        Assert.That(objectResult.Value, Is.EqualTo(authError.ToString()));
-    }
-
-    [TestCase(UserAuthError.PasswordIsTooShort)]
-    [TestCase(UserAuthError.PasswordIsTooLong)]
-    [TestCase(UserAuthError.InvalidUsername)]
-    [TestCase(UserAuthError.UsernameIsTooShort)]
-    [TestCase(UserAuthError.UsernameIsTooLong)]
-    [TestCase(UserAuthError.InvalidEmail)]
-    [TestCase(UserAuthError.EmailIsTooLong)]
-    [TestCase(UserAuthError.InvalidDateOfBirth)]
-    [TestCase(UserAuthError.UnderMinimumAge)]
-    [TestCase(UserAuthError.ExceedsMaximumAge)]
-    public async Task Register_BadRequestError_ReturnsBadRequest(UserAuthError authError)
-    {
-        //ARRANGE
-        var request = _fixture.Create<UserRegisterRequest>();
-        var serviceResult = CombinedResult<Guid, UserAuthError>.Failure(authError);
-
-        _userManagerService.Register(Arg.Any<UserRegisterParams>()).Returns(serviceResult);
-
-        var controller = new UserAuthController(_logger, _userManagerService);
-
-        //ACT
-        var res = await controller.Register(request);
-
-        //ASSERT
-        var objectResult = res as ObjectResult;
-        Assert.That(objectResult, Is.Not.Null);
-        Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
-        Assert.That(objectResult.Value, Is.EqualTo(authError.ToString()));
     }
 
     [Test]
@@ -115,12 +94,12 @@ public class UserAuthControllerTests
     {
         //ARRANGE
         var request = _fixture.Create<UserRegisterRequest>();
-        var serviceResult = CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.NoUserFound);
+        var serviceResult = CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.InternalServerError);
 
         _userManagerService.Register(Arg.Any<UserRegisterParams>())
             .Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Register(request);
@@ -146,7 +125,7 @@ public class UserAuthControllerTests
         _userManagerService.Login(Arg.Any<UserLoginParams>())
             .Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Login(request);
@@ -172,7 +151,7 @@ public class UserAuthControllerTests
         _userManagerService.Login(Arg.Any<UserLoginParams>())
             .Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Login(request);
@@ -193,7 +172,7 @@ public class UserAuthControllerTests
         _userManagerService.Login(Arg.Any<UserLoginParams>())
             .Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Login(request);
@@ -202,7 +181,6 @@ public class UserAuthControllerTests
         var objectResult = res as ObjectResult;
         Assert.That(objectResult, Is.Not.Null);
         Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status403Forbidden));
-        Assert.That(objectResult.Value, Is.EqualTo(UserAuthError.UserNotActiveEmailActivation.ToString()));
     }
 
     [Test]
@@ -215,7 +193,7 @@ public class UserAuthControllerTests
         _userManagerService.Login(Arg.Any<UserLoginParams>())
             .Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Login(request);
@@ -236,7 +214,7 @@ public class UserAuthControllerTests
         _userManagerService.Login(Arg.Any<UserLoginParams>())
             .Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Login(request);
@@ -261,7 +239,7 @@ public class UserAuthControllerTests
         _userManagerService.Delete(Arg.Any<UserDeleteParams>())
             .Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Delete(request);
@@ -283,7 +261,7 @@ public class UserAuthControllerTests
         _userManagerService.Delete(Arg.Any<UserDeleteParams>())
             .Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Delete(request);
@@ -304,7 +282,7 @@ public class UserAuthControllerTests
         _userManagerService.Delete(Arg.Any<UserDeleteParams>())
             .Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Delete(request);
@@ -325,7 +303,7 @@ public class UserAuthControllerTests
         _userManagerService.Delete(Arg.Any<UserDeleteParams>())
             .Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Delete(request);
@@ -350,7 +328,7 @@ public class UserAuthControllerTests
         _userManagerService.ConfirmEmail(Arg.Any<ConfirmEmailParams>())
             .Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.ConfirmEmail(request);
@@ -373,7 +351,7 @@ public class UserAuthControllerTests
         _userManagerService.ConfirmEmail(Arg.Any<ConfirmEmailParams>())
             .Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.ConfirmEmail(request);
@@ -382,7 +360,6 @@ public class UserAuthControllerTests
         var objectResult = res as ObjectResult;
         Assert.That(objectResult, Is.Not.Null);
         Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
-        Assert.That(objectResult.Value, Is.EqualTo(authError.ToString()));
     }
 
     [Test]
@@ -395,7 +372,7 @@ public class UserAuthControllerTests
         _userManagerService.ConfirmEmail(Arg.Any<ConfirmEmailParams>())
             .Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.ConfirmEmail(request);
@@ -407,4 +384,9 @@ public class UserAuthControllerTests
     }
 
     #endregion
+
+    private UserAuthController CreateController()
+    {
+        return new UserAuthController(_logger, _userManagerService, _domainErrorMapper);
+    }
 }

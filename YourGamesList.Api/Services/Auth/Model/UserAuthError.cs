@@ -13,9 +13,8 @@ public enum UserAuthError
     #region Email
 
     InvalidEmail,
-    EmailIsTooLong,
     EmailAlreadyTaken,
-    
+
     EmailVerificationInvalid,
     EmailVerificationExpired,
 
@@ -23,26 +22,7 @@ public enum UserAuthError
 
     #region UserName
 
-    InvalidUsername,
-    UsernameIsTooShort,
-    UsernameIsTooLong,
     UsernameAlreadyTaken,
-
-    #endregion
-
-    #region Password
-
-    WrongPassword,
-    PasswordIsTooShort,
-    PasswordIsTooLong,
-
-    #endregion
-
-    #region DateOfBirth
-
-    InvalidDateOfBirth,
-    UnderMinimumAge,
-    ExceedsMaximumAge
 
     #endregion
 }

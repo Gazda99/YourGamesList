@@ -6,8 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using YourGamesList.Api.Attributes;
 using YourGamesList.Api.Model.Requests.Users;
+using YourGamesList.Api.Services;
 using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Model;
+using YourGamesList.Contracts.Responses;
 using YourGamesList.Contracts.Responses.Users;
 
 namespace YourGamesList.Api.Controllers.Users;
@@ -19,18 +21,24 @@ public class UserAuthController : YourGamesListBaseController
 {
     private readonly ILogger<UserAuthController> _logger;
     private readonly IUserManagerService _userManagerService;
+    private readonly IDomainErrorMapper _domainErrorMapper;
 
-    public UserAuthController(ILogger<UserAuthController> logger, IUserManagerService userManagerService)
+    public UserAuthController(
+        ILogger<UserAuthController> logger,
+        IUserManagerService userManagerService,
+        IDomainErrorMapper domainErrorMapper
+    )
     {
         _logger = logger;
         _userManagerService = userManagerService;
+        _domainErrorMapper = domainErrorMapper;
     }
 
     [HttpPost("register")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(void), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(void), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Register(UserRegisterRequest userRegisterRequest)
     {
         _logger.LogInformation("Requested to register user {Username}", userRegisterRequest.Body.Username);
@@ -43,11 +51,10 @@ public class UserAuthController : YourGamesListBaseController
         {
             if (result.Error is UserAuthError.UsernameAlreadyTaken or UserAuthError.EmailAlreadyTaken)
             {
-                return Result(StatusCodes.Status409Conflict, result.Error.ToString());
-            }
-            else if (IsErrorBadRequest(result.Error))
-            {
-                return Result(StatusCodes.Status400BadRequest, result.Error.ToString());
+                return Result(StatusCodes.Status409Conflict, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
             }
             else
             {
@@ -58,22 +65,15 @@ public class UserAuthController : YourGamesListBaseController
         {
             return Result(StatusCodes.Status200OK, result.Value.ToString());
         }
-
-        static bool IsErrorBadRequest(UserAuthError userAuthError)
-        {
-            return userAuthError is UserAuthError.PasswordIsTooShort or UserAuthError.PasswordIsTooLong
-                or UserAuthError.InvalidUsername or UserAuthError.UsernameIsTooShort or UserAuthError.UsernameIsTooLong
-                or UserAuthError.InvalidEmail or UserAuthError.EmailIsTooLong
-                or UserAuthError.InvalidDateOfBirth or UserAuthError.UnderMinimumAge or UserAuthError.ExceedsMaximumAge;
-        }
     }
 
     [HttpPost("login")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(AuthLoginResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(void), StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Login(UserLoginRequest userLoginRequest)
     {
         _logger.LogInformation("Requested to login user {Username}", userLoginRequest.Body.Username);
@@ -90,7 +90,10 @@ public class UserAuthController : YourGamesListBaseController
             }
             else if (result.Error is UserAuthError.UserNotActiveEmailActivation)
             {
-                return Result(StatusCodes.Status403Forbidden, result.Error.ToString());
+                return Result(StatusCodes.Status403Forbidden, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
             }
             else if (result.Error is UserAuthError.UnauthorizedUser)
             {
@@ -114,6 +117,7 @@ public class UserAuthController : YourGamesListBaseController
     [HttpDelete("delete")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(UserDeleteRequest userDeleteRequest)
@@ -148,7 +152,7 @@ public class UserAuthController : YourGamesListBaseController
     [HttpGet("confirmEmail")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(void), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ConfirmEmail(ConfirmEmailRequest confirmEmailRequest)
     {
         _logger.LogInformation("Requested to confirm email");
@@ -161,7 +165,10 @@ public class UserAuthController : YourGamesListBaseController
         {
             if (result.Error is UserAuthError.EmailVerificationInvalid or UserAuthError.EmailVerificationExpired)
             {
-                return Result(StatusCodes.Status400BadRequest, result.Error.ToString());
+                return Result(StatusCodes.Status400BadRequest, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
             }
             else
             {

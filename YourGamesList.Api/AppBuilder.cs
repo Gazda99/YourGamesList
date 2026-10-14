@@ -86,6 +86,7 @@ public static class AppBuilder
 
         //Other services
         builder.Services.AddRequestModelValidators();
+        builder.Services.AddSingleton<IDomainErrorMapper, DomainErrorMapper>();
 
         builder.Services.AddKeyedSingleton<ICacheProvider, InMemoryCacheProvider>(CacheProviders.InMemory);
 
@@ -101,7 +102,7 @@ public static class AppBuilder
         services.Configure<MvcOptions>(options => { options.ModelBinderProviders.Insert(0, new UserInformationTokenModelBinderProvider()); });
 
         services.AddOptionsWithFluentValidation<TokenAuthOptions, TokenAuthOptionsValidator>(TokenAuthOptions.SectionName);
-        services.AddOptionsWithFluentValidation<UserValuesValidatorOptions, UserValuesValidatorOptionsValidator>(UserValuesValidatorOptions.SectionName);
+        services.AddOptionsWithFluentValidation<RequestValidatorOptions, UserValuesValidatorOptionsValidator>(RequestValidatorOptions.SectionName);
         services.AddOptionsWithFluentValidation<UserManagerServiceOptions, UserManagerServiceOptionsValidator>(UserManagerServiceOptions.SectionName);
         services.AddOptionsWithFluentValidation<VerificationEmailSenderOptions, VerificationEmailSenderOptionsValidator>(VerificationEmailSenderOptions.SectionName);
 

@@ -5,7 +5,7 @@ using YourGamesList.Api.Services.Auth.Options;
 
 namespace YourGamesList.Api.UnitTests.Services.Auth.Options;
 
-public class UserValuesValidatorOptionsTests
+public class RequestValidatorOptionsTests
 {
     private IFixture _fixture;
 
@@ -19,9 +19,12 @@ public class UserValuesValidatorOptionsTests
     public void Validate_ValidOptions_ReturnsTrue()
     {
         //ARRANGE
-        var options = _fixture.Build<UserValuesValidatorOptions>()
+        var options = _fixture.Build<RequestValidatorOptions>()
             .With(x => x.Email, _fixture.Build<EmailValidatorOptions>()
                 .With(x => x.MaximumEmailLength, 100)
+                .Create())
+            .With(x => x.Lists, _fixture.Build<ListsValidatorOptions>()
+                .With(x => x.MaximumListNameLength, 100)
                 .Create())
             .With(x => x.Username, _fixture.Build<UsernameValidatorOptions>()
                 .With(x => x.MinimumUsernameLength, 1)
@@ -67,6 +70,31 @@ public class UserValuesValidatorOptionsTests
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
         res.ShouldHaveValidationErrorFor(x => x.MaximumEmailLength);
+    }
+
+    #endregion
+
+    #region Lists
+
+    [Test]
+    [TestCase(0)]
+    [TestCase(-10)]
+    public void Validate_InvalidMaximumListNameLength_ReturnsFalse(int maximumListNameLength)
+    {
+        //ARRANGE
+        var options = _fixture.Build<ListsValidatorOptions>()
+            .With(x => x.MaximumListNameLength, maximumListNameLength)
+            .Create();
+
+        var validator = new ListsValidatorOptionsValidator();
+
+        //ACT
+        var res = validator.TestValidate(options);
+
+        //ASSERT
+        Assert.That(res.IsValid, Is.False);
+        Assert.That(res.Errors, Is.Not.Null);
+        res.ShouldHaveValidationErrorFor(x => x.MaximumListNameLength);
     }
 
     #endregion

@@ -1,11 +1,13 @@
-﻿namespace YourGamesList.Api.Services.Lists.Model;
+﻿using System.Text.Json.Serialization;
 
+namespace YourGamesList.Api.Services.Lists.Model;
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ListsError
 {
     InternalServerError,
     UserNotFound,
     ListAlreadyExists,
-    ListNameTooLong,
     ListNotFound,
     ListCannotBeDeleted
 }

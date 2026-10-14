@@ -20,6 +20,8 @@ public static class ErrorCodes
         public const string EmailVerificationInvalid = "EmailVerificationInvalid";
         public const string EmailVerificationExpired = "EmailVerificationExpired";
 
+        public const string UserNotActiveEmailActivation = "UserNotActiveEmailActivation";
+
         public const string InvalidPassword = "InvalidPassword";
         public const string PasswordIsTooShort = "PasswordIsTooShort";
         public const string PasswordIsTooLong = "PasswordIsTooLong";
@@ -27,6 +29,16 @@ public static class ErrorCodes
         public const string InvalidDateOfBirth = "InvalidDateOfBirth";
         public const string UnderMinimumAge = "UnderMinimumAge";
         public const string ExceedsMaximumAge = "ExceedsMaximumAge";
+    }
+
+    public static class Lists
+    {
+        public const string UserNotFound = "UserNotFound";
+        public const string ListAlreadyExists = "ListAlreadyExists";
+        public const string ListNameTooLong = "ListNameTooLong";
+        public const string InvalidListName = "InvalidListName";
+        public const string ListNotFound = "ListNotFound";
+        public const string ListCannotBeDeleted = "ListCannotBeDeleted";
     }
 
     public static class Validation
