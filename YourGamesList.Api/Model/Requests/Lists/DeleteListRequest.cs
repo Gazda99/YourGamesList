@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using YourGamesList.Api.Attributes;
 using YourGamesList.Contracts.Requests.Lists;
+using YourGamesList.Contracts.Responses;
 
 namespace YourGamesList.Api.Model.Requests.Lists;
 
@@ -16,12 +17,16 @@ public class DeleteListRequestValidator : AbstractValidator<DeleteListRequest>
     public DeleteListRequestValidator()
     {
         RuleFor(x => x.Body)
-            .NotEmpty()
+            .NotNull()
+            .WithErrorCode(ErrorCodes.Validation.RequestBodyRequired)
             .WithMessage("Proper request body is required.")
             .ChildRules(body =>
             {
                 body.RuleFor(x => x.Id)
                     .NotNull();
             });
+        
+        RuleFor(x => x.UserInformation)
+            .NotEmpty();
     }
 }

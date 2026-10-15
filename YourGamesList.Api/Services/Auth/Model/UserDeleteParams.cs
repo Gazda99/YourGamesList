@@ -14,7 +14,7 @@ public static class UserDeleteParamsMappingExtensions
     {
         return new UserDeleteParams
         {
-            Username = request.Body.Username,
+            Username = request.Body.Username.Trim(),
             Password = request.Body.Password
         };
     }

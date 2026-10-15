@@ -13,7 +13,7 @@ public class UserRegisterParamsTests
         var dateOfBirth = new DateOnly(1995, 3, 14);
         var request = new UserRegisterRequest
         {
-            Body = new AuthUserRegisterRequestBody("testuser", "test@example.com", "password", dateOfBirth)
+            Body = new AuthUserRegisterRequestBody(" testuser ", " TEST@EXAMPLE.COM ", "password", dateOfBirth)
         };
 
         var result = request.ToParams();

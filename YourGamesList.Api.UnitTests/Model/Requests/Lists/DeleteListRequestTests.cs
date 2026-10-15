@@ -3,6 +3,7 @@ using FluentValidation.TestHelper;
 using YourGamesList.Api.Model;
 using YourGamesList.Api.Model.Requests.Lists;
 using YourGamesList.Contracts.Requests.Lists;
+using YourGamesList.Contracts.Responses;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Lists;
 
@@ -11,6 +12,7 @@ public class DeleteListRequestTests
     [Test]
     public void Validate_ValidRequest_ReturnsValid()
     {
+        //ARRANGE
         var request = new DeleteListRequest
         {
             UserInformation = new UserInformationToken
@@ -23,14 +25,17 @@ public class DeleteListRequestTests
         };
         var validator = new DeleteListRequestValidator();
 
+        //ACT
         var result = validator.TestValidate(request);
 
+        //ASSERT
         Assert.That(result.IsValid, Is.True);
     }
 
     [Test]
     public void Validate_BodyMissing_ReturnsValidationError()
     {
+        //ARRANGE
         var request = new DeleteListRequest
         {
             UserInformation = new UserInformationToken
@@ -43,9 +48,31 @@ public class DeleteListRequestTests
         };
         var validator = new DeleteListRequestValidator();
 
+        //ACT
         var result = validator.TestValidate(request);
 
+        //ASSERT
         Assert.That(result.IsValid, Is.False);
-        result.ShouldHaveValidationErrorFor(x => x.Body);
+        result.ShouldHaveValidationErrorFor(x => x.Body)
+            .WithErrorCode(ErrorCodes.Validation.RequestBodyRequired);
+    }
+
+    [Test]
+    public void Validate_UserInformationMissing_ReturnsValidationError()
+    {
+        //ARRANGE
+        var request = new DeleteListRequest
+        {
+            UserInformation = null!,
+            Body = new DeleteListRequestBody(Guid.NewGuid())
+        };
+        var validator = new DeleteListRequestValidator();
+
+        //ACT
+        var result = validator.TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.False);
+        result.ShouldHaveValidationErrorFor(x => x.UserInformation);
     }
 }

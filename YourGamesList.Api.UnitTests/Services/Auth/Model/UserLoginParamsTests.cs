@@ -11,7 +11,7 @@ public class UserLoginParamsTests
     {
         var request = new UserLoginRequest
         {
-            Body = new AuthUserLoginRequestBody("testuser", "password")
+            Body = new AuthUserLoginRequestBody(" testuser ", "password")
         };
 
         var result = request.ToParams();

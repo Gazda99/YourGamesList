@@ -24,7 +24,6 @@ public class UserManagerService : IUserManagerService
 {
     private readonly ILogger<UserManagerService> _logger;
     private readonly IOptions<UserManagerServiceOptions> _options;
-    private readonly IUserValuesValidator _userValuesValidator;
     private readonly IPasswordHasher _passwordHasher;
     private readonly TimeProvider _timeProvider;
     private readonly IVerificationTokenHasher _verificationTokenHasher;
@@ -35,8 +34,7 @@ public class UserManagerService : IUserManagerService
 
     public UserManagerService(ILogger<UserManagerService> logger,
         IOptions<UserManagerServiceOptions> options,
-        IUserValuesValidator userValuesValidator,
-        IDbContextFactory<YourGamesListDbContext> yglDbContext,
+        YourGamesListDbContext yglDbContext,
         IPasswordHasher passwordHasher,
         TimeProvider timeProvider,
         IVerificationTokenHasher verificationTokenHasher,
@@ -47,19 +45,18 @@ public class UserManagerService : IUserManagerService
     {
         _logger = logger;
         _options = options;
-        _userValuesValidator = userValuesValidator;
         _passwordHasher = passwordHasher;
         _timeProvider = timeProvider;
         _verificationTokenHasher = verificationTokenHasher;
         _verificationEmailSender = verificationEmailSender;
         _tokenProvider = tokenProvider;
         _defaultListsCreator = defaultListsCreator;
-        _yglDbContext = yglDbContext.CreateDbContext();
+        _yglDbContext = yglDbContext;
     }
 
     public async Task<CombinedResult<string, UserAuthError>> Login(UserLoginParams userLoginParams)
     {
-        var username = userLoginParams.Username.ToLowerInvariant().Trim();
+        var username = userLoginParams.Username;
         var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
 
         if (user == null)
@@ -95,41 +92,14 @@ public class UserManagerService : IUserManagerService
 
     public async Task<CombinedResult<Guid, UserAuthError>> Register(UserRegisterParams userRegisterParams)
     {
-        var username = userRegisterParams.Username.ToLowerInvariant().Trim();
-        var email = userRegisterParams.Email.ToLowerInvariant().Trim();
+        var username = userRegisterParams.Username;
+        var email = userRegisterParams.Email;
         var dob = userRegisterParams.DateOfBirth;
-
-        var validateEmail = _userValuesValidator.ValidateEmail(email);
-        if (validateEmail.IsFailure)
-        {
-            _logger.LogInformation("Cannot register user due to email being invalid. Error: {UserRegisterError}", validateEmail.Error.ToString());
-            return CombinedResult<Guid, UserAuthError>.Failure(validateEmail.Error);
-        }
-
-        var validateUsername = _userValuesValidator.ValidateUsername(username);
-        if (validateUsername.IsFailure)
-        {
-            _logger.LogInformation("Cannot register user due to username being invalid. Error: {UserRegisterError}", validateUsername.Error.ToString());
-            return CombinedResult<Guid, UserAuthError>.Failure(validateUsername.Error);
-        }
-
-        var validatePasswordResult = _userValuesValidator.ValidatePassword(userRegisterParams.Password);
-        if (validatePasswordResult.IsFailure)
-        {
-            _logger.LogInformation("Cannot register user due to password being invalid. Error: {UserRegisterError}", validatePasswordResult.Error.ToString());
-            return CombinedResult<Guid, UserAuthError>.Failure(validatePasswordResult.Error);
-        }
-
-        var validateDateOfBirth = _userValuesValidator.ValidateDateOfBirth(dob);
-        if (validateDateOfBirth.IsFailure)
-        {
-            _logger.LogInformation("Cannot register user due to date of birth being invalid. Error: {UserRegisterError}", validateDateOfBirth.Error.ToString());
-            return CombinedResult<Guid, UserAuthError>.Failure(validateDateOfBirth.Error);
-        }
 
         var doesUsernameExists = _yglDbContext.Users.AnyAsync(u => u.Username == username);
         var doesEmailExists = _yglDbContext.Users.AnyAsync(u => u.Email == email);
         var dbChecks = Task.WhenAll(doesUsernameExists, doesEmailExists);
+
         try
         {
             await dbChecks;
@@ -228,7 +198,7 @@ public class UserManagerService : IUserManagerService
 
     public async Task<ErrorResult<UserAuthError>> Delete(UserDeleteParams userDeleteParams)
     {
-        var username = userDeleteParams.Username.ToLowerInvariant().Trim();
+        var username = userDeleteParams.Username;
         var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
 
         if (user == null)

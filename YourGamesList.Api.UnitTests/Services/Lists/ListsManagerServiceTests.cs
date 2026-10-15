@@ -16,7 +16,6 @@ namespace YourGamesList.Api.UnitTests.Services.Lists;
 public class ListsManagerServiceTests
 {
     private ILogger<ListsManagerService> _logger = null!;
-    private IDbContextFactory<YourGamesListDbContext> _dbContextFactory = null!;
     private YourGamesListDbContext _dbContext = null!;
     private FakeTimeProvider _timeProvider = null!;
 
@@ -24,14 +23,12 @@ public class ListsManagerServiceTests
     public void SetUp()
     {
         _logger = Substitute.For<ILogger<ListsManagerService>>();
-        _dbContextFactory = Substitute.For<IDbContextFactory<YourGamesListDbContext>>();
         _timeProvider = new FakeTimeProvider();
 
         var options = new DbContextOptionsBuilder<YourGamesListDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         _dbContext = new YourGamesListDbContext(options);
-        _dbContextFactory.CreateDbContext().Returns(_dbContext);
     }
 
     [TearDown]
@@ -130,19 +127,6 @@ public class ListsManagerServiceTests
     }
 
     [Test]
-    public async Task Create_NameExceedsSchemaLimit_ReturnsNameTooLong()
-    {
-        var result = await CreateService().Create(new CreateListParams
-        {
-            UserInformation = CreateUserInformation(Guid.NewGuid()),
-            Name = new string('x', ValidationConstants.GamesList.MaximumNameLength + 1)
-        });
-
-        Assert.That(result.IsFailure, Is.True);
-        Assert.That(result.Error, Is.EqualTo(ListsError.ListNameTooLong));
-    }
-
-    [Test]
     public async Task Delete_OwnedDeletableList_RemovesIt()
     {
         var user = CreateUser();
@@ -201,7 +185,7 @@ public class ListsManagerServiceTests
         Assert.That(await _dbContext.GamesLists.AnyAsync(), Is.True);
     }
 
-    private ListsManagerService CreateService() => new(_logger, _dbContextFactory, _timeProvider);
+    private ListsManagerService CreateService() => new(_logger, _dbContext, _timeProvider);
 
     private static User CreateUser() => new()
     {

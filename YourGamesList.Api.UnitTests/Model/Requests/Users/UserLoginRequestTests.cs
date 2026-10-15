@@ -2,6 +2,7 @@
 using FluentValidation.TestHelper;
 using YourGamesList.Api.Model.Requests.Users;
 using YourGamesList.Contracts.Requests.Users;
+using YourGamesList.Contracts.Responses;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Users;
 
@@ -33,6 +34,22 @@ public class UserLoginRequestTests
     }
 
     [Test]
+    public void Validate_BodyMissing_ReturnsValidationError()
+    {
+        //ARRANGE
+        var request = new UserLoginRequest { Body = null! };
+        var validator = new UserLoginRequestValidator();
+
+        //ACT
+        var result = validator.TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.False);
+        result.ShouldHaveValidationErrorFor(x => x.Body)
+            .WithErrorCode(ErrorCodes.Validation.RequestBodyRequired);
+    }
+
+    [Test]
     public void Validate_InvalidUsername_ReturnsFalse()
     {
         //ARRANGE
@@ -53,7 +70,8 @@ public class UserLoginRequestTests
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        res.ShouldHaveValidationErrorFor(x => x.Body.Username);
+        res.ShouldHaveValidationErrorFor(x => x.Body.Username)
+            .WithErrorCode(ErrorCodes.UserAuth.InvalidUsername);
     }
 
     [Test]
@@ -77,6 +95,7 @@ public class UserLoginRequestTests
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
-        res.ShouldHaveValidationErrorFor(x => x.Body.Password);
+        res.ShouldHaveValidationErrorFor(x => x.Body.Password)
+            .WithErrorCode(ErrorCodes.UserAuth.InvalidPassword);
     }
 }

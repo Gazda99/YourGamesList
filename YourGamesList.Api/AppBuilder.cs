@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -83,6 +86,7 @@ public static class AppBuilder
 
         //Other services
         builder.Services.AddRequestModelValidators();
+        builder.Services.AddSingleton<IDomainErrorMapper, DomainErrorMapper>();
 
         builder.Services.AddKeyedSingleton<ICacheProvider, InMemoryCacheProvider>(CacheProviders.InMemory);
 
@@ -98,12 +102,11 @@ public static class AppBuilder
         services.Configure<MvcOptions>(options => { options.ModelBinderProviders.Insert(0, new UserInformationTokenModelBinderProvider()); });
 
         services.AddOptionsWithFluentValidation<TokenAuthOptions, TokenAuthOptionsValidator>(TokenAuthOptions.SectionName);
-        services.AddOptionsWithFluentValidation<UserValuesValidatorOptions, UserValuesValidatorOptionsValidator>(UserValuesValidatorOptions.SectionName);
+        services.AddOptionsWithFluentValidation<RequestValidatorOptions, UserValuesValidatorOptionsValidator>(RequestValidatorOptions.SectionName);
         services.AddOptionsWithFluentValidation<UserManagerServiceOptions, UserManagerServiceOptionsValidator>(UserManagerServiceOptions.SectionName);
         services.AddOptionsWithFluentValidation<VerificationEmailSenderOptions, VerificationEmailSenderOptionsValidator>(VerificationEmailSenderOptions.SectionName);
 
         services.AddSingleton<ITokenProvider, UserInformationTokenProvider>();
-        services.AddSingleton<IUserValuesValidator, UserValuesValidator>();
         services.AddSingleton<ISodiumInitializer, SodiumInitializer>();
         services.AddSingleton<IPasswordHasher, LibSodiumPasswordHasher>();
         services.AddSingleton<IVerificationTokenHasher, VerificationTokenHasher>();
@@ -181,7 +184,6 @@ public static class AppBuilder
     {
         //Essentials
         services
-            .AddScoped<IBaseRequestValidator, BaseRequestValidator>()
             .AddScoped<IValidationFailedResultFactory, ValidationFailedResultFactory>()
             ;
 

@@ -45,8 +45,13 @@ public class ValidateRequestFilter : IAsyncActionFilter
 
                 if (!validationResult.IsValid)
                 {
+                    _logger.LogInformation("Validation of model {RequestType} failed.", argumentType);
                     context.Result = _resultFactory.CreateValidationFailedResult(validationResult);
                     return;
+                }
+                else
+                {
+                    _logger.LogInformation("Validation of model {RequestType} passed.", argumentType);
                 }
             }
         }

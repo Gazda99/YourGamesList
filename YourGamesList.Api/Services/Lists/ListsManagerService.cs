@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using YourGamesList.Api.Model;
 using YourGamesList.Api.Services.Lists.Model;
 using YourGamesList.Common;
 using YourGamesList.Contracts.Dto;
@@ -28,11 +27,11 @@ public class ListsManagerService : IListsManagerService
 
     public ListsManagerService(
         ILogger<ListsManagerService> logger,
-        IDbContextFactory<YourGamesListDbContext> yglDbContext,
+        YourGamesListDbContext yglDbContext,
         TimeProvider timeProvider)
     {
         _logger = logger;
-        _yglDbContext = yglDbContext.CreateDbContext();
+        _yglDbContext = yglDbContext;
         _timeProvider = timeProvider;
     }
 
@@ -83,11 +82,6 @@ public class ListsManagerService : IListsManagerService
 
     public async Task<CombinedResult<Guid, ListsError>> Create(CreateListParams createListParams)
     {
-        if (createListParams.Name.Length > ValidationConstants.GamesList.MaximumNameLength)
-        {
-            return CombinedResult<Guid, ListsError>.Failure(ListsError.ListNameTooLong);
-        }
-
         var userId = createListParams.UserInformation.UserId;
         var user = await _yglDbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
         if (user == null)

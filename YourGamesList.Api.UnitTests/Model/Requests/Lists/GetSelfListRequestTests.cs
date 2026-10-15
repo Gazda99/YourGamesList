@@ -10,6 +10,7 @@ public class GetSelfListRequestTests
     [Test]
     public void Validate_UserInformationPresent_ReturnsValid()
     {
+        //ARRANGE
         var request = new GetSelfListRequest
         {
             UserInformation = new UserInformationToken
@@ -21,22 +22,27 @@ public class GetSelfListRequestTests
         };
         var validator = new GetSelfListRequestValidator();
 
+        //ACT
         var result = validator.TestValidate(request);
 
+        //ASSERT
         Assert.That(result.IsValid, Is.True);
     }
 
     [Test]
     public void Validate_UserInformationMissing_ReturnsValidationError()
     {
+        //ARRANGE
         var request = new GetSelfListRequest
         {
             UserInformation = null!
         };
         var validator = new GetSelfListRequestValidator();
 
+        //ACT
         var result = validator.TestValidate(request);
 
+        //ASSERT
         Assert.That(result.IsValid, Is.False);
         result.ShouldHaveValidationErrorFor(x => x.UserInformation);
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoFixture;
 using Microsoft.AspNetCore.Http;
@@ -8,9 +9,11 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Controllers.Users;
 using YourGamesList.Api.Model.Requests.Users;
+using YourGamesList.Api.Services;
 using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Model;
 using YourGamesList.Common;
+using YourGamesList.Contracts.Responses;
 using YourGamesList.Contracts.Responses.Users;
 using YourGamesList.TestsUtils;
 
@@ -21,6 +24,7 @@ public class UserAuthControllerTests
     private IFixture _fixture;
     private ILogger<UserAuthController> _logger;
     private IUserManagerService _userManagerService;
+    private IDomainErrorMapper _domainErrorMapper;
 
     [SetUp]
     public void Setup()
@@ -30,6 +34,7 @@ public class UserAuthControllerTests
             composer.FromFactory(() => DateOnly.FromDateTime(_fixture.Create<DateTime>())));
         _logger = Substitute.For<ILogger<UserAuthController>>();
         _userManagerService = Substitute.For<IUserManagerService>();
+        _domainErrorMapper = Substitute.For<IDomainErrorMapper>();
     }
 
     #region Register
@@ -44,7 +49,7 @@ public class UserAuthControllerTests
 
         _userManagerService.Register(Arg.Any<UserRegisterParams>()).Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Register(request);
@@ -64,11 +69,12 @@ public class UserAuthControllerTests
         //ARRANGE
         var request = _fixture.Create<UserRegisterRequest>();
         var serviceResult = CombinedResult<Guid, UserAuthError>.Failure(authError);
+        var error = _fixture.Create<Error>();
+        _domainErrorMapper.Map(authError).Returns(error);
 
-        _userManagerService.Register(Arg.Any<UserRegisterParams>())
-            .Returns(serviceResult);
+        _userManagerService.Register(Arg.Any<UserRegisterParams>()).Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Register(request);
@@ -77,37 +83,11 @@ public class UserAuthControllerTests
         var objectResult = res as ObjectResult;
         Assert.That(objectResult, Is.Not.Null);
         Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status409Conflict));
-        Assert.That(objectResult.Value, Is.EqualTo(authError.ToString()));
-    }
-
-    [TestCase(UserAuthError.PasswordIsTooShort)]
-    [TestCase(UserAuthError.PasswordIsTooLong)]
-    [TestCase(UserAuthError.InvalidUsername)]
-    [TestCase(UserAuthError.UsernameIsTooShort)]
-    [TestCase(UserAuthError.UsernameIsTooLong)]
-    [TestCase(UserAuthError.InvalidEmail)]
-    [TestCase(UserAuthError.EmailIsTooLong)]
-    [TestCase(UserAuthError.InvalidDateOfBirth)]
-    [TestCase(UserAuthError.UnderMinimumAge)]
-    [TestCase(UserAuthError.ExceedsMaximumAge)]
-    public async Task Register_BadRequestError_ReturnsBadRequest(UserAuthError authError)
-    {
-        //ARRANGE
-        var request = _fixture.Create<UserRegisterRequest>();
-        var serviceResult = CombinedResult<Guid, UserAuthError>.Failure(authError);
-
-        _userManagerService.Register(Arg.Any<UserRegisterParams>()).Returns(serviceResult);
-
-        var controller = new UserAuthController(_logger, _userManagerService);
-
-        //ACT
-        var res = await controller.Register(request);
-
-        //ASSERT
-        var objectResult = res as ObjectResult;
-        Assert.That(objectResult, Is.Not.Null);
-        Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
-        Assert.That(objectResult.Value, Is.EqualTo(authError.ToString()));
+        var errorResponse = objectResult.Value as ErrorResponse;
+        Assert.That(errorResponse, Is.Not.Null);
+        var errors = errorResponse.Errors.ToArray();
+        Assert.That(errors, Has.Length.EqualTo(1));
+        Assert.That(errors[0], Is.SameAs(error));
     }
 
     [Test]
@@ -115,12 +95,11 @@ public class UserAuthControllerTests
     {
         //ARRANGE
         var request = _fixture.Create<UserRegisterRequest>();
-        var serviceResult = CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.NoUserFound);
+        var serviceResult = CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.InternalServerError);
 
-        _userManagerService.Register(Arg.Any<UserRegisterParams>())
-            .Returns(serviceResult);
+        _userManagerService.Register(Arg.Any<UserRegisterParams>()).Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Register(request);
@@ -143,10 +122,9 @@ public class UserAuthControllerTests
         const string token = "sample_jwt_token";
         var serviceResult = CombinedResult<string, UserAuthError>.Success(token);
 
-        _userManagerService.Login(Arg.Any<UserLoginParams>())
-            .Returns(serviceResult);
+        _userManagerService.Login(Arg.Any<UserLoginParams>()).Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Login(request);
@@ -169,10 +147,9 @@ public class UserAuthControllerTests
         var request = _fixture.Create<UserLoginRequest>();
         var serviceResult = CombinedResult<string, UserAuthError>.Failure(UserAuthError.NoUserFound);
 
-        _userManagerService.Login(Arg.Any<UserLoginParams>())
-            .Returns(serviceResult);
+        _userManagerService.Login(Arg.Any<UserLoginParams>()).Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Login(request);
@@ -189,11 +166,12 @@ public class UserAuthControllerTests
         //ARRANGE
         var request = _fixture.Create<UserLoginRequest>();
         var serviceResult = CombinedResult<string, UserAuthError>.Failure(UserAuthError.UserNotActiveEmailActivation);
+        var error = _fixture.Create<Error>();
+        _domainErrorMapper.Map(UserAuthError.UserNotActiveEmailActivation).Returns(error);
 
-        _userManagerService.Login(Arg.Any<UserLoginParams>())
-            .Returns(serviceResult);
+        _userManagerService.Login(Arg.Any<UserLoginParams>()).Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Login(request);
@@ -202,7 +180,11 @@ public class UserAuthControllerTests
         var objectResult = res as ObjectResult;
         Assert.That(objectResult, Is.Not.Null);
         Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status403Forbidden));
-        Assert.That(objectResult.Value, Is.EqualTo(UserAuthError.UserNotActiveEmailActivation.ToString()));
+        var errorResponse = objectResult.Value as ErrorResponse;
+        Assert.That(errorResponse, Is.Not.Null);
+        var errors = errorResponse.Errors.ToArray();
+        Assert.That(errors, Has.Length.EqualTo(1));
+        Assert.That(errors[0], Is.SameAs(error));
     }
 
     [Test]
@@ -212,10 +194,9 @@ public class UserAuthControllerTests
         var request = _fixture.Create<UserLoginRequest>();
         var serviceResult = CombinedResult<string, UserAuthError>.Failure(UserAuthError.UnauthorizedUser);
 
-        _userManagerService.Login(Arg.Any<UserLoginParams>())
-            .Returns(serviceResult);
+        _userManagerService.Login(Arg.Any<UserLoginParams>()).Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Login(request);
@@ -233,10 +214,9 @@ public class UserAuthControllerTests
         var request = _fixture.Create<UserLoginRequest>();
         var serviceResult = CombinedResult<string, UserAuthError>.Failure(UserAuthError.InvalidEmail);
 
-        _userManagerService.Login(Arg.Any<UserLoginParams>())
-            .Returns(serviceResult);
+        _userManagerService.Login(Arg.Any<UserLoginParams>()).Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Login(request);
@@ -258,10 +238,9 @@ public class UserAuthControllerTests
         var request = _fixture.Create<UserDeleteRequest>();
         var serviceResult = ErrorResult<UserAuthError>.Success();
 
-        _userManagerService.Delete(Arg.Any<UserDeleteParams>())
-            .Returns(serviceResult);
+        _userManagerService.Delete(Arg.Any<UserDeleteParams>()).Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Delete(request);
@@ -280,10 +259,9 @@ public class UserAuthControllerTests
         var request = _fixture.Create<UserDeleteRequest>();
         var serviceResult = ErrorResult<UserAuthError>.Failure(UserAuthError.NoUserFound);
 
-        _userManagerService.Delete(Arg.Any<UserDeleteParams>())
-            .Returns(serviceResult);
+        _userManagerService.Delete(Arg.Any<UserDeleteParams>()).Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Delete(request);
@@ -301,10 +279,9 @@ public class UserAuthControllerTests
         var request = _fixture.Create<UserDeleteRequest>();
         var serviceResult = ErrorResult<UserAuthError>.Failure(UserAuthError.UnauthorizedUser);
 
-        _userManagerService.Delete(Arg.Any<UserDeleteParams>())
-            .Returns(serviceResult);
+        _userManagerService.Delete(Arg.Any<UserDeleteParams>()).Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Delete(request);
@@ -322,10 +299,9 @@ public class UserAuthControllerTests
         var request = _fixture.Create<UserDeleteRequest>();
         var serviceResult = ErrorResult<UserAuthError>.Failure(UserAuthError.InvalidEmail);
 
-        _userManagerService.Delete(Arg.Any<UserDeleteParams>())
-            .Returns(serviceResult);
+        _userManagerService.Delete(Arg.Any<UserDeleteParams>()).Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.Delete(request);
@@ -347,10 +323,9 @@ public class UserAuthControllerTests
         var request = _fixture.Create<ConfirmEmailRequest>();
         var serviceResult = ErrorResult<UserAuthError>.Success();
 
-        _userManagerService.ConfirmEmail(Arg.Any<ConfirmEmailParams>())
-            .Returns(serviceResult);
+        _userManagerService.ConfirmEmail(Arg.Any<ConfirmEmailParams>()).Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.ConfirmEmail(request);
@@ -369,11 +344,12 @@ public class UserAuthControllerTests
         //ARRANGE
         var request = _fixture.Create<ConfirmEmailRequest>();
         var serviceResult = ErrorResult<UserAuthError>.Failure(authError);
+        var error = _fixture.Create<Error>();
+        _domainErrorMapper.Map(authError).Returns(error);
 
-        _userManagerService.ConfirmEmail(Arg.Any<ConfirmEmailParams>())
-            .Returns(serviceResult);
+        _userManagerService.ConfirmEmail(Arg.Any<ConfirmEmailParams>()).Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.ConfirmEmail(request);
@@ -382,7 +358,11 @@ public class UserAuthControllerTests
         var objectResult = res as ObjectResult;
         Assert.That(objectResult, Is.Not.Null);
         Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
-        Assert.That(objectResult.Value, Is.EqualTo(authError.ToString()));
+        var errorResponse = objectResult.Value as ErrorResponse;
+        Assert.That(errorResponse, Is.Not.Null);
+        var errors = errorResponse.Errors.ToArray();
+        Assert.That(errors, Has.Length.EqualTo(1));
+        Assert.That(errors[0], Is.SameAs(error));
     }
 
     [Test]
@@ -392,10 +372,9 @@ public class UserAuthControllerTests
         var request = _fixture.Create<ConfirmEmailRequest>();
         var serviceResult = ErrorResult<UserAuthError>.Failure(UserAuthError.NoUserFound);
 
-        _userManagerService.ConfirmEmail(Arg.Any<ConfirmEmailParams>())
-            .Returns(serviceResult);
+        _userManagerService.ConfirmEmail(Arg.Any<ConfirmEmailParams>()).Returns(serviceResult);
 
-        var controller = new UserAuthController(_logger, _userManagerService);
+        var controller = CreateController();
 
         //ACT
         var res = await controller.ConfirmEmail(request);
@@ -407,4 +386,9 @@ public class UserAuthControllerTests
     }
 
     #endregion
+
+    private UserAuthController CreateController()
+    {
+        return new UserAuthController(_logger, _userManagerService, _domainErrorMapper);
+    }
 }

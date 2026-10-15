@@ -5,7 +5,6 @@ public enum ListsError
     InternalServerError,
     UserNotFound,
     ListAlreadyExists,
-    ListNameTooLong,
     ListNotFound,
     ListCannotBeDeleted
 }
