@@ -14,8 +14,19 @@ namespace YourGamesList.Api.Services.Lists;
 
 public interface IListsManagerService
 {
+    /// <summary>
+    /// Gets the current user's lists.
+    /// </summary>
     Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelf(GetSelfListParams getSelfListParams);
+
+    /// <summary>
+    /// Creates a list for the current user.
+    /// </summary>
     Task<CombinedResult<Guid, ListsError>> Create(CreateListParams createListParams);
+
+    /// <summary>
+    /// Deletes a list owned by the current user.
+    /// </summary>
     Task<ErrorResult<ListsError>> Delete(DeleteListParams deleteListParams);
 }
 

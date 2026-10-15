@@ -7,7 +7,14 @@ namespace YourGamesList.Api.Services.Igdb;
 
 public interface IIgdbGamesService
 {
+    /// <summary>
+    /// Searches for games by name.
+    /// </summary>
     Task<ValueResult<IgdbGame[]>> GetGamesByName(string gameName);
+
+    /// <summary>
+    /// Gets games by their IGDB IDs.
+    /// </summary>
     Task<ValueResult<IgdbGame[]>> GetGamesByIds(int[] gameIds);
 }
 

@@ -10,6 +10,9 @@ namespace YourGamesList.Api.Services.Auth;
 
 public interface ITokenProvider
 {
+    /// <summary>
+    /// Creates an authentication token for a user.
+    /// </summary>
     string CreateToken(string username, Guid userId);
 }
 

@@ -9,6 +9,9 @@ namespace YourGamesList.Api.Services.Igdb;
 
 public interface IIgdbService
 {
+    /// <summary>
+    /// Sends a query to IGDB and returns the response.
+    /// </summary>
     Task<ValueResult<TResponseFormat>> CallIgdb<TResponseFormat>(IgdbEndpoint endpoint, string query) where TResponseFormat : class;
 }
 

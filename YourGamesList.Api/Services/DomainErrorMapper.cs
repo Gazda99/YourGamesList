@@ -8,10 +8,19 @@ namespace YourGamesList.Api.Services;
 
 public interface IDomainErrorMapper
 {
+    /// <summary>
+    /// Maps an authentication error to an API error.
+    /// </summary>
     Error Map(UserAuthError userAuthError);
 
+    /// <summary>
+    /// Maps a list error to an API error.
+    /// </summary>
     Error Map(ListsError listsError);
 
+    /// <summary>
+    /// Maps a user error to an API error.
+    /// </summary>
     Error Map(UsersError usersError);
 }
 

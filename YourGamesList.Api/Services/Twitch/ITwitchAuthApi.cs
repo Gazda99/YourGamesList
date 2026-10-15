@@ -9,6 +9,9 @@ namespace YourGamesList.Api.Services.Twitch;
 
 public interface ITwitchAuthApi : IHandlesRefitFailure
 {
+    /// <summary>
+    /// Requests an access token from Twitch.
+    /// </summary>
     [Post("/oauth2/token")]
     [Headers($"Accept: {ContentTypes.ApplicationJson}", $"Content-Type: {ContentTypes.FormUrlEncoded}")]
     Task<IApiResponse<TwitchAuthResponse>> GetAccessToken(

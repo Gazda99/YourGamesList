@@ -14,9 +14,24 @@ namespace YourGamesList.Api.Services.Auth;
 
 public interface IUserManagerService
 {
+    /// <summary>
+    /// Registers a user.
+    /// </summary>
     Task<CombinedResult<Guid, UserAuthError>> Register(UserRegisterParams userRegisterParams);
+
+    /// <summary>
+    /// Authenticates a user and returns a token.
+    /// </summary>
     Task<CombinedResult<string, UserAuthError>> Login(UserLoginParams userLoginParams);
+
+    /// <summary>
+    /// Deletes a user account.
+    /// </summary>
     Task<ErrorResult<UserAuthError>> Delete(UserDeleteParams userDeleteParams);
+
+    /// <summary>
+    /// Confirms a user's email address.
+    /// </summary>
     Task<ErrorResult<UserAuthError>> ConfirmEmail(ConfirmEmailParams confirmEmailParams);
 }
 

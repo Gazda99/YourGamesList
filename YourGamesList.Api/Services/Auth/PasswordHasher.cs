@@ -8,7 +8,14 @@ namespace YourGamesList.Api.Services.Auth;
 
 public interface IPasswordHasher
 {
+    /// <summary>
+    /// Hashes a password.
+    /// </summary>
     ValueResult<string> HashPassword(string password);
+
+    /// <summary>
+    /// Checks a password against its hash.
+    /// </summary>
     bool VerifyHashedPassword(string password, string hashedPassword);
 }
 

@@ -9,6 +9,9 @@ namespace YourGamesList.Api.Services.Auth;
 
 public interface IVerificationEmailSender
 {
+    /// <summary>
+    /// Sends an email verification link.
+    /// </summary>
     Task<bool> SendVerificationEmail(string email, string username, string token);
 }
 

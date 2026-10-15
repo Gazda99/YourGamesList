@@ -1,13 +1,19 @@
 ﻿using System;
 using System.Security.Cryptography;
 using System.Text;
-using SQLitePCL;
 
 namespace YourGamesList.Api.Services.Auth;
 
 public interface IVerificationTokenHasher
 {
+    /// <summary>
+    /// Generates a verification token and its hash.
+    /// </summary>
     (string RawToken, string TokenHash) GenerateToken();
+
+    /// <summary>
+    /// Hashes a verification token.
+    /// </summary>
     string HashToken(string rawToken);
 }
 
