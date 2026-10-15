@@ -7,6 +7,9 @@ namespace YourGamesList.Api.Services.Igdb;
 
 public interface IIgdbApi : IHandlesRefitFailure
 {
+    /// <summary>
+    /// Sends a query to an IGDB endpoint.
+    /// </summary>
     [Post("/{endpointName}")]
     [Headers($"Accept: {ContentTypes.ApplicationJson}", $"Content-Type: {ContentTypes.ApplicationJson}")]
     Task<IApiResponse<TResponse>> Endpoint<TResponse>(

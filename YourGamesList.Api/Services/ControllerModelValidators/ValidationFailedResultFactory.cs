@@ -8,6 +8,9 @@ namespace YourGamesList.Api.Services.ControllerModelValidators;
 
 public interface IValidationFailedResultFactory
 {
+    /// <summary>
+    /// Creates a response for failed request validation.
+    /// </summary>
     IActionResult CreateValidationFailedResult(ValidationResult? validationResult);
 }
 

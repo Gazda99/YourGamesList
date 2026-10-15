@@ -13,6 +13,9 @@ namespace YourGamesList.Api.Services.YourGamesList;
 
 public interface IUsersService
 {
+    /// <summary>
+    /// Gets the current user's profile.
+    /// </summary>
     public Task<CombinedResult<UserDto, UsersError>> GetSelfUser(UserGetSelfParams userGetSelfParams);
 }
 

@@ -7,6 +7,9 @@ namespace YourGamesList.Api.Services.Auth;
 
 public interface ISodiumInitializer
 {
+    /// <summary>
+    /// Initializes libsodium if needed.
+    /// </summary>
     void EnsureInitialized();
 }
 

@@ -8,6 +8,9 @@ namespace YourGamesList.Api.Services.Lists;
 
 public interface IDefaultListsCreator
 {
+    /// <summary>
+    /// Adds the default lists for a user.
+    /// </summary>
     Task AddDefaultListsToGivenUser(YourGamesListDbContext dbContext, User user);
 }
 

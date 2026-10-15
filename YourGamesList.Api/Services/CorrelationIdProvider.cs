@@ -4,7 +4,14 @@ namespace YourGamesList.Api.Services;
 
 public interface ICorrelationIdProvider
 {
+    /// <summary>
+    /// Checks whether a correlation ID is valid.
+    /// </summary>
     bool IsValidCorrelationId(string correlationId);
+
+    /// <summary>
+    /// Creates a new correlation ID.
+    /// </summary>
     string GetCorrelationId();
 }
 

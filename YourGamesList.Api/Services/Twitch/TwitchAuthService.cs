@@ -12,12 +12,12 @@ namespace YourGamesList.Api.Services.Twitch;
 public interface ITwitchAuthService
 {
     /// <summary>
-    /// Returns Client ID
+    /// Returns the client ID.
     /// </summary>
     string GetClientId();
 
     /// <summary>
-    /// Calls Twitch Auth Service in order to obtain Access Token
+    /// Gets an access token from Twitch.
     /// </summary>
     Task<ValueResult<string>> GetAccessToken();
 }
