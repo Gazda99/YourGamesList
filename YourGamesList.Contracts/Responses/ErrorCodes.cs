@@ -42,8 +42,11 @@ public static class ErrorCodes
         public const string ListAlreadyExists = "ListAlreadyExists";
         public const string ListNameTooLong = "ListNameTooLong";
         public const string InvalidListName = "InvalidListName";
+        public const string InvalidListDescription = "InvalidListDescription";
+        public const string InvalidListPrivacy = "InvalidListPrivacy";
         public const string ListNotFound = "ListNotFound";
         public const string ListCannotBeDeleted = "ListCannotBeDeleted";
+        public const string ListCannotBeEdited = "ListCannotBeEdited";
     }
 
     public static class Validation

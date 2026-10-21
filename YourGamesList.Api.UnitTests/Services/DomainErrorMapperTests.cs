@@ -64,6 +64,7 @@ public class DomainErrorMapperTests
     [TestCase(ListsError.ListAlreadyExists, ErrorCodes.Lists.ListAlreadyExists, "A list with this name already exists.")]
     [TestCase(ListsError.ListNotFound, ErrorCodes.Lists.ListNotFound, "List was not found.")]
     [TestCase(ListsError.ListCannotBeDeleted, ErrorCodes.Lists.ListCannotBeDeleted, "This list cannot be deleted.")]
+    [TestCase(ListsError.ListCannotBeEdited, ErrorCodes.Lists.ListCannotBeEdited, "This list cannot be edited.")]
     public void Map_ListsError_ReturnsMappedError(ListsError listsError, string expectedCode, string expectedDescription)
     {
         //ARRANGE

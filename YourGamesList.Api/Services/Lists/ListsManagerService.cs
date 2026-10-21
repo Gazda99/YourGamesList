@@ -28,6 +28,11 @@ public interface IListsManagerService
     /// Deletes a list owned by the current user.
     /// </summary>
     Task<ErrorResult<ListsError>> Delete(DeleteListParams deleteListParams);
+
+    /// <summary>
+    /// Updates metadata on a list owned by the current user.
+    /// </summary>
+    Task<ErrorResult<ListsError>> Update(UpdateListParams updateListParams);
 }
 
 public class ListsManagerService : IListsManagerService
@@ -68,12 +73,14 @@ public class ListsManagerService : IListsManagerService
         {
             CreatedAt = list.CreatedAt,
             Description = list.Description,
+            Id = list.Id,
             IsPrivate = list.IsPrivate,
             Name = list.Name,
             GameListEntries = list.GamesListEntries.Select(entry => new GamesListEntryDto
             {
                 CompletionStatus = (CompletionStatusDto)entry.CompletionStatus,
                 Description = entry.Description,
+                GamesListId = entry.GamesListId,
                 IgdbId = entry.IgdbId,
                 Rating = entry.Rating,
                 OwnershipInfos = entry.OwnershipInfo.Select(ownership => new OwnershipInfoDto
@@ -112,7 +119,7 @@ public class ListsManagerService : IListsManagerService
         var gamesList = new GamesList
         {
             CreatedAt = _timeProvider.GetUtcNow(),
-            CanBeDeleted = true,
+            Editable = true,
             IsPrivate = true,
             Name = createListParams.Name,
             User = user
@@ -136,13 +143,75 @@ public class ListsManagerService : IListsManagerService
             return ErrorResult<ListsError>.Failure(ListsError.ListNotFound);
         }
 
-        if (!gamesList.CanBeDeleted)
+        if (!gamesList.Editable)
         {
             _logger.LogInformation("Cannot delete protected list {GamesListId}.", deleteListParams.Id);
             return ErrorResult<ListsError>.Failure(ListsError.ListCannotBeDeleted);
         }
 
         _yglDbContext.GamesLists.Remove(gamesList);
+        await _yglDbContext.SaveChangesAsync();
+
+        return ErrorResult<ListsError>.Success();
+    }
+
+    public async Task<ErrorResult<ListsError>> Update(UpdateListParams updateListParams)
+    {
+        var userId = updateListParams.UserInformation.UserId;
+        var gamesList = await _yglDbContext.GamesLists
+            .FirstOrDefaultAsync(list => list.Id == updateListParams.Id && list.UserId == userId);
+
+        if (gamesList == null)
+        {
+            _logger.LogInformation("Cannot find list {GamesListId} for the requesting user.", updateListParams.Id);
+            return ErrorResult<ListsError>.Failure(ListsError.ListNotFound);
+        }
+
+        var nameChanged = updateListParams.Name != null && updateListParams.Name != gamesList.Name;
+        var descriptionChanged = updateListParams.HasDescription &&
+                                 updateListParams.Description != gamesList.Description;
+        var privacyChanged = updateListParams.IsPrivate.HasValue &&
+                             updateListParams.IsPrivate.Value != gamesList.IsPrivate;
+
+        if (!nameChanged && !descriptionChanged && !privacyChanged)
+        {
+            return ErrorResult<ListsError>.Success();
+        }
+
+        if (!gamesList.Editable)
+        {
+            _logger.LogInformation("Cannot edit protected list {GamesListId}.", updateListParams.Id);
+            return ErrorResult<ListsError>.Failure(ListsError.ListCannotBeEdited);
+        }
+
+        if (nameChanged)
+        {
+            var listAlreadyExists = await _yglDbContext.GamesLists
+                .AnyAsync(list =>
+                    list.UserId == userId &&
+                    list.Id != gamesList.Id &&
+                    list.Name == updateListParams.Name);
+
+            if (listAlreadyExists)
+            {
+                _logger.LogInformation("User already has a list named {ListName}.", updateListParams.Name);
+                return ErrorResult<ListsError>.Failure(ListsError.ListAlreadyExists);
+            }
+
+            gamesList.Name = updateListParams.Name!;
+        }
+
+        if (descriptionChanged)
+        {
+            gamesList.Description = updateListParams.Description;
+        }
+
+        if (privacyChanged)
+        {
+            gamesList.IsPrivate = updateListParams.IsPrivate!.Value;
+        }
+
+        gamesList.ModifiedAt = _timeProvider.GetUtcNow();
         await _yglDbContext.SaveChangesAsync();
 
         return ErrorResult<ListsError>.Success();

@@ -167,4 +167,49 @@ public class ListsController : YourGamesListBaseController
             return Result(StatusCodes.Status204NoContent);
         }
     }
+
+    [HttpPatch("update")]
+    [Authorize]
+    [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Update(UpdateListRequest updateListRequest)
+    {
+        _logger.LogInformation("Requested to update list with id: {GamesListId}", updateListRequest.Body.Id);
+
+        var dto = updateListRequest.ToParams();
+        var result = await _listsManagerService.Update(dto);
+
+        if (result.IsFailure)
+        {
+            if (result.Error is ListsError.ListNotFound)
+            {
+                return Result(StatusCodes.Status404NotFound, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
+            }
+            else if (result.Error is ListsError.ListAlreadyExists or ListsError.ListCannotBeEdited)
+            {
+                return Result(StatusCodes.Status409Conflict, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
+            }
+            else if (result.Error is ListsError.InternalServerError)
+            {
+                return Result(StatusCodes.Status400BadRequest, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
+            }
+            else
+            {
+                return Result(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        return Result(StatusCodes.Status204NoContent);
+    }
 }

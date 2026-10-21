@@ -15,6 +15,7 @@ using YourGamesList.Api.Services;
 using YourGamesList.Api.Services.Lists;
 using YourGamesList.Api.Services.Lists.Model;
 using YourGamesList.Common;
+using YourGamesList.Contracts;
 using YourGamesList.Contracts.Dto;
 using YourGamesList.Contracts.Requests.Lists;
 using YourGamesList.Contracts.Responses;
@@ -221,6 +222,66 @@ public class ListsControllerTests
         Assert.That(errors[0], Is.SameAs(error));
     }
 
+    [Test]
+    public async Task Update_Success_ReturnsNoContentAndPassesRequestData()
+    {
+        //ARRANGE
+        var userInformation = CreateUserInformation();
+        var listId = Guid.NewGuid();
+        _listsManagerService.Update(Arg.Any<UpdateListParams>()).Returns(ErrorResult<ListsError>.Success());
+
+        //ACT
+        var result = await CreateController().Update(new UpdateListRequest
+        {
+            UserInformation = userInformation,
+            Body = new UpdateListRequestBody
+            {
+                Id = listId,
+                Name = Optional<string?>.Some(" Updated "),
+                Description = Optional<string?>.Some(null),
+                IsPrivate = Optional<bool?>.Some(false)
+            }
+        });
+
+        //ASSERT
+        var statusCodeResult = result as IStatusCodeActionResult;
+        Assert.That(statusCodeResult, Is.Not.Null);
+        Assert.That(statusCodeResult?.StatusCode, Is.EqualTo(StatusCodes.Status204NoContent));
+        await _listsManagerService.Received(1).Update(
+            Arg.Is<UpdateListParams>(parameters =>
+                parameters.UserInformation == userInformation &&
+                parameters.Id == listId &&
+                parameters.Name == "Updated" &&
+                parameters.HasDescription &&
+                parameters.Description == null &&
+                parameters.IsPrivate == false));
+    }
+
+    [Test]
+    public async Task Update_ListCannotBeEdited_ReturnsConflict()
+    {
+        //ARRANGE
+        var error = _fixture.Create<Error>();
+        _domainErrorMapper.Map(ListsError.ListCannotBeEdited).Returns(error);
+        _listsManagerService.Update(Arg.Any<UpdateListParams>())
+            .Returns(ErrorResult<ListsError>.Failure(ListsError.ListCannotBeEdited));
+
+        //ACT
+        var result = await CreateController().Update(new UpdateListRequest
+        {
+            UserInformation = CreateUserInformation(),
+            Body = new UpdateListRequestBody { Id = Guid.NewGuid() }
+        });
+
+        //ASSERT
+        var objectResult = result as ObjectResult;
+        Assert.That(objectResult, Is.Not.Null);
+        Assert.That(objectResult?.StatusCode, Is.EqualTo(StatusCodes.Status409Conflict));
+        var errorResponse = objectResult?.Value as ErrorResponse;
+        Assert.That(errorResponse, Is.Not.Null);
+        Assert.That(errorResponse?.Errors.Single(), Is.SameAs(error));
+    }
+
     private ListsController CreateController()
     {
         return new ListsController(_logger, _listsManagerService, _domainErrorMapper);
@@ -235,4 +296,5 @@ public class ListsControllerTests
             UserId = Guid.NewGuid()
         };
     }
+
 }

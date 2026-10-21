@@ -79,6 +79,8 @@ public class DomainErrorMapper : IDomainErrorMapper
                 return Create(ErrorCodes.Lists.ListNotFound, "List was not found.");
             case ListsError.ListCannotBeDeleted:
                 return Create(ErrorCodes.Lists.ListCannotBeDeleted, "This list cannot be deleted.");
+            case ListsError.ListCannotBeEdited:
+                return Create(ErrorCodes.Lists.ListCannotBeEdited, "This list cannot be edited.");
             default:
                 _logger.LogInformation("Domain level error {DomainError} was not mapped. Defaulting to {ErrorCode}", listsError.ToString(),
                     ErrorCodes.General.InternalServerError);

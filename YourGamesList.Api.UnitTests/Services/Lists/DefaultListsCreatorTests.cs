@@ -74,7 +74,7 @@ public class DefaultListsCreatorTests
 
         Assert.That(lists, Has.All.Matches<GamesList>(list =>
             list.CreatedAt == now &&
-            list.CanBeDeleted == false &&
+            !list.Editable &&
             list.IsPrivate &&
             list.UserId == user.Id));
 

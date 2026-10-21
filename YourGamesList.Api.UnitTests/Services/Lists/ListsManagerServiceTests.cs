@@ -45,7 +45,7 @@ public class ListsManagerServiceTests
         var list = new GamesList
         {
             CreatedAt = DateTimeOffset.UtcNow,
-            CanBeDeleted = true,
+            Editable = true,
             IsPrivate = true,
             Name = "My list",
             User = user
@@ -67,7 +67,9 @@ public class ListsManagerServiceTests
 
         Assert.That(result.IsSuccess, Is.True);
         Assert.That(result.Value, Has.Count.EqualTo(1));
+        Assert.That(result.Value[0].Id, Is.EqualTo(list.Id));
         Assert.That(result.Value[0].Name, Is.EqualTo("My list"));
+        Assert.That(result.Value[0].GameListEntries.Single().GamesListId, Is.EqualTo(list.Id));
         Assert.That(result.Value[0].GameListEntries.Single().IgdbId, Is.EqualTo(123));
     }
 
@@ -104,7 +106,7 @@ public class ListsManagerServiceTests
         Assert.That(list.UserId, Is.EqualTo(user.Id));
         Assert.That(list.Name, Is.EqualTo("Collection"));
         Assert.That(list.IsPrivate, Is.True);
-        Assert.That(list.CanBeDeleted, Is.True);
+        Assert.That(list.Editable, Is.True);
         Assert.That(list.CreatedAt, Is.EqualTo(createdAt));
     }
 
@@ -169,7 +171,7 @@ public class ListsManagerServiceTests
     public async Task Delete_ProtectedList_ReturnsCannotBeDeleted()
     {
         var user = CreateUser();
-        var list = CreateList(user, "Wishlist", canBeDeleted: false);
+        var list = CreateList(user, "Wishlist", editable: false);
         _dbContext.Users.Add(user);
         _dbContext.GamesLists.Add(list);
         await _dbContext.SaveChangesAsync();
@@ -185,6 +187,123 @@ public class ListsManagerServiceTests
         Assert.That(await _dbContext.GamesLists.AnyAsync(), Is.True);
     }
 
+    [Test]
+    public async Task Update_EditableList_UpdatesSuppliedMetadataAndModifiedAt()
+    {
+        var user = CreateUser();
+        var list = CreateList(user, "Collection");
+        list.Description = "Before";
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+        var modifiedAt = DateTimeOffset.UtcNow.AddMinutes(1);
+        _timeProvider.SetUtcNow(modifiedAt);
+
+        var result = await CreateService().Update(new UpdateListParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            Id = list.Id,
+            Name = "Updated",
+            HasDescription = true,
+            Description = null,
+            IsPrivate = false
+        });
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(list.Name, Is.EqualTo("Updated"));
+        Assert.That(list.Description, Is.Null);
+        Assert.That(list.IsPrivate, Is.False);
+        Assert.That(list.ModifiedAt, Is.EqualTo(modifiedAt));
+    }
+
+    [Test]
+    public async Task Update_OmittedFields_LeavesValuesUnchanged()
+    {
+        var user = CreateUser();
+        var list = CreateList(user, "Collection");
+        list.Description = "Keep this";
+        list.ModifiedAt = DateTimeOffset.UtcNow;
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+        var originalModifiedAt = list.ModifiedAt;
+
+        var result = await CreateService().Update(new UpdateListParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            Id = list.Id
+        });
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(list.Name, Is.EqualTo("Collection"));
+        Assert.That(list.Description, Is.EqualTo("Keep this"));
+        Assert.That(list.IsPrivate, Is.True);
+        Assert.That(list.ModifiedAt, Is.EqualTo(originalModifiedAt));
+    }
+
+    [Test]
+    public async Task Update_NonEditableList_ReturnsCannotBeEdited()
+    {
+        var user = CreateUser();
+        var list = CreateList(user, "Wishlist", editable: false);
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().Update(new UpdateListParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            Id = list.Id,
+            Name = "New name"
+        });
+
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.ListCannotBeEdited));
+        Assert.That(list.Name, Is.EqualTo("Wishlist"));
+    }
+
+    [Test]
+    public async Task Update_DuplicateNameForSameUser_ReturnsAlreadyExists()
+    {
+        var user = CreateUser();
+        var list = CreateList(user, "Collection");
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.AddRange(list, CreateList(user, "Other"));
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().Update(new UpdateListParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            Id = list.Id,
+            Name = "Other"
+        });
+
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.ListAlreadyExists));
+        Assert.That(list.Name, Is.EqualTo("Collection"));
+    }
+
+    [Test]
+    public async Task Update_ListOwnedByAnotherUser_ReturnsNotFound()
+    {
+        var user = CreateUser();
+        var list = CreateList(user, "Collection");
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().Update(new UpdateListParams
+        {
+            UserInformation = CreateUserInformation(Guid.NewGuid()),
+            Id = list.Id,
+            Name = "Changed"
+        });
+
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.ListNotFound));
+        Assert.That(list.Name, Is.EqualTo("Collection"));
+    }
+
     private ListsManagerService CreateService() => new(_logger, _dbContext, _timeProvider);
 
     private static User CreateUser() => new()
@@ -198,11 +317,11 @@ public class ListsManagerServiceTests
         Username = Guid.NewGuid().ToString("N")
     };
 
-    private static GamesList CreateList(User user, string name, bool canBeDeleted = true) => new()
+    private static GamesList CreateList(User user, string name, bool editable = true) => new()
     {
         Id = Guid.NewGuid(),
         CreatedAt = DateTimeOffset.UtcNow,
-        CanBeDeleted = canBeDeleted,
+        Editable = editable,
         IsPrivate = true,
         Name = name,
         User = user
