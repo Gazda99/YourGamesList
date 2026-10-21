@@ -77,18 +77,18 @@ public class UserInformationTokenModelBinderTests
         context.ModelType.Returns(typeof(UserInformationToken));
 
         //ACT - ASSERT
-        Assert.ThrowsAsync<UnauthorizedAccessException>(async () => await _binder.BindModelAsync(context!));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => await _binder.BindModelAsync(context!));
         _logger.ReceivedLog(LogLevel.Warning, ["User token cannot be parsed. Error"]);
     }
 
     [Test]
-    public void BindModelAsync_OnContextNull_ThrowsArgumentNullException()
+    public async Task BindModelAsync_OnContextNull_ThrowsArgumentNullException()
     {
         //ARRANGE
         ModelBindingContext? context = null;
 
         //ACT & ASSERT
-        Assert.ThrowsAsync<ArgumentNullException>(async () => await _binder.BindModelAsync(context!));
+        await Assert.ThrowsAsync<ArgumentNullException>(async () => await _binder.BindModelAsync(context!));
     }
 
     [Test]
