@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -202,12 +199,15 @@ public static class AppBuilder
         //Lists controller validators
         services
             .AddScoped<IValidator<GetSelfListRequest>, GetSelfListRequestValidator>()
-            .AddScoped<IValidator<CreateListRequest>, CreateListRequestValidator>()
+            .AddScoped<IValidator<AddListRequest>, CreateListRequestValidator>()
             .AddScoped<IValidator<DeleteListRequest>, DeleteListRequestValidator>()
             .AddScoped<IValidator<SearchListsRequest>, SearchListsRequestValidator>()
             .AddScoped<IValidator<AddGameListEntryRequest>, AddGameListEntryRequestValidator>()
             .AddScoped<IValidator<RemoveGameListEntryRequest>, RemoveGameListEntryRequestValidator>()
             .AddScoped<IValidator<UpdateGameListEntryRequest>, UpdateGameListEntryRequestValidator>()
+            .AddScoped<IValidator<AddOwnershipInfoRequest>, AddOwnershipInfoRequestValidator>()
+            .AddScoped<IValidator<UpdateOwnershipInfoRequest>, UpdateOwnershipInfoRequestValidator>()
+            .AddScoped<IValidator<RemoveOwnershipInfoRequest>, RemoveOwnershipInfoRequestValidator>()
             ;
 
         return services;

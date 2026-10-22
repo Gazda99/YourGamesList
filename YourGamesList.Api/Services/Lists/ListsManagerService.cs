@@ -29,7 +29,7 @@ public interface IListsManagerService
     /// <summary>
     /// Creates a list for the current user.
     /// </summary>
-    Task<CombinedResult<Guid, ListsError>> Create(CreateListParams createListParams);
+    Task<CombinedResult<Guid, ListsError>> Create(AddListParams addListParams);
 
     /// <summary>
     /// Deletes a list owned by the current user.
@@ -59,6 +59,21 @@ public interface IListsManagerService
     /// Updates a game entry in a list owned by the current user.
     /// </summary>
     Task<ErrorResult<ListsError>> UpdateGameListEntry(UpdateGameListEntryParams updateParams);
+
+    /// <summary>
+    /// Adds ownership info to a game entry in a list owned by the current user.
+    /// </summary>
+    Task<CombinedResult<Guid, ListsError>> AddOwnershipInfo(AddOwnershipInfoParams addParams);
+
+    /// <summary>
+    /// Updates ownership info on a game entry in a list owned by the current user.
+    /// </summary>
+    Task<ErrorResult<ListsError>> UpdateOwnershipInfo(UpdateOwnershipInfoParams updateParams);
+
+    /// <summary>
+    /// Removes ownership info from a game entry in a list owned by the current user.
+    /// </summary>
+    Task<ErrorResult<ListsError>> RemoveOwnershipInfo(RemoveOwnershipInfoParams removeParams);
 
     #endregion
 }
@@ -154,6 +169,7 @@ public class ListsManagerService : IListsManagerService
                     Rating = entry.Rating,
                     OwnershipInfos = entry.OwnershipInfo.Select(ownership => new OwnershipInfoDto
                     {
+                        Id = ownership.Id,
                         IsLegit = ownership.IsLegit,
                         Platform = (PlatformDto)ownership.Platform,
                         GameDistribution = (GameDistributionDto)ownership.GameDistribution,
@@ -167,9 +183,9 @@ public class ListsManagerService : IListsManagerService
         };
     }
 
-    public async Task<CombinedResult<Guid, ListsError>> Create(CreateListParams createListParams)
+    public async Task<CombinedResult<Guid, ListsError>> Create(AddListParams addListParams)
     {
-        var userId = createListParams.UserInformation.UserId;
+        var userId = addListParams.UserInformation.UserId;
         var user = await _yglDbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
         if (user == null)
         {
@@ -178,10 +194,10 @@ public class ListsManagerService : IListsManagerService
         }
 
         var listAlreadyExists = await _yglDbContext.GamesLists
-            .AnyAsync(list => list.UserId == userId && list.Name == createListParams.Name);
+            .AnyAsync(list => list.UserId == userId && list.Name == addListParams.Name);
         if (listAlreadyExists)
         {
-            _logger.LogInformation("User already has a list named {ListName}.", createListParams.Name);
+            _logger.LogInformation("User already has a list named {ListName}.", addListParams.Name);
             return CombinedResult<Guid, ListsError>.Failure(ListsError.ListAlreadyExists);
         }
 
@@ -190,7 +206,7 @@ public class ListsManagerService : IListsManagerService
             CreatedAt = _timeProvider.GetUtcNow(),
             Editable = true,
             IsPrivate = true,
-            Name = createListParams.Name,
+            Name = addListParams.Name,
             User = user
         };
 
@@ -397,6 +413,153 @@ public class ListsManagerService : IListsManagerService
         }
 
         entry.ModifiedAt = _timeProvider.GetUtcNow();
+        await _yglDbContext.SaveChangesAsync();
+        return ErrorResult<ListsError>.Success();
+    }
+
+    public async Task<CombinedResult<Guid, ListsError>> AddOwnershipInfo(AddOwnershipInfoParams addParams)
+    {
+        var entryExists = await _yglDbContext.GameListEntries.AnyAsync(entry =>
+            entry.Id == addParams.GameListEntryId &&
+            entry.GamesListId == addParams.GamesListId &&
+            entry.GamesList.UserId == addParams.UserInformation.UserId);
+
+        if (!entryExists)
+        {
+            _logger.LogInformation(
+                "Cannot find game list entry {EntryId} in list {GamesListId} for the requesting user.",
+                addParams.GameListEntryId,
+                addParams.GamesListId);
+            return CombinedResult<Guid, ListsError>.Failure(ListsError.GameListEntryNotFound);
+        }
+
+        var ownershipInfo = new OwnershipInfo
+        {
+            Id = Guid.NewGuid(),
+            CreatedAt = _timeProvider.GetUtcNow(),
+            IsLegit = addParams.IsLegit,
+            Platform = (Platform)addParams.Platform,
+            GameDistribution = (GameDistribution)addParams.GameDistribution,
+            WasEmulated = addParams.WasEmulated,
+            EmulatedOn = addParams.EmulatedOn.HasValue
+                ? (Emulator)addParams.EmulatedOn.Value
+                : null,
+            GameListEntryId = addParams.GameListEntryId
+        };
+
+        _yglDbContext.OwnershipInfos.Add(ownershipInfo);
+        await _yglDbContext.SaveChangesAsync();
+
+        return CombinedResult<Guid, ListsError>.Success(ownershipInfo.Id);
+    }
+
+    public async Task<ErrorResult<ListsError>> UpdateOwnershipInfo(UpdateOwnershipInfoParams updateParams)
+    {
+        var entryExists = await _yglDbContext.GameListEntries.AnyAsync(entry =>
+            entry.Id == updateParams.GameListEntryId &&
+            entry.GamesListId == updateParams.GamesListId &&
+            entry.GamesList.UserId == updateParams.UserInformation.UserId);
+
+        if (!entryExists)
+        {
+            _logger.LogInformation(
+                "Cannot find game list entry {EntryId} in list {GamesListId} for the requesting user.",
+                updateParams.GameListEntryId,
+                updateParams.GamesListId);
+            return ErrorResult<ListsError>.Failure(ListsError.GameListEntryNotFound);
+        }
+
+        var ownershipInfo = await _yglDbContext.OwnershipInfos.FirstOrDefaultAsync(info =>
+            info.Id == updateParams.OwnershipInfoId &&
+            info.GameListEntryId == updateParams.GameListEntryId);
+
+        if (ownershipInfo == null)
+        {
+            _logger.LogInformation("Cannot find ownership info {OwnershipInfoId}.", updateParams.OwnershipInfoId);
+            return ErrorResult<ListsError>.Failure(ListsError.OwnershipInfoNotFound);
+        }
+
+        var isLegitChanged = updateParams.IsLegit.HasValue &&
+                             updateParams.IsLegit.Value != ownershipInfo.IsLegit;
+        var platformChanged = updateParams.Platform.HasValue &&
+                              updateParams.Platform.Value != (PlatformDto)ownershipInfo.Platform;
+        var gameDistributionChanged = updateParams.GameDistribution.HasValue &&
+                                      updateParams.GameDistribution.Value !=
+                                      (GameDistributionDto)ownershipInfo.GameDistribution;
+        var wasEmulatedChanged = updateParams.WasEmulated.HasValue &&
+                                 updateParams.WasEmulated.Value != ownershipInfo.WasEmulated;
+        var emulatedOnChanged = updateParams.EmulatedOn.HasValue &&
+                                updateParams.EmulatedOn.Value !=
+                                (EmulatorDto?)ownershipInfo.EmulatedOn;
+
+        if (!isLegitChanged &&
+            !platformChanged &&
+            !gameDistributionChanged &&
+            !wasEmulatedChanged &&
+            !emulatedOnChanged)
+        {
+            return ErrorResult<ListsError>.Success();
+        }
+
+        if (isLegitChanged)
+        {
+            ownershipInfo.IsLegit = updateParams.IsLegit.Value;
+        }
+
+        if (platformChanged)
+        {
+            ownershipInfo.Platform = (Platform)updateParams.Platform.Value!.Value;
+        }
+
+        if (gameDistributionChanged)
+        {
+            ownershipInfo.GameDistribution = (GameDistribution)updateParams.GameDistribution.Value!.Value;
+        }
+
+        if (wasEmulatedChanged)
+        {
+            ownershipInfo.WasEmulated = updateParams.WasEmulated.Value!.Value;
+        }
+
+        if (emulatedOnChanged)
+        {
+            ownershipInfo.EmulatedOn = updateParams.EmulatedOn.Value.HasValue
+                ? (Emulator)updateParams.EmulatedOn.Value.Value
+                : null;
+        }
+
+        ownershipInfo.ModifiedAt = _timeProvider.GetUtcNow();
+        await _yglDbContext.SaveChangesAsync();
+        return ErrorResult<ListsError>.Success();
+    }
+
+    public async Task<ErrorResult<ListsError>> RemoveOwnershipInfo(RemoveOwnershipInfoParams removeParams)
+    {
+        var entryExists = await _yglDbContext.GameListEntries.AnyAsync(entry =>
+            entry.Id == removeParams.GameListEntryId &&
+            entry.GamesListId == removeParams.GamesListId &&
+            entry.GamesList.UserId == removeParams.UserInformation.UserId);
+
+        if (!entryExists)
+        {
+            _logger.LogInformation(
+                "Cannot find game list entry {EntryId} in list {GamesListId} for the requesting user.",
+                removeParams.GameListEntryId,
+                removeParams.GamesListId);
+            return ErrorResult<ListsError>.Failure(ListsError.GameListEntryNotFound);
+        }
+
+        var ownershipInfo = await _yglDbContext.OwnershipInfos.FirstOrDefaultAsync(info =>
+            info.Id == removeParams.OwnershipInfoId &&
+            info.GameListEntryId == removeParams.GameListEntryId);
+
+        if (ownershipInfo == null)
+        {
+            _logger.LogInformation("Cannot find ownership info {OwnershipInfoId}.", removeParams.OwnershipInfoId);
+            return ErrorResult<ListsError>.Failure(ListsError.OwnershipInfoNotFound);
+        }
+
+        _yglDbContext.OwnershipInfos.Remove(ownershipInfo);
         await _yglDbContext.SaveChangesAsync();
         return ErrorResult<ListsError>.Success();
     }

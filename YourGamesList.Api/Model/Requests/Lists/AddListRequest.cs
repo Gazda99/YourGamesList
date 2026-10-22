@@ -9,13 +9,13 @@ using YourGamesList.Contracts.Responses;
 
 namespace YourGamesList.Api.Model.Requests.Lists;
 
-public class CreateListRequest
+public class AddListRequest
 {
     [FromAuthorizeHeader] public required UserInformationToken UserInformation { get; init; }
     [FromBody] public required CreateListRequestBody Body { get; init; }
 }
 
-public class CreateListRequestValidator : AbstractValidator<CreateListRequest>
+public class CreateListRequestValidator : AbstractValidator<AddListRequest>
 {
     public CreateListRequestValidator(
         ILogger<CreateListRequestValidator> logger,

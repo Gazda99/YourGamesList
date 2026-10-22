@@ -53,6 +53,7 @@ public static class ErrorCodes
         public const string InvalidGameListEntryIgdbId = "InvalidGameListEntryIgdbId";
         public const string InvalidGameListEntryDescription = "InvalidGameListEntryDescription";
         public const string InvalidListSearchCriteria = "InvalidListSearchCriteria";
+        public const string OwnershipInfoNotFound = "OwnershipInfoNotFound";
     }
 
     public static class Validation

@@ -42,7 +42,7 @@ public class ListsController : YourGamesListBaseController
     [ProducesResponseType(typeof(List<GamesListDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetSelf(GetSelfListRequest getSelfListRequest)
+    public async Task<IActionResult> GetSelfLists(GetSelfListRequest getSelfListRequest)
     {
         _logger.LogInformation("Requested to get self lists");
 
@@ -81,7 +81,7 @@ public class ListsController : YourGamesListBaseController
     [Authorize]
     [ProducesResponseType(typeof(List<GamesListDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Search([FromQuery] SearchListsRequest searchListsRequest)
+    public async Task<IActionResult> SearchList([FromQuery] SearchListsRequest searchListsRequest)
     {
         _logger.LogInformation(
             "Requested to search lists by owner {OwnerName} and list name {ListName}.",
@@ -98,11 +98,11 @@ public class ListsController : YourGamesListBaseController
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Add(CreateListRequest createListRequest)
+    public async Task<IActionResult> AddList(AddListRequest addListRequest)
     {
         _logger.LogInformation("Requested to create list");
 
-        var dto = createListRequest.ToParams();
+        var dto = addListRequest.ToParams();
 
         var result = await _listsManagerService.Create(dto);
 
@@ -143,9 +143,9 @@ public class ListsController : YourGamesListBaseController
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Remove(DeleteListRequest deleteListRequest)
+    public async Task<IActionResult> DeleteList(DeleteListRequest deleteListRequest)
     {
-        _logger.LogInformation("Requested to remove list with id: {GamesListId}", deleteListRequest.ListId);
+        _logger.LogInformation("Requested to delete list with id: {GamesListId}", deleteListRequest.ListId);
 
         var dto = deleteListRequest.ToParams();
 
@@ -332,6 +332,96 @@ public class ListsController : YourGamesListBaseController
             {
                 return Result(StatusCodes.Status500InternalServerError);
             }
+        }
+
+        return Result(StatusCodes.Status204NoContent);
+    }
+
+    #endregion
+
+    #region Ownership info
+
+    [HttpPost("{listId:guid}/entries/{entryId:guid}/ownershipInfos")]
+    [Authorize]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AddOwnershipInfo(AddOwnershipInfoRequest request)
+    {
+        _logger.LogInformation(
+            "Requested to add ownership info to game list entry {EntryId}.",
+            request.EntryId);
+
+        var result = await _listsManagerService.AddOwnershipInfo(request.ToParams());
+        if (result.IsFailure)
+        {
+            if (result.Error is ListsError.GameListEntryNotFound)
+            {
+                return Result(StatusCodes.Status404NotFound, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
+            }
+
+            return Result(StatusCodes.Status500InternalServerError);
+        }
+
+        return Result(StatusCodes.Status200OK, result.Value);
+    }
+
+    [HttpPatch("{listId:guid}/entries/{entryId:guid}/ownershipInfos/{ownershipInfoId:guid}")]
+    [Authorize]
+    [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateOwnershipInfo(UpdateOwnershipInfoRequest request)
+    {
+        _logger.LogInformation(
+            "Requested to update ownership info {OwnershipInfoId} for game list entry {EntryId}.",
+            request.OwnershipInfoId,
+            request.EntryId);
+
+        var result = await _listsManagerService.UpdateOwnershipInfo(request.ToParams());
+        if (result.IsFailure)
+        {
+            if (result.Error is ListsError.GameListEntryNotFound or ListsError.OwnershipInfoNotFound)
+            {
+                return Result(StatusCodes.Status404NotFound, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
+            }
+
+            return Result(StatusCodes.Status500InternalServerError);
+        }
+
+        return Result(StatusCodes.Status204NoContent);
+    }
+
+    [HttpDelete("{listId:guid}/entries/{entryId:guid}/ownershipInfos/{ownershipInfoId:guid}")]
+    [Authorize]
+    [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemoveOwnershipInfo(RemoveOwnershipInfoRequest request)
+    {
+        _logger.LogInformation(
+            "Requested to remove ownership info {OwnershipInfoId} from game list entry {EntryId}.",
+            request.OwnershipInfoId,
+            request.EntryId);
+
+        var result = await _listsManagerService.RemoveOwnershipInfo(request.ToParams());
+        if (result.IsFailure)
+        {
+            if (result.Error is ListsError.GameListEntryNotFound or ListsError.OwnershipInfoNotFound)
+            {
+                return Result(StatusCodes.Status404NotFound, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
+            }
+
+            return Result(StatusCodes.Status500InternalServerError);
         }
 
         return Result(StatusCodes.Status204NoContent);

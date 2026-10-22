@@ -11,7 +11,7 @@ using YourGamesList.Contracts.Responses;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Lists;
 
-public class CreateListRequestTests
+public class AddListRequestTests
 {
     private ILogger<CreateListRequestValidator> _logger;
     private IOptions<RequestValidatorOptions> _options;
@@ -141,7 +141,7 @@ public class CreateListRequestTests
     {
         //ARRANGE
         var request = CreateRequest("My games");
-        request = new CreateListRequest
+        request = new AddListRequest
         {
             UserInformation = request.UserInformation,
             Body = null!
@@ -161,7 +161,7 @@ public class CreateListRequestTests
     public void Validate_UserInformationMissing_ReturnsValidationError()
     {
         //ARRANGE
-        var request = new CreateListRequest
+        var request = new AddListRequest
         {
             UserInformation = null!,
             Body = new CreateListRequestBody("My games")
@@ -181,9 +181,9 @@ public class CreateListRequestTests
         return new CreateListRequestValidator(_logger, _options);
     }
 
-    private static CreateListRequest CreateRequest(string name)
+    private static AddListRequest CreateRequest(string name)
     {
-        return new CreateListRequest()
+        return new AddListRequest()
         {
             UserInformation = new UserInformationToken
             {

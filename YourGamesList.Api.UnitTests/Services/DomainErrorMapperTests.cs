@@ -67,6 +67,7 @@ public class DomainErrorMapperTests
     [TestCase(ListsError.ListCannotBeEdited, ErrorCodes.Lists.ListCannotBeEdited, "This list cannot be edited.")]
     [TestCase(ListsError.GameListEntryAlreadyExists, ErrorCodes.Lists.GameListEntryAlreadyExists, "This game is already in the list.")]
     [TestCase(ListsError.GameListEntryNotFound, ErrorCodes.Lists.GameListEntryNotFound, "Game list entry was not found.")]
+    [TestCase(ListsError.OwnershipInfoNotFound, ErrorCodes.Lists.OwnershipInfoNotFound, "Ownership info was not found.")]
     public void Map_ListsError_ReturnsMappedError(ListsError listsError, string expectedCode, string expectedDescription)
     {
         //ARRANGE

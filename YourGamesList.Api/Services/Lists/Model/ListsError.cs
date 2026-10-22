@@ -9,5 +9,6 @@ public enum ListsError
     ListCannotBeDeleted,
     ListCannotBeEdited,
     GameListEntryAlreadyExists,
-    GameListEntryNotFound
+    GameListEntryNotFound,
+    OwnershipInfoNotFound
 }

@@ -1,15 +1,18 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentValidation.TestHelper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
 using YourGamesList.Api.Model;
+using YourGamesList.Api.Model.Requests.Lists;
 using YourGamesList.Api.Services.Lists;
 using YourGamesList.Api.Services.Lists.Model;
 using YourGamesList.Contracts;
 using YourGamesList.Contracts.Dto;
+using YourGamesList.Contracts.Requests.Lists;
 using YourGamesList.Database;
 using YourGamesList.Database.Entity;
 
@@ -40,6 +43,8 @@ public class ListsManagerServiceTests
         _dbContext.Dispose();
     }
 
+    #region GameList
+
     [Test]
     public async Task GetSelf_UserExists_ReturnsTheirListsAndEntries()
     {
@@ -52,12 +57,23 @@ public class ListsManagerServiceTests
             Name = "My list",
             User = user
         };
-        list.GamesListEntries.Add(new GamesListEntry
+        var entry = new GamesListEntry
         {
+            Id = Guid.NewGuid(),
             CreatedAt = DateTimeOffset.UtcNow,
             CompletionStatus = CompletionStatus.Played,
-            IgdbId = 123
+            IgdbId = 123,
+            GamesListId = list.Id
+        };
+        entry.OwnershipInfo.Add(new OwnershipInfo
+        {
+            Id = Guid.NewGuid(),
+            CreatedAt = DateTimeOffset.UtcNow,
+            Platform = Platform.PC,
+            GameDistribution = GameDistribution.Steam,
+            GameListEntryId = entry.Id
         });
+        list.GamesListEntries.Add(entry);
         _dbContext.Users.Add(user);
         _dbContext.GamesLists.Add(list);
         await _dbContext.SaveChangesAsync();
@@ -74,6 +90,9 @@ public class ListsManagerServiceTests
         Assert.That(result.Value[0].GameListEntries.Single().Id, Is.EqualTo(list.GamesListEntries.Single().Id));
         Assert.That(result.Value[0].GameListEntries.Single().GamesListId, Is.EqualTo(list.Id));
         Assert.That(result.Value[0].GameListEntries.Single().IgdbId, Is.EqualTo(123));
+        Assert.That(
+            result.Value[0].GameListEntries.Single().OwnershipInfos.Single().Id,
+            Is.EqualTo(entry.OwnershipInfo.Single().Id));
     }
 
     [Test]
@@ -169,7 +188,7 @@ public class ListsManagerServiceTests
         var createdAt = DateTimeOffset.UtcNow;
         _timeProvider.SetUtcNow(createdAt);
 
-        var result = await CreateService().Create(new CreateListParams
+        var result = await CreateService().Create(new AddListParams
         {
             UserInformation = CreateUserInformation(user.Id),
             Name = "Collection"
@@ -193,7 +212,7 @@ public class ListsManagerServiceTests
         _dbContext.GamesLists.Add(CreateList(user, "Collection"));
         await _dbContext.SaveChangesAsync();
 
-        var result = await CreateService().Create(new CreateListParams
+        var result = await CreateService().Create(new AddListParams
         {
             UserInformation = CreateUserInformation(user.Id),
             Name = "Collection"
@@ -378,6 +397,10 @@ public class ListsManagerServiceTests
         Assert.That(result.Error, Is.EqualTo(ListsError.ListNotFound));
         Assert.That(list.Name, Is.EqualTo("Collection"));
     }
+
+    #endregion
+
+    #region GameListEntry
 
     [Test]
     public async Task AddGameListEntry_OwnedList_CreatesEntryAndReturnsId()
@@ -647,6 +670,322 @@ public class ListsManagerServiceTests
         Assert.That(result.Error, Is.EqualTo(ListsError.GameListEntryNotFound));
         Assert.That(entry.Rating, Is.Null);
     }
+
+    #endregion
+
+    #region OwnershipInfo
+
+    [Test]
+    public void AddOwnershipInfoValidator_RequiresValidPlatformAndGameDistribution()
+    {
+        //ARRANGE
+        var request = new AddOwnershipInfoRequest
+        {
+            UserInformation = CreateUserInformation(Guid.NewGuid()),
+            ListId = Guid.NewGuid(),
+            EntryId = Guid.NewGuid(),
+            Body = new AddOwnershipInfoRequestBody
+            {
+                Platform = (PlatformDto)999,
+                GameDistribution = (GameDistributionDto)999
+            }
+        };
+
+        //ACT
+        var result = new AddOwnershipInfoRequestValidator().TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.False);
+        result.ShouldHaveValidationErrorFor(x => x.Body.Platform);
+        result.ShouldHaveValidationErrorFor(x => x.Body.GameDistribution);
+    }
+
+    [Test]
+    public async Task AddOwnershipInfo_OwnedEntryInNonEditableList_AddsMultipleRecords()
+    {
+        //ARRANGE
+        var user = CreateUser();
+        var list = CreateList(user, "Wishlist", editable: false);
+        var entry = CreateEntry(list, 123);
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+        var createdAt = DateTimeOffset.UtcNow.AddMinutes(1);
+        _timeProvider.SetUtcNow(createdAt);
+        var parameters = new AddOwnershipInfoParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            GamesListId = list.Id,
+            GameListEntryId = entry.Id,
+            Platform = PlatformDto.PC,
+            GameDistribution = GameDistributionDto.Steam,
+            IsLegit = true,
+            WasEmulated = true,
+            EmulatedOn = EmulatorDto.RPCS3
+        };
+
+        //ACT
+        var firstResult = await CreateService().AddOwnershipInfo(parameters);
+        var secondResult = await CreateService().AddOwnershipInfo(parameters);
+
+        //ASSERT
+        var ownershipInfos = await _dbContext.OwnershipInfos.ToListAsync();
+        Assert.That(firstResult.IsSuccess, Is.True);
+        Assert.That(secondResult.IsSuccess, Is.True);
+        Assert.That(firstResult.Value, Is.Not.EqualTo(secondResult.Value));
+        Assert.That(ownershipInfos, Has.Count.EqualTo(2));
+        Assert.That(ownershipInfos[0].GameListEntryId, Is.EqualTo(entry.Id));
+        Assert.That(ownershipInfos[0].Platform, Is.EqualTo(Platform.PC));
+        Assert.That(ownershipInfos[0].GameDistribution, Is.EqualTo(GameDistribution.Steam));
+        Assert.That(ownershipInfos[0].IsLegit, Is.True);
+        Assert.That(ownershipInfos[0].WasEmulated, Is.True);
+        Assert.That(ownershipInfos[0].EmulatedOn, Is.EqualTo(Emulator.RPCS3));
+        Assert.That(ownershipInfos[0].CreatedAt, Is.EqualTo(createdAt));
+    }
+
+    [Test]
+    public async Task AddOwnershipInfo_EntryNotOwnedByCaller_ReturnsNotFound()
+    {
+        //ARRANGE
+        var user = CreateUser();
+        var list = CreateList(user, "Wishlist");
+        var entry = CreateEntry(list, 123);
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+
+        //ACT
+        var result = await CreateService().AddOwnershipInfo(new AddOwnershipInfoParams
+        {
+            UserInformation = CreateUserInformation(Guid.NewGuid()),
+            GamesListId = list.Id,
+            GameListEntryId = entry.Id,
+            Platform = PlatformDto.PC,
+            GameDistribution = GameDistributionDto.Steam
+        });
+
+        //ASSERT
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.GameListEntryNotFound));
+        Assert.That(await _dbContext.OwnershipInfos.AnyAsync(), Is.False);
+    }
+
+    [Test]
+    public void UpdateOwnershipInfoValidator_RejectsNullNonNullableFieldsAndUndefinedEnums()
+    {
+        //ARRANGE
+        var request = new UpdateOwnershipInfoRequest
+        {
+            UserInformation = CreateUserInformation(Guid.NewGuid()),
+            ListId = Guid.NewGuid(),
+            EntryId = Guid.NewGuid(),
+            OwnershipInfoId = Guid.NewGuid(),
+            Body = new UpdateOwnershipInfoRequestBody
+            {
+                Platform = Optional<PlatformDto?>.Some(null),
+                GameDistribution = Optional<GameDistributionDto?>.Some((GameDistributionDto)999),
+                WasEmulated = Optional<bool?>.Some(null),
+                EmulatedOn = Optional<EmulatorDto?>.Some((EmulatorDto)999)
+            }
+        };
+
+        //ACT
+        var result = new UpdateOwnershipInfoRequestValidator().TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.False);
+        result.ShouldHaveValidationErrorFor(x => x.Body.Platform);
+        result.ShouldHaveValidationErrorFor(x => x.Body.GameDistribution);
+        result.ShouldHaveValidationErrorFor(x => x.Body.WasEmulated);
+        result.ShouldHaveValidationErrorFor(x => x.Body.EmulatedOn);
+    }
+
+    [Test]
+    public void UpdateOwnershipInfoValidator_AllowsExplicitNullForNullableFields()
+    {
+        //ARRANGE
+        var request = new UpdateOwnershipInfoRequest
+        {
+            UserInformation = CreateUserInformation(Guid.NewGuid()),
+            ListId = Guid.NewGuid(),
+            EntryId = Guid.NewGuid(),
+            OwnershipInfoId = Guid.NewGuid(),
+            Body = new UpdateOwnershipInfoRequestBody
+            {
+                IsLegit = Optional<bool?>.Some(null),
+                EmulatedOn = Optional<EmulatorDto?>.Some(null)
+            }
+        };
+
+        //ACT
+        var result = new UpdateOwnershipInfoRequestValidator().TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.True);
+    }
+
+    [Test]
+    public async Task UpdateOwnershipInfo_OwnedEntryInNonEditableList_UpdatesSuppliedFields()
+    {
+        //ARRANGE
+        var user = CreateUser();
+        var list = CreateList(user, "Wishlist", editable: false);
+        var entry = CreateEntry(list, 123);
+        var ownershipInfo = CreateOwnershipInfo(entry);
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+        var modifiedAt = DateTimeOffset.UtcNow.AddMinutes(1);
+        _timeProvider.SetUtcNow(modifiedAt);
+
+        //ACT
+        var result = await CreateService().UpdateOwnershipInfo(new UpdateOwnershipInfoParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            GamesListId = list.Id,
+            GameListEntryId = entry.Id,
+            OwnershipInfoId = ownershipInfo.Id,
+            IsLegit = Optional<bool?>.Some(null),
+            Platform = Optional<PlatformDto?>.Some(PlatformDto.PlayStation5),
+            GameDistribution = Optional<GameDistributionDto?>.Some(GameDistributionDto.Physical),
+            WasEmulated = Optional<bool?>.Some(false),
+            EmulatedOn = Optional<EmulatorDto?>.Some(null)
+        });
+
+        //ASSERT
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(ownershipInfo.IsLegit, Is.Null);
+        Assert.That(ownershipInfo.Platform, Is.EqualTo(Platform.PlayStation5));
+        Assert.That(ownershipInfo.GameDistribution, Is.EqualTo(GameDistribution.Physical));
+        Assert.That(ownershipInfo.WasEmulated, Is.False);
+        Assert.That(ownershipInfo.EmulatedOn, Is.Null);
+        Assert.That(ownershipInfo.ModifiedAt, Is.EqualTo(modifiedAt));
+    }
+
+    [Test]
+    public async Task UpdateOwnershipInfo_EntryNotOwnedByCaller_ReturnsNotFound()
+    {
+        //ARRANGE
+        var user = CreateUser();
+        var list = CreateList(user, "Wishlist", editable: false);
+        var entry = CreateEntry(list, 123);
+        var ownershipInfo = CreateOwnershipInfo(entry);
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+
+        //ACT
+        var result = await CreateService().UpdateOwnershipInfo(new UpdateOwnershipInfoParams
+        {
+            UserInformation = CreateUserInformation(Guid.NewGuid()),
+            GamesListId = list.Id,
+            GameListEntryId = entry.Id,
+            OwnershipInfoId = ownershipInfo.Id,
+            WasEmulated = Optional<bool?>.Some(true)
+        });
+
+        //ASSERT
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.GameListEntryNotFound));
+        Assert.That(ownershipInfo.WasEmulated, Is.True);
+    }
+
+    [Test]
+    public void RemoveOwnershipInfoValidator_RequiresAllRouteIdsAndUser()
+    {
+        //ARRANGE
+        var request = new RemoveOwnershipInfoRequest
+        {
+            UserInformation = null!,
+            ListId = Guid.Empty,
+            EntryId = Guid.Empty,
+            OwnershipInfoId = Guid.Empty
+        };
+
+        //ACT
+        var result = new RemoveOwnershipInfoRequestValidator().TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.False);
+        result.ShouldHaveValidationErrorFor(x => x.ListId);
+        result.ShouldHaveValidationErrorFor(x => x.EntryId);
+        result.ShouldHaveValidationErrorFor(x => x.OwnershipInfoId);
+        result.ShouldHaveValidationErrorFor(x => x.UserInformation);
+    }
+
+    [Test]
+    public async Task RemoveOwnershipInfo_OwnedEntry_RemovesSpecifiedRecord()
+    {
+        //ARRANGE
+        var user = CreateUser();
+        var list = CreateList(user, "Wishlist", editable: false);
+        var entry = CreateEntry(list, 123);
+        var ownershipInfo = CreateOwnershipInfo(entry);
+        CreateOwnershipInfo(entry);
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+
+        //ACT
+        var result = await CreateService().RemoveOwnershipInfo(new RemoveOwnershipInfoParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            GamesListId = list.Id,
+            GameListEntryId = entry.Id,
+            OwnershipInfoId = ownershipInfo.Id
+        });
+
+        //ASSERT
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(await _dbContext.OwnershipInfos.CountAsync(), Is.EqualTo(1));
+        Assert.That(await _dbContext.OwnershipInfos.AnyAsync(info => info.Id == ownershipInfo.Id), Is.False);
+    }
+
+    [Test]
+    public async Task RemoveOwnershipInfo_EntryNotOwnedByCaller_ReturnsNotFound()
+    {
+        //ARRANGE
+        var user = CreateUser();
+        var list = CreateList(user, "Wishlist", editable: false);
+        var entry = CreateEntry(list, 123);
+        var ownershipInfo = CreateOwnershipInfo(entry);
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+
+        //ACT
+        var result = await CreateService().RemoveOwnershipInfo(new RemoveOwnershipInfoParams
+        {
+            UserInformation = CreateUserInformation(Guid.NewGuid()),
+            GamesListId = list.Id,
+            GameListEntryId = entry.Id,
+            OwnershipInfoId = ownershipInfo.Id
+        });
+
+        //ASSERT
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.GameListEntryNotFound));
+        Assert.That(await _dbContext.OwnershipInfos.AnyAsync(info => info.Id == ownershipInfo.Id), Is.True);
+    }
+
+    private static OwnershipInfo CreateOwnershipInfo(GamesListEntry entry)
+    {
+        var ownershipInfo = new OwnershipInfo
+        {
+            Id = Guid.NewGuid(),
+            CreatedAt = DateTimeOffset.UtcNow,
+            Platform = Platform.PC,
+            GameDistribution = GameDistribution.Steam,
+            WasEmulated = true,
+            EmulatedOn = Emulator.RPCS3,
+            IsLegit = true,
+            GameListEntryId = entry.Id
+        };
+        entry.OwnershipInfo.Add(ownershipInfo);
+        return ownershipInfo;
+    }
+
+    #endregion
 
     private ListsManagerService CreateService() => new(_logger, _dbContext, _timeProvider);
 
