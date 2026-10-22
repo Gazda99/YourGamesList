@@ -22,7 +22,7 @@ public static class UpdateListParamsMappingExtensions
         return new UpdateListParams
         {
             UserInformation = request.UserInformation,
-            Id = body.Id,
+            Id = request.ListId,
             Name = body.Name.HasValue ? body.Name.Value?.Trim() : null,
             HasDescription = body.Description.HasValue,
             Description = body.Description.HasValue ? body.Description.Value : null,

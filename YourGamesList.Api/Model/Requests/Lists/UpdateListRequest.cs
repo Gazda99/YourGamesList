@@ -1,3 +1,4 @@
+using System;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,7 @@ namespace YourGamesList.Api.Model.Requests.Lists;
 public class UpdateListRequest
 {
     [FromAuthorizeHeader] public required UserInformationToken UserInformation { get; init; }
+    [FromRoute] public required Guid ListId { get; init; }
     [FromBody] public required UpdateListRequestBody Body { get; init; }
 }
 
@@ -22,6 +24,10 @@ public class UpdateListRequestValidator : AbstractValidator<UpdateListRequest>
         IOptions<RequestValidatorOptions> options)
     {
         var maximumListNameLength = options.Value.Lists.MaximumListNameLength;
+        var minimumListNameLength = options.Value.Lists.MinimumListNameLength;
+
+        RuleFor(x => x.ListId)
+            .NotEmpty();
 
         RuleFor(x => x.Body)
             .NotNull()
@@ -29,16 +35,23 @@ public class UpdateListRequestValidator : AbstractValidator<UpdateListRequest>
             .WithMessage("Proper request body is required.")
             .ChildRules(body =>
             {
-                body.RuleFor(x => x.Id)
-                    .NotEmpty();
-
                 body.RuleFor(x => x.Name)
-                    .Must(name => !string.IsNullOrWhiteSpace(name.Value))
+                    .Must(name =>
+                        {
+                            var normalizedName = name.Value!.Trim();
+                            if (normalizedName.Length < minimumListNameLength)
+                            {
+                                logger.LogInformation("List name {ListName} is too short. {ListNameLength} < {ListNameMaximumLength}", normalizedName,
+                                    normalizedName.Length, minimumListNameLength);
+                                return false;
+                            }
+
+                            return true;
+                        }
+                     )
                     .When(x => x.Name.HasValue, ApplyConditionTo.CurrentValidator)
                     .WithErrorCode(ErrorCodes.Lists.InvalidListName)
-                    .WithMessage("Invalid list name.");
-
-                body.RuleFor(x => x.Name)
+                    .WithMessage($"List name must be at least {minimumListNameLength} characters.")
                     .Must(name =>
                     {
                         var normalizedName = name.Value!.Trim();
@@ -50,7 +63,7 @@ public class UpdateListRequestValidator : AbstractValidator<UpdateListRequest>
 
                         return true;
                     })
-                    .When(x => x.Name.HasValue && !string.IsNullOrWhiteSpace(x.Name.Value), ApplyConditionTo.CurrentValidator)
+                    .When(x => x.Name.HasValue, ApplyConditionTo.CurrentValidator)
                     .WithErrorCode(ErrorCodes.Lists.ListNameTooLong)
                     .WithMessage($"List name must be no longer than {maximumListNameLength} characters.");
 

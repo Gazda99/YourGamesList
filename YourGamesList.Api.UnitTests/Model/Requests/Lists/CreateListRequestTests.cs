@@ -23,7 +23,11 @@ public class CreateListRequestTests
         _options = Substitute.For<IOptions<RequestValidatorOptions>>();
         _options.Value.Returns(new RequestValidatorOptions
         {
-            Lists = new ListsValidatorOptions { MaximumListNameLength = 20 }
+            Lists = new ListsValidatorOptions
+            {
+                MinimumListNameLength = 3,
+                MaximumListNameLength = 20
+            }
         });
     }
 
@@ -69,6 +73,36 @@ public class CreateListRequestTests
         Assert.That(result.IsValid, Is.False);
         result.ShouldHaveValidationErrorFor(x => x.Body.Name)
             .WithErrorCode(ErrorCodes.Lists.InvalidListName);
+    }
+
+    [Test]
+    public void Validate_NameShorterThanMinimumLengthAfterTrimming_ReturnsValidationError()
+    {
+        //ARRANGE
+        var request = CreateRequest(" ab ");
+        var validator = CreateValidator();
+
+        //ACT
+        var result = validator.TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.False);
+        result.ShouldHaveValidationErrorFor(x => x.Body.Name)
+            .WithErrorCode(ErrorCodes.Lists.InvalidListName);
+    }
+
+    [Test]
+    public void Validate_NameAtMinimumLengthAfterTrimming_ReturnsValid()
+    {
+        //ARRANGE
+        var request = CreateRequest(" abc ");
+        var validator = CreateValidator();
+
+        //ACT
+        var result = validator.TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.True);
     }
 
     [Test]

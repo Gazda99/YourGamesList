@@ -81,6 +81,10 @@ public class DomainErrorMapper : IDomainErrorMapper
                 return Create(ErrorCodes.Lists.ListCannotBeDeleted, "This list cannot be deleted.");
             case ListsError.ListCannotBeEdited:
                 return Create(ErrorCodes.Lists.ListCannotBeEdited, "This list cannot be edited.");
+            case ListsError.GameListEntryAlreadyExists:
+                return Create(ErrorCodes.Lists.GameListEntryAlreadyExists, "This game is already in the list.");
+            case ListsError.GameListEntryNotFound:
+                return Create(ErrorCodes.Lists.GameListEntryNotFound, "Game list entry was not found.");
             default:
                 _logger.LogInformation("Domain level error {DomainError} was not mapped. Defaulting to {ErrorCode}", listsError.ToString(),
                     ErrorCodes.General.InternalServerError);

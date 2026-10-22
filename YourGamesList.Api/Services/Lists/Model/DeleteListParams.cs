@@ -17,7 +17,7 @@ public static class DeleteListParamsMappingExtensions
         return new DeleteListParams
         {
             UserInformation = request.UserInformation,
-            Id = request.Body.Id,
+            Id = request.ListId,
         };
     }
 }

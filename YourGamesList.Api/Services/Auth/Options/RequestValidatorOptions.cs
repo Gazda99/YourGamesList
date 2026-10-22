@@ -20,7 +20,9 @@ public class EmailValidatorOptions
 
 public class ListsValidatorOptions
 {
+    public int MinimumListNameLength { get; init; }
     public int MaximumListNameLength { get; init; }
+    public int MaximumGameListEntryDescriptionLength { get; init; }
 }
 
 public class UsernameValidatorOptions
@@ -68,9 +70,19 @@ public class ListsValidatorOptionsValidator : AbstractValidator<ListsValidatorOp
 {
     public ListsValidatorOptionsValidator()
     {
+        RuleFor(x => x.MinimumListNameLength)
+            .NotEmpty()
+            .GreaterThan(0);
         RuleFor(x => x.MaximumListNameLength)
             .NotEmpty()
             .GreaterThan(0);
+        RuleFor(x => x.MaximumGameListEntryDescriptionLength)
+            .NotEmpty()
+            .GreaterThan(0);
+
+        RuleFor(x => new { x.MinimumListNameLength, x.MaximumListNameLength })
+            .Must(x => x.MinimumListNameLength <= x.MaximumListNameLength)
+            .WithMessage("Minimum list name length must be less or equal than maximum list name length.");
     }
 }
 

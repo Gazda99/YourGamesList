@@ -47,6 +47,12 @@ public static class ErrorCodes
         public const string ListNotFound = "ListNotFound";
         public const string ListCannotBeDeleted = "ListCannotBeDeleted";
         public const string ListCannotBeEdited = "ListCannotBeEdited";
+        public const string GameListEntryAlreadyExists = "GameListEntryAlreadyExists";
+        public const string GameListEntryNotFound = "GameListEntryNotFound";
+        public const string InvalidGameListEntryCompletionStatus = "InvalidGameListEntryCompletionStatus";
+        public const string InvalidGameListEntryIgdbId = "InvalidGameListEntryIgdbId";
+        public const string InvalidGameListEntryDescription = "InvalidGameListEntryDescription";
+        public const string InvalidListSearchCriteria = "InvalidListSearchCriteria";
     }
 
     public static class Validation

@@ -7,6 +7,7 @@ public class GamesListEntryDto
 {
     public required CompletionStatusDto CompletionStatus { get; set; }
     public string? Description { get; set; }
+    public required Guid Id { get; set; }
     public required Guid GamesListId { get; set; }
     public required long IgdbId { get; set; }
     public byte? Rating { get; set; }

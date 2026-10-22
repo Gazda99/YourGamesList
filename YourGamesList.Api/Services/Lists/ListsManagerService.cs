@@ -14,10 +14,17 @@ namespace YourGamesList.Api.Services.Lists;
 
 public interface IListsManagerService
 {
+    #region Lists
+
     /// <summary>
     /// Gets the current user's lists.
     /// </summary>
     Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelf(GetSelfListParams getSelfListParams);
+
+    /// <summary>
+    /// Searches visible lists by owner username or list name.
+    /// </summary>
+    Task<List<GamesListDto>> Search(SearchListsParams searchListsParams);
 
     /// <summary>
     /// Creates a list for the current user.
@@ -33,6 +40,27 @@ public interface IListsManagerService
     /// Updates metadata on a list owned by the current user.
     /// </summary>
     Task<ErrorResult<ListsError>> Update(UpdateListParams updateListParams);
+
+    #endregion
+
+    #region Game list entries
+
+    /// <summary>
+    /// Adds a game to a list owned by the current user.
+    /// </summary>
+    Task<CombinedResult<Guid, ListsError>> AddGameListEntry(AddGameListEntryParams addParams);
+
+    /// <summary>
+    /// Removes a game from a list owned by the current user.
+    /// </summary>
+    Task<ErrorResult<ListsError>> RemoveGameListEntry(RemoveGameListEntryParams removeParams);
+
+    /// <summary>
+    /// Updates a game entry in a list owned by the current user.
+    /// </summary>
+    Task<ErrorResult<ListsError>> UpdateGameListEntry(UpdateGameListEntryParams updateParams);
+
+    #endregion
 }
 
 public class ListsManagerService : IListsManagerService
@@ -50,6 +78,8 @@ public class ListsManagerService : IListsManagerService
         _yglDbContext = yglDbContext;
         _timeProvider = timeProvider;
     }
+
+    #region Lists
 
     public async Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelf(GetSelfListParams getSelfListParams)
     {
@@ -69,33 +99,72 @@ public class ListsManagerService : IListsManagerService
             return CombinedResult<List<GamesListDto>, ListsError>.Failure(ListsError.UserNotFound);
         }
 
-        var gamesLists = user.GamesLists.Select(list => new GamesListDto
+        var gamesLists = user.GamesLists.Select(list => MapGamesList(list, includeEntries: true)).ToList();
+        
+        return CombinedResult<List<GamesListDto>, ListsError>.Success(gamesLists);
+    }
+
+    public async Task<List<GamesListDto>> Search(SearchListsParams searchListsParams)
+    {
+        var ownerName = searchListsParams.OwnerName?.ToLowerInvariant();
+        var listName = searchListsParams.ListName?.ToLowerInvariant();
+        var gamesListsQuery = _yglDbContext.GamesLists
+            .AsNoTracking()
+            .Where(list => !list.IsPrivate || list.UserId == searchListsParams.UserInformation.UserId);
+
+        if (ownerName != null)
+        {
+            gamesListsQuery = gamesListsQuery.Where(list => list.User.Username.ToLower().Contains(ownerName));
+        }
+
+        if (listName != null)
+        {
+            gamesListsQuery = gamesListsQuery.Where(list => list.Name.ToLower().Contains(listName));
+        }
+
+        if (searchListsParams.IncludeEntries)
+        {
+            gamesListsQuery = gamesListsQuery
+                .AsSplitQuery()
+                .Include(list => list.GamesListEntries)
+                .ThenInclude(entry => entry.OwnershipInfo);
+        }
+
+        var gamesLists = await gamesListsQuery.ToListAsync();
+        return gamesLists.Select(list => MapGamesList(list, searchListsParams.IncludeEntries)).ToList();
+    }
+
+    private static GamesListDto MapGamesList(GamesList list, bool includeEntries)
+    {
+        return new GamesListDto
         {
             CreatedAt = list.CreatedAt,
             Description = list.Description,
             Id = list.Id,
             IsPrivate = list.IsPrivate,
             Name = list.Name,
-            GameListEntries = list.GamesListEntries.Select(entry => new GamesListEntryDto
-            {
-                CompletionStatus = (CompletionStatusDto)entry.CompletionStatus,
-                Description = entry.Description,
-                GamesListId = entry.GamesListId,
-                IgdbId = entry.IgdbId,
-                Rating = entry.Rating,
-                OwnershipInfos = entry.OwnershipInfo.Select(ownership => new OwnershipInfoDto
+            GameListEntries = includeEntries
+                ? list.GamesListEntries.Select(entry => new GamesListEntryDto
                 {
-                    IsLegit = ownership.IsLegit,
-                    Platform = (PlatformDto)ownership.Platform,
-                    GameDistribution = (GameDistributionDto)ownership.GameDistribution,
-                    WasEmulated = ownership.WasEmulated,
-                    EmulatedOn = ownership.EmulatedOn.HasValue
-                        ? (EmulatorDto)ownership.EmulatedOn.Value
-                        : null
+                    CompletionStatus = (CompletionStatusDto)entry.CompletionStatus,
+                    Description = entry.Description,
+                    Id = entry.Id,
+                    GamesListId = entry.GamesListId,
+                    IgdbId = entry.IgdbId,
+                    Rating = entry.Rating,
+                    OwnershipInfos = entry.OwnershipInfo.Select(ownership => new OwnershipInfoDto
+                    {
+                        IsLegit = ownership.IsLegit,
+                        Platform = (PlatformDto)ownership.Platform,
+                        GameDistribution = (GameDistributionDto)ownership.GameDistribution,
+                        WasEmulated = ownership.WasEmulated,
+                        EmulatedOn = ownership.EmulatedOn.HasValue
+                            ? (EmulatorDto)ownership.EmulatedOn.Value
+                            : null
+                    }).ToList()
                 }).ToList()
-            }).ToList()
-        }).ToList();
-        return CombinedResult<List<GamesListDto>, ListsError>.Success(gamesLists);
+                : []
+        };
     }
 
     public async Task<CombinedResult<Guid, ListsError>> Create(CreateListParams createListParams)
@@ -145,7 +214,7 @@ public class ListsManagerService : IListsManagerService
 
         if (!gamesList.Editable)
         {
-            _logger.LogInformation("Cannot delete protected list {GamesListId}.", deleteListParams.Id);
+            _logger.LogInformation("Cannot remove protected list {GamesListId}.", deleteListParams.Id);
             return ErrorResult<ListsError>.Failure(ListsError.ListCannotBeDeleted);
         }
 
@@ -217,4 +286,120 @@ public class ListsManagerService : IListsManagerService
         return ErrorResult<ListsError>.Success();
     }
 
+    #endregion
+
+    #region Game list entries
+
+    public async Task<CombinedResult<Guid, ListsError>> AddGameListEntry(AddGameListEntryParams addParams)
+    {
+        var userId = addParams.UserInformation.UserId;
+        var gamesList = await _yglDbContext.GamesLists.FirstOrDefaultAsync(list => list.Id == addParams.GamesListId && list.UserId == userId);
+
+        if (gamesList == null)
+        {
+            _logger.LogInformation("Cannot find list {GamesListId} for the requesting user.", addParams.GamesListId);
+            return CombinedResult<Guid, ListsError>.Failure(ListsError.ListNotFound);
+        }
+
+        var entryAlreadyExists = await _yglDbContext.GameListEntries.AnyAsync(entry => entry.GamesListId == gamesList.Id && entry.IgdbId == addParams.IgdbId);
+
+        if (entryAlreadyExists)
+        {
+            _logger.LogInformation("Game {IgdbId} already exists in list {GamesListId}.", addParams.IgdbId, gamesList.Id);
+            return CombinedResult<Guid, ListsError>.Failure(ListsError.GameListEntryAlreadyExists);
+        }
+
+        var entry = new GamesListEntry
+        {
+            Id = Guid.NewGuid(),
+            CreatedAt = _timeProvider.GetUtcNow(),
+            CompletionStatus = (CompletionStatus)addParams.CompletionStatus,
+            Description = addParams.Description,
+            IgdbId = addParams.IgdbId,
+            Rating = addParams.Rating,
+            GamesListId = gamesList.Id
+        };
+
+        _yglDbContext.GameListEntries.Add(entry);
+
+        await _yglDbContext.SaveChangesAsync();
+
+        return CombinedResult<Guid, ListsError>.Success(entry.Id);
+    }
+
+    public async Task<ErrorResult<ListsError>> RemoveGameListEntry(RemoveGameListEntryParams removeParams)
+    {
+        var userId = removeParams.UserInformation.UserId;
+        var entry = await _yglDbContext.GameListEntries
+            .FirstOrDefaultAsync(gameListEntry =>
+                gameListEntry.Id == removeParams.Id &&
+                gameListEntry.GamesListId == removeParams.GamesListId &&
+                gameListEntry.GamesList.UserId == userId);
+
+        if (entry == null)
+        {
+            _logger.LogInformation("Cannot find game list entry {EntryId} for the requesting user.", removeParams.Id);
+            return ErrorResult<ListsError>.Failure(ListsError.GameListEntryNotFound);
+        }
+
+        _yglDbContext.GameListEntries.Remove(entry);
+        await _yglDbContext.SaveChangesAsync();
+        return ErrorResult<ListsError>.Success();
+    }
+
+    public async Task<ErrorResult<ListsError>> UpdateGameListEntry(UpdateGameListEntryParams updateParams)
+    {
+        var userId = updateParams.UserInformation.UserId;
+        var entry = await _yglDbContext.GameListEntries
+            .Include(gameListEntry => gameListEntry.GamesList)
+            .FirstOrDefaultAsync(gameListEntry =>
+                gameListEntry.Id == updateParams.Id &&
+                gameListEntry.GamesListId == updateParams.GamesListId &&
+                gameListEntry.GamesList.UserId == userId);
+
+        if (entry == null)
+        {
+            _logger.LogInformation("Cannot find game list entry {EntryId} for the requesting user.", updateParams.Id);
+            return ErrorResult<ListsError>.Failure(ListsError.GameListEntryNotFound);
+        }
+
+        var completionStatusChanged = updateParams.CompletionStatus.HasValue &&
+                                      updateParams.CompletionStatus.Value != (CompletionStatusDto)entry.CompletionStatus;
+        var descriptionChanged = updateParams.Description.HasValue &&
+                                 updateParams.Description.Value != entry.Description;
+        var ratingChanged = updateParams.Rating.HasValue &&
+                            updateParams.Rating.Value != entry.Rating;
+
+        if (!completionStatusChanged && !descriptionChanged && !ratingChanged)
+        {
+            return ErrorResult<ListsError>.Success();
+        }
+
+        if (!entry.GamesList.Editable)
+        {
+            _logger.LogInformation("Cannot edit game list entry {EntryId} in a protected list.", updateParams.Id);
+            return ErrorResult<ListsError>.Failure(ListsError.ListCannotBeEdited);
+        }
+
+        if (completionStatusChanged)
+        {
+            entry.CompletionStatus = (CompletionStatus)updateParams.CompletionStatus.Value!.Value;
+        }
+
+        if (descriptionChanged)
+        {
+            entry.Description = updateParams.Description.Value;
+        }
+
+        if (ratingChanged)
+        {
+            entry.Rating = updateParams.Rating.Value;
+        }
+
+        entry.ModifiedAt = _timeProvider.GetUtcNow();
+        await _yglDbContext.SaveChangesAsync();
+        return ErrorResult<ListsError>.Success();
+    }
+
+    #endregion
 }

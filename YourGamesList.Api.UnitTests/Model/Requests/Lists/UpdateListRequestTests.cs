@@ -1,5 +1,6 @@
 using System;
 using System.Text.Json;
+using AutoFixture;
 using FluentValidation.TestHelper;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -11,22 +12,29 @@ using YourGamesList.Api.Services.Lists.Model;
 using YourGamesList.Contracts;
 using YourGamesList.Contracts.Requests.Lists;
 using YourGamesList.Contracts.Responses;
+using YourGamesList.TestsUtils;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Lists;
 
 public class UpdateListRequestTests
 {
+    private IFixture _fixture;
     private ILogger<UpdateListRequestValidator> _logger = null!;
     private IOptions<RequestValidatorOptions> _options = null!;
 
     [SetUp]
     public void SetUp()
     {
+        _fixture = new Fixture();
         _logger = Substitute.For<ILogger<UpdateListRequestValidator>>();
         _options = Substitute.For<IOptions<RequestValidatorOptions>>();
         _options.Value.Returns(new RequestValidatorOptions
         {
-            Lists = new ListsValidatorOptions { MaximumListNameLength = 20 }
+            Lists = new ListsValidatorOptions
+            {
+                MinimumListNameLength = 3,
+                MaximumListNameLength = 20
+            }
         });
     }
 
@@ -34,7 +42,7 @@ public class UpdateListRequestTests
     public void Validate_IdOnlyRequest_ReturnsValid()
     {
         //ARRANGE
-        var request = CreateRequest(new UpdateListRequestBody { Id = Guid.NewGuid() });
+        var request = CreateRequest(new UpdateListRequestBody());
 
         //ACT
         var result = CreateValidator().TestValidate(request);
@@ -49,7 +57,6 @@ public class UpdateListRequestTests
         //ARRANGE
         var request = CreateRequest(new UpdateListRequestBody
         {
-            Id = Guid.NewGuid(),
             Description = Optional<string?>.Some(null)
         });
 
@@ -66,7 +73,6 @@ public class UpdateListRequestTests
         //ARRANGE
         var request = CreateRequest(new UpdateListRequestBody
         {
-            Id = Guid.NewGuid(),
             Name = Optional<string?>.Some("This list name is too long")
         });
 
@@ -77,6 +83,10 @@ public class UpdateListRequestTests
         Assert.That(result.IsValid, Is.False);
         result.ShouldHaveValidationErrorFor(x => x.Body.Name)
             .WithErrorCode(ErrorCodes.Lists.ListNameTooLong);
+        var normalizedName = "This list name is too long";
+        _logger.ReceivedLog(
+            LogLevel.Information,
+            $"List name {normalizedName} is too long. {normalizedName.Length} > 20");
     }
 
     [Test]
@@ -85,7 +95,6 @@ public class UpdateListRequestTests
         //ARRANGE
         var request = CreateRequest(new UpdateListRequestBody
         {
-            Id = Guid.NewGuid(),
             Name = Optional<string?>.Some("   ")
         });
 
@@ -96,6 +105,42 @@ public class UpdateListRequestTests
         Assert.That(result.IsValid, Is.False);
         result.ShouldHaveValidationErrorFor(x => x.Body.Name)
             .WithErrorCode(ErrorCodes.Lists.InvalidListName);
+        _logger.ReceivedLog(LogLevel.Information, "List name  is too short. 0 < 3");
+    }
+
+    [Test]
+    public void Validate_NameShorterThanMinimumLengthAfterTrimming_ReturnsValidationError()
+    {
+        //ARRANGE
+        var request = CreateRequest(new UpdateListRequestBody
+        {
+            Name = Optional<string?>.Some(" ab ")
+        });
+
+        //ACT
+        var result = CreateValidator().TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.False);
+        result.ShouldHaveValidationErrorFor(x => x.Body.Name)
+            .WithErrorCode(ErrorCodes.Lists.InvalidListName);
+        _logger.ReceivedLog(LogLevel.Information, "List name ab is too short. 2 < 3");
+    }
+
+    [Test]
+    public void Validate_NameAtMinimumLengthAfterTrimming_ReturnsValid()
+    {
+        //ARRANGE
+        var request = CreateRequest(new UpdateListRequestBody
+        {
+            Name = Optional<string?>.Some(" abc ")
+        });
+
+        //ACT
+        var result = CreateValidator().TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.True);
     }
 
     [Test]
@@ -104,7 +149,6 @@ public class UpdateListRequestTests
         //ARRANGE
         var request = CreateRequest(new UpdateListRequestBody
         {
-            Id = Guid.NewGuid(),
             IsPrivate = Optional<bool?>.Some(null)
         });
 
@@ -121,10 +165,9 @@ public class UpdateListRequestTests
     public void ToParams_TracksOmittedAndExplicitNullDescription()
     {
         //ARRANGE
-        var omittedDescriptionRequest = CreateRequest(new UpdateListRequestBody { Id = Guid.NewGuid() });
+        var omittedDescriptionRequest = CreateRequest(new UpdateListRequestBody());
         var nullDescriptionRequest = CreateRequest(new UpdateListRequestBody
         {
-            Id = Guid.NewGuid(),
             Description = Optional<string?>.Some(null)
         });
 
@@ -142,9 +185,8 @@ public class UpdateListRequestTests
     public void Deserialize_TracksOmittedAndExplicitNullDescription()
     {
         //ARRANGE
-        var id = Guid.NewGuid();
-        var omittedDescriptionJson = $$"""{"id":"{{id}}"}""";
-        var nullDescriptionJson = $$"""{"id":"{{id}}","description":null}""";
+        var omittedDescriptionJson = """{}""";
+        var nullDescriptionJson = """{"description":null}""";
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
 
         //ACT
@@ -169,6 +211,7 @@ public class UpdateListRequestTests
             Username = "testuser",
             UserId = Guid.NewGuid()
         },
+        ListId = Guid.NewGuid(),
         Body = body
     };
 

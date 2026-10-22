@@ -35,6 +35,9 @@ public class CreateListRequestValidator : AbstractValidator<CreateListRequest>
                     .NotEmpty()
                     .WithErrorCode(ErrorCodes.Lists.InvalidListName)
                     .WithMessage("Invalid list name.")
+                    .Must(listName => NormalizeListName(listName).Length >= validatorOptions.Lists.MinimumListNameLength)
+                    .WithErrorCode(ErrorCodes.Lists.InvalidListName)
+                    .WithMessage($"List name must be at least {validatorOptions.Lists.MinimumListNameLength} characters.")
                     .Must(listName =>
                     {
                         var listNameNormalized = NormalizeListName(listName);

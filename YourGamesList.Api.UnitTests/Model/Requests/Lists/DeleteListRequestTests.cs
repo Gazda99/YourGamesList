@@ -2,8 +2,6 @@ using System;
 using FluentValidation.TestHelper;
 using YourGamesList.Api.Model;
 using YourGamesList.Api.Model.Requests.Lists;
-using YourGamesList.Contracts.Requests.Lists;
-using YourGamesList.Contracts.Responses;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Lists;
 
@@ -21,7 +19,7 @@ public class DeleteListRequestTests
                 Username = "testuser",
                 UserId = Guid.NewGuid()
             },
-            Body = new DeleteListRequestBody(Guid.NewGuid())
+            ListId = Guid.NewGuid()
         };
         var validator = new DeleteListRequestValidator();
 
@@ -33,7 +31,7 @@ public class DeleteListRequestTests
     }
 
     [Test]
-    public void Validate_BodyMissing_ReturnsValidationError()
+    public void Validate_EmptyListId_ReturnsValidationError()
     {
         //ARRANGE
         var request = new DeleteListRequest
@@ -44,7 +42,7 @@ public class DeleteListRequestTests
                 Username = "testuser",
                 UserId = Guid.NewGuid()
             },
-            Body = null!
+            ListId = Guid.Empty
         };
         var validator = new DeleteListRequestValidator();
 
@@ -53,8 +51,7 @@ public class DeleteListRequestTests
 
         //ASSERT
         Assert.That(result.IsValid, Is.False);
-        result.ShouldHaveValidationErrorFor(x => x.Body)
-            .WithErrorCode(ErrorCodes.Validation.RequestBodyRequired);
+        result.ShouldHaveValidationErrorFor(x => x.ListId);
     }
 
     [Test]
@@ -64,7 +61,7 @@ public class DeleteListRequestTests
         var request = new DeleteListRequest
         {
             UserInformation = null!,
-            Body = new DeleteListRequestBody(Guid.NewGuid())
+            ListId = Guid.NewGuid()
         };
         var validator = new DeleteListRequestValidator();
 

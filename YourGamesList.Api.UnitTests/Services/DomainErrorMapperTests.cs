@@ -65,6 +65,8 @@ public class DomainErrorMapperTests
     [TestCase(ListsError.ListNotFound, ErrorCodes.Lists.ListNotFound, "List was not found.")]
     [TestCase(ListsError.ListCannotBeDeleted, ErrorCodes.Lists.ListCannotBeDeleted, "This list cannot be deleted.")]
     [TestCase(ListsError.ListCannotBeEdited, ErrorCodes.Lists.ListCannotBeEdited, "This list cannot be edited.")]
+    [TestCase(ListsError.GameListEntryAlreadyExists, ErrorCodes.Lists.GameListEntryAlreadyExists, "This game is already in the list.")]
+    [TestCase(ListsError.GameListEntryNotFound, ErrorCodes.Lists.GameListEntryNotFound, "Game list entry was not found.")]
     public void Map_ListsError_ReturnsMappedError(ListsError listsError, string expectedCode, string expectedDescription)
     {
         //ARRANGE

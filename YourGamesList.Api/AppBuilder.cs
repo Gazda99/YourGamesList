@@ -204,6 +204,10 @@ public static class AppBuilder
             .AddScoped<IValidator<GetSelfListRequest>, GetSelfListRequestValidator>()
             .AddScoped<IValidator<CreateListRequest>, CreateListRequestValidator>()
             .AddScoped<IValidator<DeleteListRequest>, DeleteListRequestValidator>()
+            .AddScoped<IValidator<SearchListsRequest>, SearchListsRequestValidator>()
+            .AddScoped<IValidator<AddGameListEntryRequest>, AddGameListEntryRequestValidator>()
+            .AddScoped<IValidator<RemoveGameListEntryRequest>, RemoveGameListEntryRequestValidator>()
+            .AddScoped<IValidator<UpdateGameListEntryRequest>, UpdateGameListEntryRequestValidator>()
             ;
 
         return services;
