@@ -165,8 +165,7 @@ public class InMemoryCacheProviderTests
         await cancellationTokenSource.CancelAsync();
 
         //ACT & ASSERT
-        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
-            await _cacheProvider.AcquireLock(key, TimeSpan.FromSeconds(5), cancellationTokenSource.Token));
+        await Assert.CatchAsync<OperationCanceledException>(async () => await _cacheProvider.AcquireLock(key, TimeSpan.FromSeconds(5), cancellationTokenSource.Token));
 
         await lease.DisposeAsync();
     }
