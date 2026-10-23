@@ -1,7 +1,9 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using YourGamesList.Api.Services.Twitch.Model;
 using YourGamesList.Api.Services.Twitch.Model.Requests;
 using YourGamesList.Api.Services.Twitch.Options;
 using YourGamesList.Common;
@@ -9,34 +11,26 @@ using YourGamesList.Common.Refit;
 
 namespace YourGamesList.Api.Services.Twitch;
 
-public interface ITwitchAuthService
-{
-    /// <summary>
-    /// Returns the client ID.
-    /// </summary>
-    string GetClientId();
-
-    /// <summary>
-    /// Gets an access token from Twitch.
-    /// </summary>
-    Task<ValueResult<string>> GetAccessToken();
-}
-
 public class TwitchAuthService : ITwitchAuthService
 {
+    private const int ExpirationThresholdInSeconds = 15 * 60;
+
     private readonly ILogger<TwitchAuthService> _logger;
     private readonly ITwitchAuthApi _twitchAuthApi;
     private readonly IOptions<TwitchAuthOptions> _twitchAuthOptions;
+    private readonly TimeProvider _timeProvider;
 
     public TwitchAuthService(
         ILogger<TwitchAuthService> logger,
         ITwitchAuthApi twitchAuthApi,
-        IOptions<TwitchAuthOptions> twitchAuthOptions
+        IOptions<TwitchAuthOptions> twitchAuthOptions,
+        TimeProvider timeProvider
     )
     {
         _logger = logger;
         _twitchAuthApi = twitchAuthApi;
         _twitchAuthOptions = twitchAuthOptions;
+        _timeProvider = timeProvider;
     }
 
     public string GetClientId()
@@ -44,7 +38,7 @@ public class TwitchAuthService : ITwitchAuthService
         return _twitchAuthOptions.Value.ClientId;
     }
 
-    public async Task<ValueResult<string>> GetAccessToken()
+    public async Task<ValueResult<TwitchToken>> GetAccessToken()
     {
         var request = new TwitchAuthRequest()
         {
@@ -56,26 +50,45 @@ public class TwitchAuthService : ITwitchAuthService
 
         if (callResult.IsFailure)
         {
-            return ValueResult<string>.Failure();
+            return ValueResult<TwitchToken>.Failure();
         }
 
         var res = callResult.Value;
 
         if (res.StatusCode == HttpStatusCode.OK)
         {
-            var accessToken = res.Content?.AccessToken;
-            if (string.IsNullOrEmpty(accessToken))
+            var content = res.Content;
+
+            if (content == null || string.IsNullOrEmpty(content?.AccessToken))
             {
                 _logger.LogError("Obtained Twitch access token is null or empty.");
-                return ValueResult<string>.Failure();
+                return ValueResult<TwitchToken>.Failure();
             }
 
-            _logger.LogInformation("Successfully obtained Twitch access token from Twitch.");
+            _logger.LogInformation("Successfully obtained Twitch access token from Twitch that will expire in {TwitchTokenExpiryInSeconds}.", content.ExpiresIn);
+            var now = _timeProvider.GetUtcNow();
+            var finalExpirySeconds = content.ExpiresIn - ExpirationThresholdInSeconds;
+            
+            if (finalExpirySeconds <= 0)
+            {
+                _logger.LogError("Invalid final expiration in seconds for Twitch access token.");
+                return ValueResult<TwitchToken>.Failure();
+            }
 
-            return ValueResult<string>.Success(accessToken);
+            var expiresOn = now + TimeSpan.FromSeconds(content.ExpiresIn) - TimeSpan.FromSeconds(ExpirationThresholdInSeconds);
+
+            _logger.LogInformation("Twitch auth token expiration saved to cache: {TwitchTokenExpiresOn}", expiresOn);
+            
+            var twitchToken = new TwitchToken()
+            {
+                AccessToken = content.AccessToken,
+                ExpiresOn = expiresOn
+            };
+
+            return ValueResult<TwitchToken>.Success(twitchToken);
         }
 
         _logger.LogError("Twitch responded with {StatusCode} status code. Could not obtain Twitch access token.", res.StatusCode);
-        return ValueResult<string>.Failure();
+        return ValueResult<TwitchToken>.Failure();
     }
 }

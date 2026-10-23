@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,4 +20,9 @@ public interface ICacheProvider
     /// Removes a value from the cache.
     /// </summary>
     Task Remove(string key, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Acquires a lock for a key that is released when its lease expires or is disposed.
+    /// </summary>
+    Task<IAsyncDisposable> AcquireLock(string key, TimeSpan leaseDuration, CancellationToken cancellationToken = default);
 }
