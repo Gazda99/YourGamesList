@@ -52,8 +52,10 @@ public static class ErrorCodes
         public const string InvalidGameListEntryCompletionStatus = "InvalidGameListEntryCompletionStatus";
         public const string InvalidGameListEntryIgdbId = "InvalidGameListEntryIgdbId";
         public const string InvalidGameListEntryDescription = "InvalidGameListEntryDescription";
+        public const string InvalidGameListEntryRating = "InvalidGameListEntryRating";
         public const string InvalidListSearchCriteria = "InvalidListSearchCriteria";
         public const string OwnershipInfoNotFound = "OwnershipInfoNotFound";
+        public const string InvalidOwnershipInfoEmulation = "InvalidOwnershipInfoEmulation";
     }
 
     public static class Validation

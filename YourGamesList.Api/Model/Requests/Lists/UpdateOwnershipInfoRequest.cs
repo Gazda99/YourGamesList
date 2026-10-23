@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using YourGamesList.Api.Attributes;
 using YourGamesList.Contracts.Requests.Lists;
+using YourGamesList.Contracts.Responses;
 
 namespace YourGamesList.Api.Model.Requests.Lists;
 
@@ -47,6 +48,14 @@ public class UpdateOwnershipInfoRequestValidator : AbstractValidator<UpdateOwner
                         emulator.Value == null || Enum.IsDefined(emulator.Value.Value))
                     .When(request => request.EmulatedOn.HasValue)
                     .WithMessage("Invalid emulator.");
+                body.RuleFor(request => request.EmulatedOn)
+                    .Must(emulator => emulator.Value == null)
+                    .When(request =>
+                        request.EmulatedOn.HasValue &&
+                        request.WasEmulated.HasValue &&
+                        request.WasEmulated.Value == false)
+                    .WithErrorCode(ErrorCodes.Lists.InvalidOwnershipInfoEmulation)
+                    .WithMessage("EmulatedOn can only be set when WasEmulated is true.");
             });
     }
 }

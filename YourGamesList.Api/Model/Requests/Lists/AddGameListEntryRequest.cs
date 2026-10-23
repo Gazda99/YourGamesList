@@ -21,6 +21,8 @@ public class AddGameListEntryRequestValidator : AbstractValidator<AddGameListEnt
     public AddGameListEntryRequestValidator(IOptions<RequestValidatorOptions> options)
     {
         var maximumDescriptionLength = options.Value.Lists.MaximumGameListEntryDescriptionLength;
+        var minimumRating = options.Value.Lists.MinimumGameListEntryRating;
+        var maximumRating = options.Value.Lists.MaximumGameListEntryRating;
 
         RuleFor(x => x.ListId)
             .NotEmpty();
@@ -43,6 +45,11 @@ public class AddGameListEntryRequestValidator : AbstractValidator<AddGameListEnt
                     .MaximumLength(maximumDescriptionLength)
                     .WithErrorCode(ErrorCodes.Lists.InvalidGameListEntryDescription)
                     .WithMessage($"Description must be no longer than {maximumDescriptionLength} characters.");
+                body.RuleFor(x => x.Rating)
+                    .Must(rating => rating >= minimumRating && rating <= maximumRating)
+                    .When(x => x.Rating.HasValue)
+                    .WithErrorCode(ErrorCodes.Lists.InvalidGameListEntryRating)
+                    .WithMessage($"Rating must be between {minimumRating} and {maximumRating}.");
             });
 
         RuleFor(x => x.UserInformation)

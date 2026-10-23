@@ -863,6 +863,67 @@ public class ListsManagerServiceTests
     }
 
     [Test]
+    public async Task UpdateOwnershipInfo_SetWasEmulatedFalseWhileEmulatorStored_ReturnsInvalidEmulation()
+    {
+        //ARRANGE
+        var user = CreateUser();
+        var list = CreateList(user, "Collection");
+        var entry = CreateEntry(list, 123);
+        var ownershipInfo = CreateOwnershipInfo(entry);
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+
+        //ACT
+        var result = await CreateService().UpdateOwnershipInfo(new UpdateOwnershipInfoParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            GamesListId = list.Id,
+            GameListEntryId = entry.Id,
+            OwnershipInfoId = ownershipInfo.Id,
+            WasEmulated = Optional<bool?>.Some(false)
+        });
+
+        //ASSERT
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.InvalidOwnershipInfoEmulation));
+        Assert.That(ownershipInfo.WasEmulated, Is.True);
+        Assert.That(ownershipInfo.EmulatedOn, Is.EqualTo(Emulator.RPCS3));
+        Assert.That(ownershipInfo.ModifiedAt, Is.Null);
+    }
+
+    [Test]
+    public async Task UpdateOwnershipInfo_SetEmulatorWhileNotEmulatedStored_ReturnsInvalidEmulation()
+    {
+        //ARRANGE
+        var user = CreateUser();
+        var list = CreateList(user, "Collection");
+        var entry = CreateEntry(list, 123);
+        var ownershipInfo = CreateOwnershipInfo(entry);
+        ownershipInfo.WasEmulated = false;
+        ownershipInfo.EmulatedOn = null;
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+
+        //ACT
+        var result = await CreateService().UpdateOwnershipInfo(new UpdateOwnershipInfoParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            GamesListId = list.Id,
+            GameListEntryId = entry.Id,
+            OwnershipInfoId = ownershipInfo.Id,
+            EmulatedOn = Optional<EmulatorDto?>.Some(EmulatorDto.Xenia)
+        });
+
+        //ASSERT
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.InvalidOwnershipInfoEmulation));
+        Assert.That(ownershipInfo.EmulatedOn, Is.Null);
+        Assert.That(ownershipInfo.ModifiedAt, Is.Null);
+    }
+
+    [Test]
     public async Task UpdateOwnershipInfo_EntryNotOwnedByCaller_ReturnsNotFound()
     {
         //ARRANGE

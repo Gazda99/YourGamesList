@@ -10,5 +10,6 @@ public enum ListsError
     ListCannotBeEdited,
     GameListEntryAlreadyExists,
     GameListEntryNotFound,
-    OwnershipInfoNotFound
+    OwnershipInfoNotFound,
+    InvalidOwnershipInfoEmulation
 }
