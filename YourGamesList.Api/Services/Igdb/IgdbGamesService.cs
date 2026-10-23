@@ -61,7 +61,7 @@ public class IgdbGamesService : IIgdbGamesService
             .WithSort("rating_count desc")
             .CreateQuery();
 
-        _logger.LogInformation($"Searching for game '{gameName}'");
+        _logger.LogInformation("Searching for game {GameName}", gameName);
 
         return await _igdbService.CallIgdb<IgdbGame[]>(IgdbEndpoints.Game, query);
     }
@@ -74,7 +74,7 @@ public class IgdbGamesService : IIgdbGamesService
             .WithFields(RequestGameFields)
             .CreateQuery();
 
-        _logger.LogInformation($"Searching for '{gameIds.Length}' games with ids: '[{ids}]'");
+        _logger.LogInformation("Searching for {GamesCount} games with ids: [{GameIds}]", gameIds.Length, ids);
 
         return await _igdbService.CallIgdb<IgdbGame[]>(IgdbEndpoints.Game, query);
     }

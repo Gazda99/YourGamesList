@@ -75,7 +75,7 @@ public class TwitchAuthService : ITwitchAuthService
             return ValueResult<string>.Success(accessToken);
         }
 
-        _logger.LogError($"Twitch responded with '{res.StatusCode}' status code. Could not obtain Twitch access token.");
+        _logger.LogError("Twitch responded with {StatusCode} status code. Could not obtain Twitch access token.", res.StatusCode);
         return ValueResult<string>.Failure();
     }
 }

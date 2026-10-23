@@ -59,13 +59,6 @@ public class ListsController : YourGamesListBaseController
                     Errors = [_domainErrorMapper.Map(result.Error)]
                 });
             }
-            else if (result.Error is ListsError.InternalServerError)
-            {
-                return Result(StatusCodes.Status400BadRequest, new ErrorResponse
-                {
-                    Errors = [_domainErrorMapper.Map(result.Error)]
-                });
-            }
             else
             {
                 return Result(StatusCodes.Status500InternalServerError);
@@ -122,10 +115,6 @@ public class ListsController : YourGamesListBaseController
                     Errors = [_domainErrorMapper.Map(result.Error)]
                 });
             }
-            else if (result.Error is ListsError.InternalServerError)
-            {
-                return Result(StatusCodes.Status400BadRequest, _domainErrorMapper.Map(result.Error));
-            }
             else
             {
                 return Result(StatusCodes.Status500InternalServerError);
@@ -167,13 +156,6 @@ public class ListsController : YourGamesListBaseController
                     Errors = [_domainErrorMapper.Map(result.Error)]
                 });
             }
-            else if (result.Error is ListsError.InternalServerError)
-            {
-                return Result(StatusCodes.Status400BadRequest, new ErrorResponse
-                {
-                    Errors = [_domainErrorMapper.Map(result.Error)]
-                });
-            }
             else
             {
                 return Result(StatusCodes.Status500InternalServerError);
@@ -210,13 +192,6 @@ public class ListsController : YourGamesListBaseController
             else if (result.Error is ListsError.ListAlreadyExists or ListsError.ListCannotBeEdited)
             {
                 return Result(StatusCodes.Status409Conflict, new ErrorResponse
-                {
-                    Errors = [_domainErrorMapper.Map(result.Error)]
-                });
-            }
-            else if (result.Error is ListsError.InternalServerError)
-            {
-                return Result(StatusCodes.Status400BadRequest, new ErrorResponse
                 {
                     Errors = [_domainErrorMapper.Map(result.Error)]
                 });

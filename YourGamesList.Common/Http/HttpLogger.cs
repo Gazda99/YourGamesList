@@ -28,7 +28,10 @@ public class HttpLogger : IHttpClientLogger
         using (_logger.BeginScope(RequestStartScopes(request)))
         {
             _logger.LogInformation(
-                $"Sending '{request.Method}' to '{request.RequestUri?.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped)}{request.RequestUri!.PathAndQuery}'");
+                "Sending {RequestMethod} to {RequestHost}{RequestPath}",
+                request.Method,
+                request.RequestUri?.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped),
+                request.RequestUri!.PathAndQuery);
         }
 
         return null;
@@ -44,7 +47,11 @@ public class HttpLogger : IHttpClientLogger
             : null;
         using var requestStopScopes = _logger.BeginScope(RequestStopScopes(response, elapsed));
 
-        _logger.LogInformation($"Received '{(int) response.StatusCode} {response.StatusCode}' after {FormatElapsedMilliseconds(elapsed)}ms");
+        _logger.LogInformation(
+            "Received {ResponseStatusCodeInt} {ResponseStatusCode} after {ElapsedMilliseconds}ms",
+            (int) response.StatusCode,
+            response.StatusCode,
+            FormatElapsedMilliseconds(elapsed));
     }
 
     public void LogRequestFailed(object? context, HttpRequestMessage request, HttpResponseMessage? response, Exception exception, TimeSpan elapsed)
@@ -58,7 +65,11 @@ public class HttpLogger : IHttpClientLogger
         using var requestFailedScopes = _logger.BeginScope(RequestFailedScopes(request, elapsed));
 
         _logger.LogWarning(exception,
-            $"Request '{request.Method}' towards '{request.RequestUri?.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped)}{request.RequestUri!.PathAndQuery}' failed after {FormatElapsedMilliseconds(elapsed)}ms");
+            "Request {RequestMethod} towards {RequestHost}{RequestPath} failed after {ElapsedMilliseconds}ms",
+            request.Method,
+            request.RequestUri?.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped),
+            request.RequestUri!.PathAndQuery,
+            FormatElapsedMilliseconds(elapsed));
     }
 
     private static bool TryGetLogScopesFromHttpHeaders(HttpHeaders? headers, Dictionary<string, string> headersToLog,

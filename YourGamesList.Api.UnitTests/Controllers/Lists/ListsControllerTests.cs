@@ -183,6 +183,26 @@ public class ListsControllerTests
     }
 
     [Test]
+    public async Task Create_InternalServerError_ReturnsInternalServerError()
+    {
+        //ARRANGE
+        var listName = _fixture.Create<string>();
+        _listsManagerService.Create(Arg.Any<AddListParams>()).Returns(CombinedResult<Guid, ListsError>.Failure(ListsError.InternalServerError));
+
+        //ACT
+        var result = await CreateController().AddList(new AddListRequest
+        {
+            UserInformation = CreateUserInformation(),
+            Body = new CreateListRequestBody(listName)
+        });
+
+        //ASSERT
+        var statusCodeResult = result as IStatusCodeActionResult;
+        Assert.That(statusCodeResult, Is.Not.Null);
+        Assert.That(statusCodeResult.StatusCode, Is.EqualTo(StatusCodes.Status500InternalServerError));
+    }
+
+    [Test]
     public async Task Delete_Success_ReturnsNoContentAndPassesRequestData()
     {
         //ARRANGE
@@ -224,6 +244,25 @@ public class ListsControllerTests
         var statusCodeResult = result as IStatusCodeActionResult;
         Assert.That(statusCodeResult, Is.Not.Null);
         Assert.That(statusCodeResult.StatusCode, Is.EqualTo(StatusCodes.Status404NotFound));
+    }
+
+    [Test]
+    public async Task Delete_InternalServerError_ReturnsInternalServerError()
+    {
+        //ARRANGE
+        _listsManagerService.Delete(Arg.Any<DeleteListParams>()).Returns(ErrorResult<ListsError>.Failure(ListsError.InternalServerError));
+
+        //ACT
+        var result = await CreateController().DeleteList(new DeleteListRequest
+        {
+            UserInformation = CreateUserInformation(),
+            ListId = Guid.NewGuid()
+        });
+
+        //ASSERT
+        var statusCodeResult = result as IStatusCodeActionResult;
+        Assert.That(statusCodeResult, Is.Not.Null);
+        Assert.That(statusCodeResult.StatusCode, Is.EqualTo(StatusCodes.Status500InternalServerError));
     }
 
     [Test]
@@ -311,6 +350,27 @@ public class ListsControllerTests
         var errorResponse = objectResult?.Value as ErrorResponse;
         Assert.That(errorResponse, Is.Not.Null);
         Assert.That(errorResponse?.Errors.Single(), Is.SameAs(error));
+    }
+
+    [Test]
+    public async Task Update_InternalServerError_ReturnsInternalServerError()
+    {
+        //ARRANGE
+        _listsManagerService.Update(Arg.Any<UpdateListParams>())
+            .Returns(ErrorResult<ListsError>.Failure(ListsError.InternalServerError));
+
+        //ACT
+        var result = await CreateController().Update(new UpdateListRequest
+        {
+            UserInformation = CreateUserInformation(),
+            ListId = Guid.NewGuid(),
+            Body = new UpdateListRequestBody()
+        });
+
+        //ASSERT
+        var statusCodeResult = result as IStatusCodeActionResult;
+        Assert.That(statusCodeResult, Is.Not.Null);
+        Assert.That(statusCodeResult.StatusCode, Is.EqualTo(StatusCodes.Status500InternalServerError));
     }
 
     #endregion

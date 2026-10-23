@@ -38,7 +38,7 @@ public class IgdbService : IIgdbService
             return ValueResult<TResponseFormat>.Failure();
         }
 
-        _logger.LogInformation($"Calling IGDB API Endpoint: '{endpoint.Endpoint}'");
+        _logger.LogInformation("Calling IGDB API Endpoint: {IgdbEndpoint}", endpoint.Endpoint);
 
         var callResult = await _igdbApi.TryRefit(
             () => _igdbApi.Endpoint<TResponseFormat>(endpoint.Endpoint, accessToken.Value, clientId, query),
@@ -58,7 +58,7 @@ public class IgdbService : IIgdbService
             return ValueResult<TResponseFormat>.Success(res.Content!);
         }
         
-        _logger.LogError($"Unhandled HTTP Status Code '{(int?) res.StatusCode ?? 0}' from IGDB API.");
+        _logger.LogError("Unhandled HTTP Status Code {StatusCode} from IGDB API.", (int?) res.StatusCode ?? 0);
         return ValueResult<TResponseFormat>.Failure();
     }
 }

@@ -35,7 +35,7 @@ public class HttpLoggerTests
         //ASSERT
         Assert.That(result, Is.Null);
 
-        _logger.ReceivedLog(LogLevel.Information, "Sending 'GET' to 'https://api.yourgameslist.com/v1/games?page=1'");
+        _logger.ReceivedLog(LogLevel.Information, "Sending GET to https://api.yourgameslist.com/v1/games?page=1");
         _logger.ReceivedBeginScope(new Dictionary<string, object>
         {
             ["Request.Method"] = HttpMethod.Get,
@@ -81,7 +81,7 @@ public class HttpLoggerTests
         _httpLogger.LogRequestStop(null, request, response, elapsed);
 
         //ASSERT
-        _logger.ReceivedLog(LogLevel.Information, "Received '200 OK' after 150.5ms");
+        _logger.ReceivedLog(LogLevel.Information, "Received 200 OK after 150.5ms");
         _logger.ReceivedBeginScope(new Dictionary<string, object>
         {
             ["Response.StatusCodeInt"] = 200,
@@ -102,7 +102,7 @@ public class HttpLoggerTests
 
             _httpLogger.LogRequestStop(null, request, response, TimeSpan.FromMilliseconds(150.47));
 
-            _logger.ReceivedLog(LogLevel.Information, "Received '200 OK' after 150.5ms");
+            _logger.ReceivedLog(LogLevel.Information, "Received 200 OK after 150.5ms");
             _logger.ReceivedBeginScope(new Dictionary<string, object>
             {
                 ["Response.StatusCodeInt"] = 200,
@@ -154,7 +154,7 @@ public class HttpLoggerTests
         _httpLogger.LogRequestFailed(null, request, null, exception, elapsed);
 
         //ASSERT
-        _logger.ReceivedLog(LogLevel.Warning, "Request 'GET' towards 'https://api.yourgameslist.com/v1/games' failed after 500.1ms", (ex) => ex == exception);
+        _logger.ReceivedLog(LogLevel.Warning, "Request GET towards https://api.yourgameslist.com/v1/games failed after 500.1ms", (ex) => ex == exception);
         _logger.ReceivedBeginScope(new Dictionary<string, object>
         {
             ["Request.Method"] = HttpMethod.Get,

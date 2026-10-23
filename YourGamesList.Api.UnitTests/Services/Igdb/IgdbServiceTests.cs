@@ -50,7 +50,7 @@ public class IgdbServiceTests
         //ASSERT
         Assert.That(res.IsSuccess, Is.True);
         Assert.That(res.Value, Is.EqualTo(testIgdbData));
-        _logger.ReceivedLog(LogLevel.Information, $"Calling IGDB API Endpoint: '{endpoint.Endpoint}'");
+        _logger.ReceivedLog(LogLevel.Information, $"Calling IGDB API Endpoint: {endpoint.Endpoint}");
         _logger.ReceivedLog(LogLevel.Information, "Successfully obtained response from IGDB API.");
     }
 
@@ -78,8 +78,8 @@ public class IgdbServiceTests
 
         //ASSERT
         Assert.That(res.IsSuccess, Is.False);
-        _logger.ReceivedLog(LogLevel.Information, $"Calling IGDB API Endpoint: '{endpoint.Endpoint}'");
-        _logger.ReceivedLog(LogLevel.Error, $"Unhandled HTTP Status Code '{(int) statusCode}' from IGDB API.");
+        _logger.ReceivedLog(LogLevel.Information, $"Calling IGDB API Endpoint: {endpoint.Endpoint}");
+        _logger.ReceivedLog(LogLevel.Error, $"Unhandled HTTP Status Code {(int) statusCode} from IGDB API.");
     }
 
 
