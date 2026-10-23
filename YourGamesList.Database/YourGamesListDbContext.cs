@@ -50,7 +50,7 @@ public class YourGamesListDbContext : DbContext
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasIndex(x => x.Username).IsUnique();
+            entity.HasIndex(x => x.NormalizedUsername).IsUnique();
             entity.HasIndex(x => x.Email).IsUnique();
         });
 
@@ -62,6 +62,9 @@ public class YourGamesListDbContext : DbContext
                 .WithOne(x => x.GamesList)
                 .HasForeignKey(x => x.GamesListId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(x => new { x.UserId, x.NormalizedName })
+                .IsUnique();
         });
 
         modelBuilder.Entity<GamesListEntry>(entity =>

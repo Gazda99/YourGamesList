@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
+using YourGamesList.Api.Model;
 using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Model;
 using YourGamesList.Api.Services.Auth.Options;
@@ -179,6 +180,41 @@ public class UserManagerServiceTests
         _logger.ReceivedLog(LogLevel.Information, "Created new user token. User logged in.");
     }
 
+    [Test]
+    public async Task Login_UsernameWithDifferentCasing_CreatesTokenWithNormalizedUsername()
+    {
+        //ARRANGE
+        const string storedUsername = "TestUser";
+        const string password = "correct_password";
+        const string hashedPassword = "hashed_password";
+        const string expectedToken = "jwt_token_sample";
+        const string normalizedUsername = "testuser";
+
+        var userId = Guid.NewGuid();
+        var user = CreateUser(id: userId, username: storedUsername, passwordHash: hashedPassword, status: UserStatus.Active);
+
+        await _dbContext.Users.AddAsync(user);
+        await _dbContext.SaveChangesAsync();
+
+        _passwordHasher.VerifyHashedPassword(password, hashedPassword).Returns(true);
+        _tokenProvider.CreateToken(normalizedUsername, userId).Returns(expectedToken);
+
+        var dto = new UserLoginParams()
+        {
+            Username = "tESTuSER",
+            Password = password
+        };
+        var service = CreateService();
+
+        //ACT
+        var res = await service.Login(dto);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.True);
+        Assert.That(res.Value, Is.EqualTo(expectedToken));
+        _tokenProvider.Received(1).CreateToken(normalizedUsername, userId);
+    }
+
     #endregion
 
     #region Register
@@ -236,6 +272,31 @@ public class UserManagerServiceTests
     }
 
     [Test]
+    public async Task Register_UsernameDiffersOnlyByCase_ReturnsUsernameAlreadyTaken()
+    {
+        //ARRANGE
+        await _dbContext.Users.AddAsync(CreateUser(username: "ExistingUser", email: "other@example.com"));
+        await _dbContext.SaveChangesAsync();
+
+        var dto = new UserRegisterParams()
+        {
+            Username = "existinguser",
+            Email = "new@example.com",
+            Password = "password123",
+            DateOfBirth = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-20))
+        };
+        var service = CreateService();
+
+        //ACT
+        var res = await service.Register(dto);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.False);
+        Assert.That(res.Error, Is.EqualTo(UserAuthError.UsernameAlreadyTaken));
+        _logger.ReceivedLog(LogLevel.Information, "Username already registered.");
+    }
+
+    [Test]
     public async Task Register_PasswordHashingFails_ReturnsInternalServerError()
     {
         //ARRANGE
@@ -269,7 +330,7 @@ public class UserManagerServiceTests
 
         var dto = new UserRegisterParams()
         {
-            Username = "newuser",
+            Username = "NewUser",
             Email = "new@example.com",
             Password = "password123",
             DateOfBirth = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-20))
@@ -282,8 +343,9 @@ public class UserManagerServiceTests
         //ASSERT
         Assert.That(res.IsSuccess, Is.True);
 
-        var dbUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == "newuser");
+        var dbUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == "NewUser");
         Assert.That(dbUser, Is.Not.Null);
+        Assert.That(dbUser.NormalizedUsername, Is.EqualTo("newuser"));
         Assert.That(dbUser.UserStatus, Is.EqualTo(UserStatus.Active));
         Assert.That(dbUser.CreatedAt, Is.EqualTo(now));
         Assert.That(dbUser.ExpiryAt, Is.Null);
@@ -309,7 +371,7 @@ public class UserManagerServiceTests
 
         var dto = new UserRegisterParams()
         {
-            Username = "newuser",
+            Username = "NewUser",
             Email = "new@example.com",
             Password = "password123",
             DateOfBirth = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-20))
@@ -336,7 +398,7 @@ public class UserManagerServiceTests
     {
         //ARRANGE
         var now = DateTimeOffset.UtcNow;
-        var username = "newuser2137";
+        var username = "NewUser2137";
         var password = "password123";
         var email = "email@com.pl";
         var rawToken = _fixture.Create<string>();
@@ -372,6 +434,7 @@ public class UserManagerServiceTests
         
         Assert.That(res.Value, Is.EqualTo(dbUser.Id));
 
+        Assert.That(dbUser.NormalizedUsername, Is.EqualTo("newuser2137"));
         Assert.That(dbUser.UserStatus, Is.EqualTo(UserStatus.Pending));
         Assert.That(dbUser.ExpiryAt, Is.EqualTo(now + TimeSpan.FromMinutes(60)));
 
@@ -391,10 +454,42 @@ public class UserManagerServiceTests
     #region Delete
 
     [Test]
+    public async Task Delete_UsernameDoesNotMatchDatabaseUser_ReturnsForbiddenUserError()
+    {
+        //ARRANGE
+        var user = CreateUser(username: "victim");
+        await _dbContext.Users.AddAsync(user);
+        await _dbContext.SaveChangesAsync();
+
+        var dto = new UserDeleteParams()
+        {
+            UserInformation = CreateUserInformation(user.Id, "attacker"),
+            Username = "attacker",
+            Password = "password"
+        };
+        var service = CreateService();
+
+        //ACT
+        var res = await service.Delete(dto);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.False);
+        Assert.That(res.Error, Is.EqualTo(UserAuthError.ForbiddenUser));
+        _passwordHasher.DidNotReceive().VerifyHashedPassword(Arg.Any<string>(), Arg.Any<string>());
+        Assert.That(await _dbContext.Users.AnyAsync(u => u.Id == user.Id), Is.True);
+        _logger.ReceivedLog(LogLevel.Information, "Requested username does not match authenticated user.");
+    }
+
+    [Test]
     public async Task Delete_UserNotFound_ReturnsNoUserFoundError()
     {
         //ARRANGE
-        var dto = _fixture.Create<UserDeleteParams>();
+        var dto = new UserDeleteParams()
+        {
+            UserInformation = CreateUserInformation(Guid.NewGuid(), "missing_user"),
+            Username = "missing_user",
+            Password = "password"
+        };
         var service = CreateService();
 
         //ACT
@@ -422,6 +517,7 @@ public class UserManagerServiceTests
 
         var dto = new UserDeleteParams()
         {
+            UserInformation = CreateUserInformation(user.Id, username),
             Username = username,
             Password = password
         };
@@ -452,6 +548,7 @@ public class UserManagerServiceTests
 
         var dto = new UserDeleteParams()
         {
+            UserInformation = CreateUserInformation(user.Id, username),
             Username = username,
             Password = password
         };
@@ -464,6 +561,39 @@ public class UserManagerServiceTests
         Assert.That(res.IsSuccess, Is.True);
 
         var dbUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
+        Assert.That(dbUser, Is.Null);
+        _logger.ReceivedLog(LogLevel.Information, "Removed user from database.");
+    }
+
+    [Test]
+    public async Task Delete_UsernameWithDifferentCasing_RemovesUserAndReturnsSuccess()
+    {
+        //ARRANGE
+        const string username = "User_To_Delete";
+        const string password = "correct_password";
+        const string hashedPassword = "hashed_password";
+
+        var user = CreateUser(username: "User_To_Delete", passwordHash: hashedPassword);
+        await _dbContext.Users.AddAsync(user);
+        await _dbContext.SaveChangesAsync();
+
+        _passwordHasher.VerifyHashedPassword(password, hashedPassword).Returns(true);
+
+        var dto = new UserDeleteParams()
+        {
+            UserInformation = CreateUserInformation(user.Id, "stale-token-username"),
+            Username = "USER_TO_DELETE",
+            Password = password
+        };
+        var service = CreateService();
+
+        //ACT
+        var res = await service.Delete(dto);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.True);
+
+        var dbUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == user.Id);
         Assert.That(dbUser, Is.Null);
         _logger.ReceivedLog(LogLevel.Information, "Removed user from database.");
     }
@@ -637,11 +767,22 @@ public class UserManagerServiceTests
         {
             Id = id ?? Guid.NewGuid(),
             Username = username,
+            NormalizedUsername = username.ToLowerInvariant(),
             Email = email,
             PasswordHash = passwordHash,
             CreatedAt = DateTimeOffset.UtcNow,
             DateOfBirth = new DateOnly(2000, 1, 1),
             UserStatus = status
+        };
+    }
+
+    private static UserInformationToken CreateUserInformation(Guid userId, string normalizedUsername)
+    {
+        return new UserInformationToken
+        {
+            RawToken = "token",
+            NormalizedUsername = normalizedUsername,
+            UserId = userId
         };
     }
 
