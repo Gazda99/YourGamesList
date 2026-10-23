@@ -21,7 +21,7 @@ public class VerificationEmailSenderOptionsValidator : AbstractValidator<Verific
     {
         RuleFor(x => x.YglUrl)
             .NotEmpty()
-            .IsValidAbsoluteUrl();;
+            .IsValidAbsoluteUrl();
         RuleFor(x => x.Password)
             .NotEmpty();
         RuleFor(x => x.Address)

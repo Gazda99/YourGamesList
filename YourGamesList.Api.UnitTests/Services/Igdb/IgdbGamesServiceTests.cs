@@ -66,7 +66,7 @@ public class IgdbGamesServiceTests
 
         //ASSERT
         Assert.That(res.IsSuccess, Is.True);
-        _logger.ReceivedLog(LogLevel.Information, $"Searching for game '{gameName}'");
+        _logger.ReceivedLog(LogLevel.Information, $"Searching for game {gameName}");
         await _igdbService.Received(1).CallIgdb<IgdbGame[]>(IgdbEndpoints.Game, Arg.Is<string>(x =>
             x.Contains(RequestGameFields)
             && x.Contains($"name ~ *\"{gameName}\"*")
@@ -93,7 +93,7 @@ public class IgdbGamesServiceTests
 
         //ASSERT
         Assert.That(res.IsSuccess, Is.True);
-        _logger.ReceivedLog(LogLevel.Information, $"Searching for '{gameIds.Length}' games with ids: '[{ids}]'");
+        _logger.ReceivedLog(LogLevel.Information, $"Searching for {gameIds.Length} games with ids: [{ids}]");
         await _igdbService.Received(1).CallIgdb<IgdbGame[]>(IgdbEndpoints.Game, Arg.Is<string>(x =>
             x.Contains(RequestGameFields)
             && x.Contains($"id = ({ids})")

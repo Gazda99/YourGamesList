@@ -116,7 +116,7 @@ public class TwitchAuthServiceTests
         //ASSERT
         Assert.That(res.IsSuccess, Is.False);
         await _twitchAuthApi.Received(1).GetAccessToken(Arg.Any<FormUrlEncodedContent>());
-        _logger.ReceivedLog(LogLevel.Error, $"Twitch responded with '{status}' status code. Could not obtain Twitch access token.");
+        _logger.ReceivedLog(LogLevel.Error, $"Twitch responded with {status} status code. Could not obtain Twitch access token.");
     }
 
     [Test]
