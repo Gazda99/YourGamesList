@@ -371,7 +371,6 @@ public class ListsManagerService : IListsManagerService
     {
         var userId = updateParams.UserInformation.UserId;
         var entry = await _yglDbContext.GameListEntries
-            .Include(gameListEntry => gameListEntry.GamesList)
             .FirstOrDefaultAsync(gameListEntry =>
                 gameListEntry.Id == updateParams.Id &&
                 gameListEntry.GamesListId == updateParams.GamesListId &&
@@ -393,12 +392,6 @@ public class ListsManagerService : IListsManagerService
         if (!completionStatusChanged && !descriptionChanged && !ratingChanged)
         {
             return ErrorResult<ListsError>.Success();
-        }
-
-        if (!entry.GamesList.Editable)
-        {
-            _logger.LogInformation("Cannot edit game list entry {EntryId} in a protected list.", updateParams.Id);
-            return ErrorResult<ListsError>.Failure(ListsError.ListCannotBeEdited);
         }
 
         if (completionStatusChanged)
