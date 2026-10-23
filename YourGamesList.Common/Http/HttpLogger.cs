@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -43,7 +44,7 @@ public class HttpLogger : IHttpClientLogger
             : null;
         using var requestStopScopes = _logger.BeginScope(RequestStopScopes(response, elapsed));
 
-        _logger.LogInformation($"Received '{(int) response.StatusCode} {response.StatusCode}' after {elapsed.TotalMilliseconds:F1}ms");
+        _logger.LogInformation($"Received '{(int) response.StatusCode} {response.StatusCode}' after {FormatElapsedMilliseconds(elapsed)}ms");
     }
 
     public void LogRequestFailed(object? context, HttpRequestMessage request, HttpResponseMessage? response, Exception exception, TimeSpan elapsed)
@@ -57,7 +58,7 @@ public class HttpLogger : IHttpClientLogger
         using var requestFailedScopes = _logger.BeginScope(RequestFailedScopes(request, elapsed));
 
         _logger.LogWarning(exception,
-            $"Request '{request.Method}' towards '{request.RequestUri?.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped)}{request.RequestUri!.PathAndQuery}' failed after {elapsed.TotalMilliseconds:F1}ms");
+            $"Request '{request.Method}' towards '{request.RequestUri?.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped)}{request.RequestUri!.PathAndQuery}' failed after {FormatElapsedMilliseconds(elapsed)}ms");
     }
 
     private static bool TryGetLogScopesFromHttpHeaders(HttpHeaders? headers, Dictionary<string, string> headersToLog,
@@ -102,7 +103,7 @@ public class HttpLogger : IHttpClientLogger
         {
             ["Response.StatusCodeInt"] = (int) response.StatusCode,
             ["Response.StatusCodeString"] = response.StatusCode,
-            ["Response.ElapsedMilliseconds"] = elapsed.TotalMilliseconds.ToString("F1")
+            ["Response.ElapsedMilliseconds"] = FormatElapsedMilliseconds(elapsed)
         };
     }
 
@@ -113,7 +114,10 @@ public class HttpLogger : IHttpClientLogger
             ["Request.Method"] = request.Method,
             ["Request.Host"] = request.RequestUri?.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped) ?? "N/A",
             ["Request.Path"] = request.RequestUri!.PathAndQuery,
-            ["Response.ElapsedMilliseconds"] = elapsed.TotalMilliseconds.ToString("F1")
+            ["Response.ElapsedMilliseconds"] = FormatElapsedMilliseconds(elapsed)
         };
     }
+
+    private static string FormatElapsedMilliseconds(TimeSpan elapsed) =>
+        elapsed.TotalMilliseconds.ToString("F1", CultureInfo.InvariantCulture);
 }

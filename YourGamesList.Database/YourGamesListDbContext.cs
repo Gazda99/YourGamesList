@@ -68,6 +68,9 @@ public class YourGamesListDbContext : DbContext
         {
             entity.HasKey(x => x.Id);
 
+            entity.HasIndex(x => new { x.GamesListId, x.IgdbId })
+                .IsUnique();
+
             entity.HasMany(x => x.OwnershipInfo)
                 .WithOne(x => x.GameListEntry)
                 .HasForeignKey(x => x.GameListEntryId)

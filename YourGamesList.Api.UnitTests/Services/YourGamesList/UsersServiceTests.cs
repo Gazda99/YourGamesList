@@ -47,6 +47,7 @@ public class UsersServiceTests
         var gamesListCreatedAt = createdAt.AddMinutes(1);
         const string gamesListName = "Completed games";
         const string gamesListDescription = "Games I finished";
+        var gamesListId = Guid.NewGuid();
         _dbContext.Users.Add(new User
         {
             Id = userId,
@@ -60,9 +61,9 @@ public class UsersServiceTests
         });
         _dbContext.GamesLists.Add(new GamesList
         {
-            Id = Guid.NewGuid(),
+            Id = gamesListId,
             CreatedAt = gamesListCreatedAt,
-            CanBeDeleted = true,
+            Editable = true,
             Description = gamesListDescription,
             IsPrivate = false,
             Name = gamesListName,
@@ -86,6 +87,7 @@ public class UsersServiceTests
         Assert.That(result.Value.DateOfBirth, Is.EqualTo(dateOfBirth));
 
         var gamesList = result.Value.GamesLists.Single();
+        Assert.That(gamesList.Id, Is.EqualTo(gamesListId));
         Assert.That(gamesList.CreatedAt, Is.EqualTo(gamesListCreatedAt));
         Assert.That(gamesList.Description, Is.EqualTo(gamesListDescription));
         Assert.That(gamesList.IsPrivate, Is.False);

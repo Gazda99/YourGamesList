@@ -6,5 +6,9 @@ public enum ListsError
     UserNotFound,
     ListAlreadyExists,
     ListNotFound,
-    ListCannotBeDeleted
+    ListCannotBeDeleted,
+    ListCannotBeEdited,
+    GameListEntryAlreadyExists,
+    GameListEntryNotFound,
+    OwnershipInfoNotFound
 }

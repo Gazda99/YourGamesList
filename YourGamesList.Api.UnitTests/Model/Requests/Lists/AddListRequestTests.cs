@@ -11,7 +11,7 @@ using YourGamesList.Contracts.Responses;
 
 namespace YourGamesList.Api.UnitTests.Model.Requests.Lists;
 
-public class CreateListRequestTests
+public class AddListRequestTests
 {
     private ILogger<CreateListRequestValidator> _logger;
     private IOptions<RequestValidatorOptions> _options;
@@ -23,7 +23,11 @@ public class CreateListRequestTests
         _options = Substitute.For<IOptions<RequestValidatorOptions>>();
         _options.Value.Returns(new RequestValidatorOptions
         {
-            Lists = new ListsValidatorOptions { MaximumListNameLength = 20 }
+            Lists = new ListsValidatorOptions
+            {
+                MinimumListNameLength = 3,
+                MaximumListNameLength = 20
+            }
         });
     }
 
@@ -72,6 +76,36 @@ public class CreateListRequestTests
     }
 
     [Test]
+    public void Validate_NameShorterThanMinimumLengthAfterTrimming_ReturnsValidationError()
+    {
+        //ARRANGE
+        var request = CreateRequest(" ab ");
+        var validator = CreateValidator();
+
+        //ACT
+        var result = validator.TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.False);
+        result.ShouldHaveValidationErrorFor(x => x.Body.Name)
+            .WithErrorCode(ErrorCodes.Lists.InvalidListName);
+    }
+
+    [Test]
+    public void Validate_NameAtMinimumLengthAfterTrimming_ReturnsValid()
+    {
+        //ARRANGE
+        var request = CreateRequest(" abc ");
+        var validator = CreateValidator();
+
+        //ACT
+        var result = validator.TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.True);
+    }
+
+    [Test]
     public void Validate_NameExceedsMaximumLength_ReturnsValidationError()
     {
         //ARRANGE
@@ -107,7 +141,7 @@ public class CreateListRequestTests
     {
         //ARRANGE
         var request = CreateRequest("My games");
-        request = new CreateListRequest
+        request = new AddListRequest
         {
             UserInformation = request.UserInformation,
             Body = null!
@@ -127,7 +161,7 @@ public class CreateListRequestTests
     public void Validate_UserInformationMissing_ReturnsValidationError()
     {
         //ARRANGE
-        var request = new CreateListRequest
+        var request = new AddListRequest
         {
             UserInformation = null!,
             Body = new CreateListRequestBody("My games")
@@ -147,9 +181,9 @@ public class CreateListRequestTests
         return new CreateListRequestValidator(_logger, _options);
     }
 
-    private static CreateListRequest CreateRequest(string name)
+    private static AddListRequest CreateRequest(string name)
     {
-        return new CreateListRequest()
+        return new AddListRequest()
         {
             UserInformation = new UserInformationToken
             {

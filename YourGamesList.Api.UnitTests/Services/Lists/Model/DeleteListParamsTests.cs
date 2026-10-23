@@ -2,7 +2,6 @@ using System;
 using YourGamesList.Api.Model;
 using YourGamesList.Api.Model.Requests.Lists;
 using YourGamesList.Api.Services.Lists.Model;
-using YourGamesList.Contracts.Requests.Lists;
 
 namespace YourGamesList.Api.UnitTests.Services.Lists.Model;
 
@@ -15,7 +14,7 @@ public class DeleteListParamsTests
         var request = new DeleteListRequest
         {
             UserInformation = CreateUserInformation(),
-            Body = new DeleteListRequestBody(listId)
+            ListId = listId
         };
 
         var result = request.ToParams();

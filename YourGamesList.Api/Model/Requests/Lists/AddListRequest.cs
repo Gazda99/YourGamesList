@@ -9,13 +9,13 @@ using YourGamesList.Contracts.Responses;
 
 namespace YourGamesList.Api.Model.Requests.Lists;
 
-public class CreateListRequest
+public class AddListRequest
 {
     [FromAuthorizeHeader] public required UserInformationToken UserInformation { get; init; }
     [FromBody] public required CreateListRequestBody Body { get; init; }
 }
 
-public class CreateListRequestValidator : AbstractValidator<CreateListRequest>
+public class CreateListRequestValidator : AbstractValidator<AddListRequest>
 {
     public CreateListRequestValidator(
         ILogger<CreateListRequestValidator> logger,
@@ -35,6 +35,9 @@ public class CreateListRequestValidator : AbstractValidator<CreateListRequest>
                     .NotEmpty()
                     .WithErrorCode(ErrorCodes.Lists.InvalidListName)
                     .WithMessage("Invalid list name.")
+                    .Must(listName => NormalizeListName(listName).Length >= validatorOptions.Lists.MinimumListNameLength)
+                    .WithErrorCode(ErrorCodes.Lists.InvalidListName)
+                    .WithMessage($"List name must be at least {validatorOptions.Lists.MinimumListNameLength} characters.")
                     .Must(listName =>
                     {
                         var listNameNormalized = NormalizeListName(listName);

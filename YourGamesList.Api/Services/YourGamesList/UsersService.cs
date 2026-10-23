@@ -49,6 +49,7 @@ public class UsersService : IUsersService
         {
             CreatedAt = x.CreatedAt,
             Description = x.Description,
+            Id = x.Id,
             IsPrivate = x.IsPrivate,
             Name = x.Name,
         }).ToList();

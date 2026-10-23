@@ -3,17 +3,17 @@ using YourGamesList.Api.Model.Requests.Lists;
 
 namespace YourGamesList.Api.Services.Lists.Model;
 
-public class CreateListParams
+public class AddListParams
 {
     public required UserInformationToken UserInformation { get; set; }
     public required string Name { get; set; }
 }
 
-public static class CreateListParamsMappingExtensions
+public static class AddListParamsMappingExtensions
 {
-    public static CreateListParams ToParams(this CreateListRequest request)
+    public static AddListParams ToParams(this AddListRequest request)
     {
-        return new CreateListParams
+        return new AddListParams
         {
             UserInformation = request.UserInformation,
             Name = request.Body.Name.Trim()

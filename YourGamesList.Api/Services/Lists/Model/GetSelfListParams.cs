@@ -1,5 +1,4 @@
-﻿using System;
-using YourGamesList.Api.Model;
+﻿using YourGamesList.Api.Model;
 using YourGamesList.Api.Model.Requests.Lists;
 
 namespace YourGamesList.Api.Services.Lists.Model;

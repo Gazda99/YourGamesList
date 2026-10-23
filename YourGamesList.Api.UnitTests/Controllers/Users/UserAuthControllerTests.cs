@@ -243,13 +243,13 @@ public class UserAuthControllerTests
         var controller = CreateController();
 
         //ACT
-        var res = await controller.Delete(request);
+        var res = await controller.Remove(request);
 
         //ASSERT
         var statusCodeResult = res as IStatusCodeActionResult;
         Assert.That(statusCodeResult, Is.Not.Null);
         Assert.That(statusCodeResult.StatusCode, Is.EqualTo(StatusCodes.Status204NoContent));
-        _logger.ReceivedLog(LogLevel.Information, $"Requested to delete user {request.Body.Username}");
+        _logger.ReceivedLog(LogLevel.Information, $"Requested to remove user {request.Body.Username}");
     }
 
     [Test]
@@ -264,7 +264,7 @@ public class UserAuthControllerTests
         var controller = CreateController();
 
         //ACT
-        var res = await controller.Delete(request);
+        var res = await controller.Remove(request);
 
         //ASSERT
         var statusCodeResult = res as IStatusCodeActionResult;
@@ -284,7 +284,7 @@ public class UserAuthControllerTests
         var controller = CreateController();
 
         //ACT
-        var res = await controller.Delete(request);
+        var res = await controller.Remove(request);
 
         //ASSERT
         var statusCodeResult = res as IStatusCodeActionResult;
@@ -304,7 +304,7 @@ public class UserAuthControllerTests
         var controller = CreateController();
 
         //ACT
-        var res = await controller.Delete(request);
+        var res = await controller.Remove(request);
 
         //ASSERT
         var statusCodeResult = res as IStatusCodeActionResult;

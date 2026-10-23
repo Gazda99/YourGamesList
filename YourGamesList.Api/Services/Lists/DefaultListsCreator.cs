@@ -34,7 +34,7 @@ public class DefaultListsCreator : IDefaultListsCreator
             CreatedAt = now,
             Name = "Wishlist",
             User = user,
-            CanBeDeleted = false,
+            Editable = false,
             IsPrivate = true,
             Description = "Games I would like to play."
         };
@@ -44,7 +44,7 @@ public class DefaultListsCreator : IDefaultListsCreator
             CreatedAt = now,
             Name = "Played",
             User = user,
-            CanBeDeleted = false,
+            Editable = false,
             IsPrivate = true,
             Description = "Games I have played so far."
         };

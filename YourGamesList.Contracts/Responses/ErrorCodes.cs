@@ -42,8 +42,18 @@ public static class ErrorCodes
         public const string ListAlreadyExists = "ListAlreadyExists";
         public const string ListNameTooLong = "ListNameTooLong";
         public const string InvalidListName = "InvalidListName";
+        public const string InvalidListDescription = "InvalidListDescription";
+        public const string InvalidListPrivacy = "InvalidListPrivacy";
         public const string ListNotFound = "ListNotFound";
         public const string ListCannotBeDeleted = "ListCannotBeDeleted";
+        public const string ListCannotBeEdited = "ListCannotBeEdited";
+        public const string GameListEntryAlreadyExists = "GameListEntryAlreadyExists";
+        public const string GameListEntryNotFound = "GameListEntryNotFound";
+        public const string InvalidGameListEntryCompletionStatus = "InvalidGameListEntryCompletionStatus";
+        public const string InvalidGameListEntryIgdbId = "InvalidGameListEntryIgdbId";
+        public const string InvalidGameListEntryDescription = "InvalidGameListEntryDescription";
+        public const string InvalidListSearchCriteria = "InvalidListSearchCriteria";
+        public const string OwnershipInfoNotFound = "OwnershipInfoNotFound";
     }
 
     public static class Validation

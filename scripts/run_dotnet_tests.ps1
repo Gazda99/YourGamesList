@@ -25,6 +25,7 @@ Push-Location $repoRoot
 
 $configFolder = Join-Path $repoRoot '.config'
 $toolManifestPath = Join-Path $configFolder 'dotnet-tools.json'
+$testExitCode = 0
 
 try
 {
@@ -54,6 +55,7 @@ try
         --configuration Release `
         --collect:"XPlat Code Coverage" `
         --results-directory $testResultsDir
+    $testExitCode = $LASTEXITCODE
 
     # generate report
     Write-Host "Generating HTML coverage report..."
@@ -71,10 +73,22 @@ try
     if (Test-Path $indexHtmlPath)
     {
         Write-Host "Opening report in browser..."
-        Start-Process $indexHtmlPath
+        if ($IsMacOS)
+        {
+            & open $indexHtmlPath
+        }
+        elseif ($IsWindows)
+        {
+            Start-Process $indexHtmlPath
+        }
     }
 }
 finally
 {
     Pop-Location
+}
+
+if ($testExitCode -ne 0)
+{
+    exit $testExitCode
 }

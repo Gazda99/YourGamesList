@@ -24,7 +24,9 @@ public class RequestValidatorOptionsTests
                 .With(x => x.MaximumEmailLength, 100)
                 .Create())
             .With(x => x.Lists, _fixture.Build<ListsValidatorOptions>()
+                .With(x => x.MinimumListNameLength, 3)
                 .With(x => x.MaximumListNameLength, 100)
+                .With(x => x.MaximumGameListEntryDescriptionLength, 500)
                 .Create())
             .With(x => x.Username, _fixture.Build<UsernameValidatorOptions>()
                 .With(x => x.AllowedCharactersRegex, "^[a-zA-Z0-9]+$")
@@ -81,6 +83,49 @@ public class RequestValidatorOptionsTests
     [Test]
     [TestCase(0)]
     [TestCase(-10)]
+    public void Validate_InvalidMinimumListNameLength_ReturnsFalse(int minimumListNameLength)
+    {
+        //ARRANGE
+        var options = _fixture.Build<ListsValidatorOptions>()
+            .With(x => x.MinimumListNameLength, minimumListNameLength)
+            .With(x => x.MaximumListNameLength, 100)
+            .With(x => x.MaximumGameListEntryDescriptionLength, 500)
+            .Create();
+
+        var validator = new ListsValidatorOptionsValidator();
+
+        //ACT
+        var res = validator.TestValidate(options);
+
+        //ASSERT
+        Assert.That(res.IsValid, Is.False);
+        res.ShouldHaveValidationErrorFor(x => x.MinimumListNameLength);
+    }
+
+    [Test]
+    public void Validate_ListNameMinimumBiggerThanMaximum_ReturnsFalse()
+    {
+        //ARRANGE
+        var options = _fixture.Build<ListsValidatorOptions>()
+            .With(x => x.MinimumListNameLength, 100)
+            .With(x => x.MaximumListNameLength, 10)
+            .With(x => x.MaximumGameListEntryDescriptionLength, 500)
+            .Create();
+
+        var validator = new ListsValidatorOptionsValidator();
+
+        //ACT
+        var res = validator.TestValidate(options);
+
+        //ASSERT
+        Assert.That(res.IsValid, Is.False);
+        Assert.That(res.Errors.Select(x => x.ErrorMessage), Contains.Item(
+            "Minimum list name length must be less or equal than maximum list name length."));
+    }
+
+    [Test]
+    [TestCase(0)]
+    [TestCase(-10)]
     public void Validate_InvalidMaximumListNameLength_ReturnsFalse(int maximumListNameLength)
     {
         //ARRANGE
@@ -97,6 +142,26 @@ public class RequestValidatorOptionsTests
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
         res.ShouldHaveValidationErrorFor(x => x.MaximumListNameLength);
+    }
+
+    [Test]
+    [TestCase(0)]
+    [TestCase(-10)]
+    public void Validate_InvalidMaximumGameListEntryDescriptionLength_ReturnsFalse(int maximumDescriptionLength)
+    {
+        //ARRANGE
+        var options = _fixture.Build<ListsValidatorOptions>()
+            .With(x => x.MaximumGameListEntryDescriptionLength, maximumDescriptionLength)
+            .Create();
+
+        var validator = new ListsValidatorOptionsValidator();
+
+        //ACT
+        var res = validator.TestValidate(options);
+
+        //ASSERT
+        Assert.That(res.IsValid, Is.False);
+        res.ShouldHaveValidationErrorFor(x => x.MaximumGameListEntryDescriptionLength);
     }
 
     #endregion

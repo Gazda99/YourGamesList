@@ -7,7 +7,7 @@ param(
 
 $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptDirectory
-$apiProjectPath = Join-Path $repoRoot 'YourGamesList.API/YourGamesList.API.csproj'
+$apiProjectPath = Join-Path $repoRoot 'YourGamesList.Api/YourGamesList.Api.csproj'
 $databaseProjectPath = Join-Path $repoRoot 'YourGamesList.Database/YourGamesList.Database.csproj'
 
 # Tool versions

@@ -114,15 +114,15 @@ public class UserAuthController : YourGamesListBaseController
         }
     }
 
-    [HttpDelete("delete")]
+    [HttpDelete("remove")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(UserDeleteRequest userDeleteRequest)
+    public async Task<IActionResult> Remove(UserDeleteRequest userDeleteRequest)
     {
-        _logger.LogInformation("Requested to delete user {Username}", userDeleteRequest.Body.Username);
+        _logger.LogInformation("Requested to remove user {Username}", userDeleteRequest.Body.Username);
 
         var userDeleteParams = userDeleteRequest.ToParams();
 

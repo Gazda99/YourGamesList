@@ -6,12 +6,12 @@ using YourGamesList.Contracts.Requests.Lists;
 
 namespace YourGamesList.Api.UnitTests.Services.Lists.Model;
 
-public class CreateListParamsTests
+public class AddListParamsTests
 {
     [Test]
     public void ToParams_MapsName()
     {
-        var request = new CreateListRequest
+        var request = new AddListRequest
         {
             UserInformation = CreateUserInformation(),
             Body = new CreateListRequestBody(" My games")
