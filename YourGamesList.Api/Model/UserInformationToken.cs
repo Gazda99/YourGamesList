@@ -27,11 +27,6 @@ public class UserInformationToken
             return CombinedResult<UserInformationToken, UserInformationTokenCreationError>.Failure(UserInformationTokenCreationError.RawTokenMissing());
         }
 
-        if (user.Identity?.IsAuthenticated != true)
-        {
-            return CombinedResult<UserInformationToken, UserInformationTokenCreationError>.Failure(UserInformationTokenCreationError.NotValid());
-        }
-
         var normalizedUsernameClaimReadResult = GetRequiredClaimOrThrow(user, JwtRegisteredClaimNames.Sub);
         if (normalizedUsernameClaimReadResult.IsFailure)
         {
