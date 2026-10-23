@@ -25,7 +25,9 @@ public class UpdateGameListEntryRequestTests
         {
             Lists = new ListsValidatorOptions
             {
-                MaximumGameListEntryDescriptionLength = 10
+                MaximumGameListEntryDescriptionLength = 10,
+                MinimumGameListEntryRating = 0,
+                MaximumGameListEntryRating = 5
             }
         });
     }
@@ -143,6 +145,54 @@ public class UpdateGameListEntryRequestTests
         Assert.That(omitted?.Description.HasValue, Is.False);
         Assert.That(explicitNull?.Description.HasValue, Is.True);
         Assert.That(explicitNull?.Description.Value, Is.Null);
+    }
+
+    [TestCase((byte)0)]
+    [TestCase((byte)5)]
+    public void Validate_RatingWithinRange_IsValid(byte rating)
+    {
+        //ARRANGE
+        var request = new UpdateGameListEntryRequest
+        {
+            UserInformation = CreateUserInformation(),
+            ListId = Guid.NewGuid(),
+            EntryId = Guid.NewGuid(),
+            Body = new UpdateGameListEntryRequestBody
+            {
+                Rating = Optional<byte?>.Some(rating)
+            }
+        };
+
+        //ACT
+        var result = CreateValidator().TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.True);
+    }
+
+    [TestCase((byte)6)]
+    [TestCase((byte)255)]
+    public void Validate_RatingAboveMaximum_IsInvalid(byte rating)
+    {
+        //ARRANGE
+        var request = new UpdateGameListEntryRequest
+        {
+            UserInformation = CreateUserInformation(),
+            ListId = Guid.NewGuid(),
+            EntryId = Guid.NewGuid(),
+            Body = new UpdateGameListEntryRequestBody
+            {
+                Rating = Optional<byte?>.Some(rating)
+            }
+        };
+
+        //ACT
+        var result = CreateValidator().TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.False);
+        result.ShouldHaveValidationErrorFor(x => x.Body.Rating)
+            .WithErrorCode(ErrorCodes.Lists.InvalidGameListEntryRating);
     }
 
     private static UserInformationToken CreateUserInformation() => new()

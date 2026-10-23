@@ -38,6 +38,11 @@ public class AddOwnershipInfoRequestValidator : AbstractValidator<AddOwnershipIn
                 body.RuleFor(request => request.EmulatedOn)
                     .Must(emulator => emulator == null || Enum.IsDefined(emulator.Value))
                     .WithMessage("Invalid emulator.");
+                body.RuleFor(request => request.EmulatedOn)
+                    .Null()
+                    .When(request => !request.WasEmulated)
+                    .WithErrorCode(ErrorCodes.Lists.InvalidOwnershipInfoEmulation)
+                    .WithMessage("EmulatedOn can only be set when WasEmulated is true.");
             });
     }
 }

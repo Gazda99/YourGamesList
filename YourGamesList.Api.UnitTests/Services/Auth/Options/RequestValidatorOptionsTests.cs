@@ -27,6 +27,8 @@ public class RequestValidatorOptionsTests
                 .With(x => x.MinimumListNameLength, 3)
                 .With(x => x.MaximumListNameLength, 100)
                 .With(x => x.MaximumGameListEntryDescriptionLength, 500)
+                .With(x => x.MinimumGameListEntryRating, 0)
+                .With(x => x.MaximumGameListEntryRating, 5)
                 .Create())
             .With(x => x.Username, _fixture.Build<UsernameValidatorOptions>()
                 .With(x => x.AllowedCharactersRegex, "^[a-zA-Z0-9]+$")
@@ -162,6 +164,72 @@ public class RequestValidatorOptionsTests
         //ASSERT
         Assert.That(res.IsValid, Is.False);
         res.ShouldHaveValidationErrorFor(x => x.MaximumGameListEntryDescriptionLength);
+    }
+
+    [Test]
+    [TestCase(-1)]
+    [TestCase(-10)]
+    public void Validate_InvalidMinimumGameListEntryRating_ReturnsFalse(int minimumRating)
+    {
+        //ARRANGE
+        var options = _fixture.Build<ListsValidatorOptions>()
+            .With(x => x.MinimumGameListEntryRating, minimumRating)
+            .With(x => x.MaximumGameListEntryRating, 5)
+            .Create();
+
+        var validator = new ListsValidatorOptionsValidator();
+
+        //ACT
+        var res = validator.TestValidate(options);
+
+        //ASSERT
+        Assert.That(res.IsValid, Is.False);
+        res.ShouldHaveValidationErrorFor(x => x.MinimumGameListEntryRating);
+    }
+
+    [Test]
+    [TestCase(0)]
+    [TestCase(-10)]
+    [TestCase(256)]
+    public void Validate_InvalidMaximumGameListEntryRating_ReturnsFalse(int maximumRating)
+    {
+        //ARRANGE
+        var options = _fixture.Build<ListsValidatorOptions>()
+            .With(x => x.MinimumGameListEntryRating, 0)
+            .With(x => x.MaximumGameListEntryRating, maximumRating)
+            .Create();
+
+        var validator = new ListsValidatorOptionsValidator();
+
+        //ACT
+        var res = validator.TestValidate(options);
+
+        //ASSERT
+        Assert.That(res.IsValid, Is.False);
+        res.ShouldHaveValidationErrorFor(x => x.MaximumGameListEntryRating);
+    }
+
+    [Test]
+    public void Validate_GameListEntryRatingMinimumBiggerThanMaximum_ReturnsFalse()
+    {
+        //ARRANGE
+        var options = _fixture.Build<ListsValidatorOptions>()
+            .With(x => x.MinimumListNameLength, 3)
+            .With(x => x.MaximumListNameLength, 100)
+            .With(x => x.MaximumGameListEntryDescriptionLength, 500)
+            .With(x => x.MinimumGameListEntryRating, 5)
+            .With(x => x.MaximumGameListEntryRating, 1)
+            .Create();
+
+        var validator = new ListsValidatorOptionsValidator();
+
+        //ACT
+        var res = validator.TestValidate(options);
+
+        //ASSERT
+        Assert.That(res.IsValid, Is.False);
+        Assert.That(res.Errors.Select(x => x.ErrorMessage), Contains.Item(
+            "Minimum game list entry rating must be less or equal than maximum game list entry rating."));
     }
 
     #endregion

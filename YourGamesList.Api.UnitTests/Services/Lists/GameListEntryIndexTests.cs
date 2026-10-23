@@ -38,6 +38,59 @@ public class GameListEntryIndexTests
         await Assert.ThrowsAsync<DbUpdateException>(async () => await dbContext.SaveChangesAsync());
     }
 
+    [TestCase((byte)0)]
+    [TestCase((byte)5)]
+    public async Task RatingCheckConstraint_AllowsRatingWithinRange(byte rating)
+    {
+        //ARRANGE
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<YourGamesListDbContext>()
+            .UseSqlite(connection)
+            .Options;
+        await using var dbContext = new YourGamesListDbContext(options);
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var list = CreateList(CreateUser());
+        dbContext.GamesLists.Add(list);
+        await dbContext.SaveChangesAsync();
+
+        var entry = CreateEntry(list.Id, 123);
+        entry.Rating = rating;
+
+        //ACT
+        dbContext.GameListEntries.Add(entry);
+
+        //ASSERT
+        await Assert.DoesNotThrowAsync(async () => await dbContext.SaveChangesAsync());
+    }
+
+    [Test]
+    public async Task RatingCheckConstraint_RejectsRatingAboveMaximum()
+    {
+        //ARRANGE
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<YourGamesListDbContext>()
+            .UseSqlite(connection)
+            .Options;
+        await using var dbContext = new YourGamesListDbContext(options);
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var list = CreateList(CreateUser());
+        dbContext.GamesLists.Add(list);
+        await dbContext.SaveChangesAsync();
+
+        var entry = CreateEntry(list.Id, 123);
+        entry.Rating = 50;
+
+        //ACT
+        dbContext.GameListEntries.Add(entry);
+
+        //ASSERT
+        await Assert.ThrowsAsync<DbUpdateException>(async () => await dbContext.SaveChangesAsync());
+    }
+    
     [Test]
     public async Task UniqueNormalizedListName_IsScopedToEachUser()
     {

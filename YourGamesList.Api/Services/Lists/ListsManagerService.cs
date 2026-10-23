@@ -498,6 +498,15 @@ public class ListsManagerService : IListsManagerService
             return ErrorResult<ListsError>.Success();
         }
 
+        var resultingWasEmulated = wasEmulatedChanged ? updateParams.WasEmulated.Value!.Value : ownershipInfo.WasEmulated;
+        var resultingEmulatedOn = emulatedOnChanged ? updateParams.EmulatedOn.Value : (EmulatorDto?)ownershipInfo.EmulatedOn;
+
+        if (!resultingWasEmulated && resultingEmulatedOn != null)
+        {
+            _logger.LogInformation("Cannot set emulator for ownership info {OwnershipInfoId} that was not emulated.", updateParams.OwnershipInfoId);
+            return ErrorResult<ListsError>.Failure(ListsError.InvalidOwnershipInfoEmulation);
+        }
+
         if (isLegitChanged)
         {
             ownershipInfo.IsLegit = updateParams.IsLegit.Value;

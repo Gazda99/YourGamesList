@@ -592,6 +592,34 @@ public class ListsControllerTests
     }
 
     [Test]
+    public async Task UpdateOwnershipInfo_InvalidEmulation_ReturnsBadRequest()
+    {
+        //ARRANGE
+        var error = _fixture.Create<Error>();
+        _domainErrorMapper.Map(ListsError.InvalidOwnershipInfoEmulation).Returns(error);
+        _listsManagerService.UpdateOwnershipInfo(Arg.Any<UpdateOwnershipInfoParams>())
+            .Returns(ErrorResult<ListsError>.Failure(ListsError.InvalidOwnershipInfoEmulation));
+
+        //ACT
+        var result = await CreateController().UpdateOwnershipInfo(new UpdateOwnershipInfoRequest
+        {
+            UserInformation = CreateUserInformation(),
+            ListId = Guid.NewGuid(),
+            EntryId = Guid.NewGuid(),
+            OwnershipInfoId = Guid.NewGuid(),
+            Body = new UpdateOwnershipInfoRequestBody()
+        });
+
+        //ASSERT
+        var objectResult = result as ObjectResult;
+        Assert.That(objectResult, Is.Not.Null);
+        Assert.That(objectResult?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+        var errorResponse = objectResult?.Value as ErrorResponse;
+        Assert.That(errorResponse, Is.Not.Null);
+        Assert.That(errorResponse?.Errors.Single(), Is.SameAs(error));
+    }
+
+    [Test]
     public async Task RemoveOwnershipInfo_Success_ReturnsNoContentAndPassesRouteIds()
     {
         //ARRANGE

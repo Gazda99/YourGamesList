@@ -384,6 +384,14 @@ public class ListsController : YourGamesListBaseController
                 });
             }
 
+            if (result.Error is ListsError.InvalidOwnershipInfoEmulation)
+            {
+                return Result(StatusCodes.Status400BadRequest, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
+            }
+
             return Result(StatusCodes.Status500InternalServerError);
         }
 
