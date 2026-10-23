@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using Microsoft.Extensions.Logging;
@@ -87,6 +88,32 @@ public class HttpLoggerTests
             ["Response.StatusCodeString"] = HttpStatusCode.OK,
             ["Response.ElapsedMilliseconds"] = "150.5"
         });
+    }
+
+    [Test]
+    public void LogRequestStop_UsesInvariantCultureForElapsedTime()
+    {
+        var originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
+            using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.yourgameslist.com/v1/games");
+            using var response = new HttpResponseMessage(HttpStatusCode.OK);
+
+            _httpLogger.LogRequestStop(null, request, response, TimeSpan.FromMilliseconds(150.47));
+
+            _logger.ReceivedLog(LogLevel.Information, "Received '200 OK' after 150.5ms");
+            _logger.ReceivedBeginScope(new Dictionary<string, object>
+            {
+                ["Response.StatusCodeInt"] = 200,
+                ["Response.StatusCodeString"] = HttpStatusCode.OK,
+                ["Response.ElapsedMilliseconds"] = "150.5"
+            });
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
     }
 
     [Test]
