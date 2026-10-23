@@ -357,6 +357,50 @@ public class ListsManagerServiceTests
     }
 
     [Test]
+    public async Task Update_NonEditableList_DescriptionChange_ReturnsCannotBeEdited()
+    {
+        var user = CreateUser();
+        var list = CreateList(user, "Custom protected", editable: false);
+        list.Description = "Before";
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().Update(new UpdateListParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            Id = list.Id,
+            HasDescription = true,
+            Description = "After"
+        });
+
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.ListCannotBeEdited));
+        Assert.That(list.Description, Is.EqualTo("Before"));
+    }
+
+    [Test]
+    public async Task Update_NonEditableList_PrivacyChange_ReturnsCannotBeEdited()
+    {
+        var user = CreateUser();
+        var list = CreateList(user, "Custom protected", editable: false);
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().Update(new UpdateListParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            Id = list.Id,
+            IsPrivate = !list.IsPrivate
+        });
+
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.ListCannotBeEdited));
+        Assert.That(list.IsPrivate, Is.True);
+    }
+
+    [Test]
     public async Task Update_DuplicateNameForSameUser_ReturnsAlreadyExists()
     {
         var user = CreateUser();
@@ -576,7 +620,7 @@ public class ListsManagerServiceTests
     }
 
     [Test]
-    public async Task UpdateGameListEntry_NonEditableList_ReturnsCannotBeEdited()
+    public async Task UpdateGameListEntry_NonEditableList_UpdatesEntry()
     {
         var user = CreateUser();
         var list = CreateList(user, "Wishlist", editable: false);
@@ -584,18 +628,22 @@ public class ListsManagerServiceTests
         _dbContext.Users.Add(user);
         _dbContext.GamesLists.Add(list);
         await _dbContext.SaveChangesAsync();
+        var modifiedAt = DateTimeOffset.UtcNow.AddMinutes(1);
+        _timeProvider.SetUtcNow(modifiedAt);
 
         var result = await CreateService().UpdateGameListEntry(new UpdateGameListEntryParams
         {
             UserInformation = CreateUserInformation(user.Id),
             GamesListId = list.Id,
             Id = entry.Id,
+            CompletionStatus = Optional<CompletionStatusDto?>.Some(CompletionStatusDto.Finished),
             Rating = Optional<byte?>.Some(8)
         });
 
-        Assert.That(result.IsFailure, Is.True);
-        Assert.That(result.Error, Is.EqualTo(ListsError.ListCannotBeEdited));
-        Assert.That(entry.Rating, Is.Null);
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(entry.CompletionStatus, Is.EqualTo(CompletionStatus.Finished));
+        Assert.That(entry.Rating, Is.EqualTo(8));
+        Assert.That(entry.ModifiedAt, Is.EqualTo(modifiedAt));
     }
 
     [Test]
