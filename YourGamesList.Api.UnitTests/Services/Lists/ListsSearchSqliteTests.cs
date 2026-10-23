@@ -83,7 +83,7 @@ public class ListsSearchSqliteTests
     private static UserInformationToken CreateUserInformation(Guid userId) => new()
     {
         RawToken = "token",
-        Username = "searcher",
+        NormalizedUsername = "searcher",
         UserId = userId
     };
 }

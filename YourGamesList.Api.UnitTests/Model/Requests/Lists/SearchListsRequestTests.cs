@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using FluentValidation.TestHelper;
 using Microsoft.Extensions.Options;
 using NSubstitute;
@@ -145,7 +145,7 @@ public class SearchListsRequestTests
         UserInformation = new UserInformationToken
         {
             RawToken = "token",
-            Username = "testuser",
+            NormalizedUsername = "testuser",
             UserId = Guid.NewGuid()
         },
         OwnerName = ownerName,

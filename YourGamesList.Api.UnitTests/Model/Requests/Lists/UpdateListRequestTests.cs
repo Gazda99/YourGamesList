@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Text.Json;
 using AutoFixture;
 using FluentValidation.TestHelper;
@@ -208,7 +208,7 @@ public class UpdateListRequestTests
         UserInformation = new UserInformationToken
         {
             RawToken = "token",
-            Username = "testuser",
+            NormalizedUsername = "testuser",
             UserId = Guid.NewGuid()
         },
         ListId = Guid.NewGuid(),

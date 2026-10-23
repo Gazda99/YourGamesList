@@ -10,7 +10,7 @@ namespace YourGamesList.Api.Model;
 public class UserInformationToken
 {
     public required string RawToken { get; init; }
-    public required string Username { get; init; }
+    public required string NormalizedUsername { get; init; }
     public required Guid UserId { get; init; }
 
     public static CombinedResult<UserInformationToken, UserInformationTokenCreationError> FromHttpContext(HttpContext httpContext)
@@ -32,10 +32,10 @@ public class UserInformationToken
             return CombinedResult<UserInformationToken, UserInformationTokenCreationError>.Failure(UserInformationTokenCreationError.NotValid());
         }
 
-        var usernameClaimReadResult = GetRequiredClaimOrThrow(user, JwtRegisteredClaimNames.Sub);
-        if (usernameClaimReadResult.IsFailure)
+        var normalizedUsernameClaimReadResult = GetRequiredClaimOrThrow(user, JwtRegisteredClaimNames.Sub);
+        if (normalizedUsernameClaimReadResult.IsFailure)
         {
-            return CombinedResult<UserInformationToken, UserInformationTokenCreationError>.Failure(usernameClaimReadResult.Error);
+            return CombinedResult<UserInformationToken, UserInformationTokenCreationError>.Failure(normalizedUsernameClaimReadResult.Error);
         }
 
         var rawUserIdClaimReadResult = GetRequiredClaimOrThrow(user, JwtCustomClaimNames.UserId);
@@ -54,7 +54,7 @@ public class UserInformationToken
         {
             RawToken = rawToken,
             UserId = userId,
-            Username = usernameClaimReadResult.Value
+            NormalizedUsername = normalizedUsernameClaimReadResult.Value
         };
         return CombinedResult<UserInformationToken, UserInformationTokenCreationError>.Success(userInformationToken);
     }

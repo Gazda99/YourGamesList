@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using YourGamesList.Api.Model;
 using YourGamesList.Api.Model.Requests.Lists;
 using YourGamesList.Api.Services.Lists.Model;
@@ -13,7 +13,7 @@ public class GetSelfListParamsTests
         var userInformation = new UserInformationToken
         {
             RawToken = "token",
-            Username = "testuser",
+            NormalizedUsername = "testuser",
             UserId = Guid.NewGuid()
         };
         var request = new GetSelfListRequest { UserInformation = userInformation };

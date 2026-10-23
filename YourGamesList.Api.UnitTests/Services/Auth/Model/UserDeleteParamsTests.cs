@@ -14,7 +14,7 @@ public class UserDeleteParamsTests
         var userInformation = new UserInformationToken
         {
             RawToken = "token",
-            Username = "testuser",
+            NormalizedUsername = "testuser",
             UserId = Guid.NewGuid()
         };
         var request = new UserDeleteRequest

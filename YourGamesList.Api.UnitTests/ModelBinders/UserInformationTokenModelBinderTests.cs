@@ -31,12 +31,12 @@ public class UserInformationTokenModelBinderTests
     {
         //ARRANGE
         var expectedUserId = Guid.NewGuid();
-        const string expectedUsername = "Gazda";
+        const string expectedNormalizedUsername = "gazda";
         const string expectedRawToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.sample.token";
 
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, expectedUsername),
+            new Claim(JwtRegisteredClaimNames.Sub, expectedNormalizedUsername),
             new Claim(JwtCustomClaimNames.UserId, expectedUserId.ToString())
         };
 
@@ -62,7 +62,7 @@ public class UserInformationTokenModelBinderTests
         var boundToken = context.Result.Model as UserInformationToken;
         Assert.That(boundToken, Is.Not.Null);
         Assert.That(boundToken!.RawToken, Is.EqualTo(expectedRawToken));
-        Assert.That(boundToken.Username, Is.EqualTo(expectedUsername));
+        Assert.That(boundToken.NormalizedUsername, Is.EqualTo(expectedNormalizedUsername));
         Assert.That(boundToken.UserId, Is.EqualTo(expectedUserId));
     }
 

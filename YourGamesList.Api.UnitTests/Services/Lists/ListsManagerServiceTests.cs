@@ -1114,7 +1114,7 @@ public class ListsManagerServiceTests
     private static UserInformationToken CreateUserInformation(Guid userId) => new()
     {
         RawToken = "token",
-        Username = "testuser",
+        NormalizedUsername = "testuser",
         UserId = userId
     };
 }

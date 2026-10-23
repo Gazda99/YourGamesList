@@ -181,13 +181,14 @@ public class UserManagerServiceTests
     }
 
     [Test]
-    public async Task Login_UsernameWithDifferentCasing_ReturnsTokenWithStoredUsername()
+    public async Task Login_UsernameWithDifferentCasing_CreatesTokenWithNormalizedUsername()
     {
         //ARRANGE
         const string storedUsername = "TestUser";
         const string password = "correct_password";
         const string hashedPassword = "hashed_password";
         const string expectedToken = "jwt_token_sample";
+        const string normalizedUsername = "testuser";
 
         var userId = Guid.NewGuid();
         var user = CreateUser(id: userId, username: storedUsername, passwordHash: hashedPassword, status: UserStatus.Active);
@@ -196,7 +197,7 @@ public class UserManagerServiceTests
         await _dbContext.SaveChangesAsync();
 
         _passwordHasher.VerifyHashedPassword(password, hashedPassword).Returns(true);
-        _tokenProvider.CreateToken(storedUsername, userId).Returns(expectedToken);
+        _tokenProvider.CreateToken(normalizedUsername, userId).Returns(expectedToken);
 
         var dto = new UserLoginParams()
         {
@@ -211,7 +212,7 @@ public class UserManagerServiceTests
         //ASSERT
         Assert.That(res.IsSuccess, Is.True);
         Assert.That(res.Value, Is.EqualTo(expectedToken));
-        _tokenProvider.Received(1).CreateToken(storedUsername, userId);
+        _tokenProvider.Received(1).CreateToken(normalizedUsername, userId);
     }
 
     #endregion
@@ -453,7 +454,7 @@ public class UserManagerServiceTests
     #region Delete
 
     [Test]
-    public async Task Delete_UsernameDoesNotMatchToken_ReturnsForbiddenUserError()
+    public async Task Delete_UsernameDoesNotMatchDatabaseUser_ReturnsForbiddenUserError()
     {
         //ARRANGE
         var user = CreateUser(username: "victim");
@@ -462,8 +463,8 @@ public class UserManagerServiceTests
 
         var dto = new UserDeleteParams()
         {
-            UserInformation = CreateUserInformation(Guid.NewGuid(), "attacker"),
-            Username = "victim",
+            UserInformation = CreateUserInformation(user.Id, "attacker"),
+            Username = "attacker",
             Password = "password"
         };
         var service = CreateService();
@@ -580,8 +581,8 @@ public class UserManagerServiceTests
 
         var dto = new UserDeleteParams()
         {
-            UserInformation = CreateUserInformation(user.Id, username),
-            Username = username,
+            UserInformation = CreateUserInformation(user.Id, "stale-token-username"),
+            Username = "USER_TO_DELETE",
             Password = password
         };
         var service = CreateService();
@@ -775,12 +776,12 @@ public class UserManagerServiceTests
         };
     }
 
-    private static UserInformationToken CreateUserInformation(Guid userId, string username)
+    private static UserInformationToken CreateUserInformation(Guid userId, string normalizedUsername)
     {
         return new UserInformationToken
         {
             RawToken = "token",
-            Username = username,
+            NormalizedUsername = normalizedUsername,
             UserId = userId
         };
     }
