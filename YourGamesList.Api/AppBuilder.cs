@@ -201,6 +201,7 @@ public static class AppBuilder
             .AddScoped<IValidator<GetSelfListRequest>, GetSelfListRequestValidator>()
             .AddScoped<IValidator<AddListRequest>, CreateListRequestValidator>()
             .AddScoped<IValidator<DeleteListRequest>, DeleteListRequestValidator>()
+            .AddScoped<IValidator<UpdateListRequest>, UpdateListRequestValidator>()
             .AddScoped<IValidator<SearchListsRequest>, SearchListsRequestValidator>()
             .AddScoped<IValidator<AddGameListEntryRequest>, AddGameListEntryRequestValidator>()
             .AddScoped<IValidator<RemoveGameListEntryRequest>, RemoveGameListEntryRequestValidator>()
