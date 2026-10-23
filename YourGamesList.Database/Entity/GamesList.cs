@@ -20,6 +20,7 @@ public class GamesList
     [StringLength(500)] public string? Description { get; set; }
     public required bool IsPrivate { get; set; }
     [StringLength(50)] public required string Name { get; set; }
+    [StringLength(50)] public required string NormalizedName { get; set; }
 
     public Guid UserId { get; set; }
     public virtual User User { get; set; } = null!;

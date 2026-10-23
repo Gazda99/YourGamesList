@@ -29,20 +29,25 @@ public class DefaultListsCreator : IDefaultListsCreator
     {
         _logger.LogInformation("Adding default lists...");
         var now = _timeProvider.GetUtcNow();
+        const string wishlistName = "Wishlist";
         var wishList = new GamesList()
         {
             CreatedAt = now,
-            Name = "Wishlist",
+            Name = wishlistName,
+            NormalizedName = wishlistName.ToLowerInvariant(),
             User = user,
             Editable = false,
             IsPrivate = true,
             Description = "Games I would like to play."
         };
         
+        const string playedName = "Played";
+        
         var playedList = new GamesList()
         {
             CreatedAt = now,
-            Name = "Played",
+            Name = playedName,
+            NormalizedName = playedName.ToLowerInvariant(),
             User = user,
             Editable = false,
             IsPrivate = true,

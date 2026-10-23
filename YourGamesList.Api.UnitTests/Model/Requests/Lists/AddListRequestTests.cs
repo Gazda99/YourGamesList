@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using FluentValidation.TestHelper;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -188,7 +188,7 @@ public class AddListRequestTests
             UserInformation = new UserInformationToken
             {
                 RawToken = "token",
-                Username = "testuser",
+                NormalizedUsername = "testuser",
                 UserId = Guid.NewGuid()
             },
             Body = new CreateListRequestBody(name)

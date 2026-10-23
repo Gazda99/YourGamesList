@@ -115,10 +115,11 @@ public class UserAuthController : YourGamesListBaseController
     }
 
     [HttpDelete("remove")]
-    [AllowAnonymous]
+    [Authorize]
     [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Remove(UserDeleteRequest userDeleteRequest)
     {
@@ -137,6 +138,13 @@ public class UserAuthController : YourGamesListBaseController
             else if (result.Error is UserAuthError.UnauthorizedUser)
             {
                 return Result(StatusCodes.Status401Unauthorized);
+            }
+            else if (result.Error is UserAuthError.ForbiddenUser)
+            {
+                return Result(StatusCodes.Status403Forbidden, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
             }
             else
             {

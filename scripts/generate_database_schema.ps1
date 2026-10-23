@@ -11,8 +11,8 @@ $apiProjectPath = Join-Path $repoRoot 'YourGamesList.Api/YourGamesList.Api.cspro
 $databaseProjectPath = Join-Path $repoRoot 'YourGamesList.Database/YourGamesList.Database.csproj'
 
 # Tool versions
-$dotnetEfVersion = "10.0.10"
-$microsoftEntityFrameworkCoreDesignVersion = "10.0.10"
+$dotnetEfVersion = "10.0.13"
+$microsoftEntityFrameworkCoreDesignVersion = "10.0.13"
 
 Write-Debug "Script directory: $scriptDirectory"
 Write-Debug "Repo root: $repoRoot"

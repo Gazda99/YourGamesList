@@ -102,6 +102,7 @@ public static class AppBuilder
         services.AddOptionsWithFluentValidation<RequestValidatorOptions, UserValuesValidatorOptionsValidator>(RequestValidatorOptions.SectionName);
         services.AddOptionsWithFluentValidation<UserManagerServiceOptions, UserManagerServiceOptionsValidator>(UserManagerServiceOptions.SectionName);
         services.AddOptionsWithFluentValidation<VerificationEmailSenderOptions, VerificationEmailSenderOptionsValidator>(VerificationEmailSenderOptions.SectionName);
+        services.AddOptionsWithFluentValidation<LibSodiumPasswordHashingOptions, LibSodiumPasswordHashingOptionsValidator>(LibSodiumPasswordHashingOptions.SectionName);
 
         services.AddSingleton<ITokenProvider, UserInformationTokenProvider>();
         services.AddSingleton<ISodiumInitializer, SodiumInitializer>();
