@@ -68,7 +68,6 @@ public class TwitchAuthService : ITwitchAuthService
             _logger.LogInformation("Successfully obtained Twitch access token from Twitch that will expire in {TwitchTokenExpiryInSeconds}.", content.ExpiresIn);
             var now = _timeProvider.GetUtcNow();
             var finalExpirySeconds = content.ExpiresIn - ExpirationThresholdInSeconds;
-            _logger.LogInformation("Calculated token expiration is {TwitchTokenFinalExpiryInSeconds}.", finalExpirySeconds);
             
             if (finalExpirySeconds <= 0)
             {
@@ -78,6 +77,8 @@ public class TwitchAuthService : ITwitchAuthService
 
             var expiresOn = now + TimeSpan.FromSeconds(content.ExpiresIn) - TimeSpan.FromSeconds(ExpirationThresholdInSeconds);
 
+            _logger.LogInformation("Twitch auth token expiration saved to cache: {TwitchTokenExpiresOn}", expiresOn);
+            
             var twitchToken = new TwitchToken()
             {
                 AccessToken = content.AccessToken,
