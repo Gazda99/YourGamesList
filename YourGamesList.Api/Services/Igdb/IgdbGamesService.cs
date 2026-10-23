@@ -15,7 +15,7 @@ public interface IIgdbGamesService
     /// <summary>
     /// Gets games by their IGDB IDs.
     /// </summary>
-    Task<ValueResult<IgdbGame[]>> GetGamesByIds(int[] gameIds);
+    Task<ValueResult<IgdbGame[]>> GetGamesByIds(long[] gameIds);
 }
 
 public class IgdbGamesService : IIgdbGamesService
@@ -66,7 +66,7 @@ public class IgdbGamesService : IIgdbGamesService
         return await _igdbService.CallIgdb<IgdbGame[]>(IgdbEndpoints.Game, query);
     }
 
-    public async Task<ValueResult<IgdbGame[]>> GetGamesByIds(int[] gameIds)
+    public async Task<ValueResult<IgdbGame[]>> GetGamesByIds(long[] gameIds)
     {
         var ids = string.Join(",", gameIds);
         var query = ApiCalypseQueryBuilder.Build()
