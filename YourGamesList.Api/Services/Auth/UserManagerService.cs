@@ -112,27 +112,27 @@ public class UserManagerService : IUserManagerService
         var dob = userRegisterParams.DateOfBirth;
 
         var normalizedUsername = username.ToLowerInvariant();
-        var doesUsernameExists = _yglDbContext.Users.AnyAsync(u => u.NormalizedUsername == normalizedUsername);
-        var doesEmailExists = _yglDbContext.Users.AnyAsync(u => u.Email == email);
-        var dbChecks = Task.WhenAll(doesUsernameExists, doesEmailExists);
+        bool doesEmailExists;
+        bool doesUsernameExists;
 
         try
         {
-            await dbChecks;
+            doesEmailExists = await _yglDbContext.Users.AnyAsync(u => u.Email == email);
+            doesUsernameExists = !doesEmailExists && await _yglDbContext.Users.AnyAsync(u => u.NormalizedUsername == normalizedUsername);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            _logger.LogError(dbChecks.Exception, "Register failed while checking username and email availability in db.");
+            _logger.LogError(ex, "Register failed while checking username and email availability in db.");
             return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.InternalServerError);
         }
 
-        if (doesEmailExists.Result)
+        if (doesEmailExists)
         {
             _logger.LogInformation("Email already registered.");
             return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.EmailAlreadyTaken);
         }
 
-        if (doesUsernameExists.Result)
+        if (doesUsernameExists)
         {
             _logger.LogInformation("Username already registered.");
             return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.UsernameAlreadyTaken);
