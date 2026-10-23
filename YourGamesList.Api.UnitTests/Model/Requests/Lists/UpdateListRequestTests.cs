@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Text.Json;
 using AutoFixture;
 using FluentValidation.TestHelper;
@@ -144,6 +144,25 @@ public class UpdateListRequestTests
     }
 
     [Test]
+    public void Validate_NullName_ReturnsValidationError()
+    {
+        //ARRANGE
+        var request = CreateRequest(new UpdateListRequestBody
+        {
+            Name = Optional<string?>.Some(null)
+        });
+
+        //ACT
+        var result = CreateValidator().TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.False);
+        Assert.That(result.Errors, Has.Count.EqualTo(1));
+        result.ShouldHaveValidationErrorFor(x => x.Body.Name)
+            .WithErrorCode(ErrorCodes.Lists.InvalidListName);
+    }
+
+    [Test]
     public void Validate_NullPrivacy_ReturnsValidationError()
     {
         //ARRANGE
@@ -208,7 +227,7 @@ public class UpdateListRequestTests
         UserInformation = new UserInformationToken
         {
             RawToken = "token",
-            Username = "testuser",
+            NormalizedUsername = "testuser",
             UserId = Guid.NewGuid()
         },
         ListId = Guid.NewGuid(),

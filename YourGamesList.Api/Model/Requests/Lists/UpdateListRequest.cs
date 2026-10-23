@@ -36,6 +36,10 @@ public class UpdateListRequestValidator : AbstractValidator<UpdateListRequest>
             .ChildRules(body =>
             {
                 body.RuleFor(x => x.Name)
+                    .Must(name => name.Value != null)
+                    .When(x => x.Name.HasValue, ApplyConditionTo.CurrentValidator)
+                    .WithErrorCode(ErrorCodes.Lists.InvalidListName)
+                    .WithMessage("List name must be a string.")
                     .Must(name =>
                         {
                             var normalizedName = name.Value!.Trim();
@@ -49,7 +53,7 @@ public class UpdateListRequestValidator : AbstractValidator<UpdateListRequest>
                             return true;
                         }
                      )
-                    .When(x => x.Name.HasValue, ApplyConditionTo.CurrentValidator)
+                    .When(x => x.Name.HasValue && x.Name.Value != null, ApplyConditionTo.CurrentValidator)
                     .WithErrorCode(ErrorCodes.Lists.InvalidListName)
                     .WithMessage($"List name must be at least {minimumListNameLength} characters.")
                     .Must(name =>
@@ -63,7 +67,7 @@ public class UpdateListRequestValidator : AbstractValidator<UpdateListRequest>
 
                         return true;
                     })
-                    .When(x => x.Name.HasValue, ApplyConditionTo.CurrentValidator)
+                    .When(x => x.Name.HasValue && x.Name.Value != null, ApplyConditionTo.CurrentValidator)
                     .WithErrorCode(ErrorCodes.Lists.ListNameTooLong)
                     .WithMessage($"List name must be no longer than {maximumListNameLength} characters.");
 

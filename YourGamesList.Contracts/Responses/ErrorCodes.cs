@@ -21,6 +21,7 @@ public static class ErrorCodes
         public const string EmailVerificationExpired = "EmailVerificationExpired";
 
         public const string UserNotActiveEmailActivation = "UserNotActiveEmailActivation";
+        public const string ForbiddenUser = "ForbiddenUser";
 
         public const string InvalidPassword = "InvalidPassword";
         public const string PasswordIsTooShort = "PasswordIsTooShort";
@@ -52,8 +53,10 @@ public static class ErrorCodes
         public const string InvalidGameListEntryCompletionStatus = "InvalidGameListEntryCompletionStatus";
         public const string InvalidGameListEntryIgdbId = "InvalidGameListEntryIgdbId";
         public const string InvalidGameListEntryDescription = "InvalidGameListEntryDescription";
+        public const string InvalidGameListEntryRating = "InvalidGameListEntryRating";
         public const string InvalidListSearchCriteria = "InvalidListSearchCriteria";
         public const string OwnershipInfoNotFound = "OwnershipInfoNotFound";
+        public const string InvalidOwnershipInfoEmulation = "InvalidOwnershipInfoEmulation";
     }
 
     public static class Validation

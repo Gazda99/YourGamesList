@@ -5,6 +5,7 @@ public enum UserAuthError
     InternalServerError,
     NoUserFound,
     UnauthorizedUser,
+    ForbiddenUser,
     UserNotActiveEmailActivation,
 
     #region Email

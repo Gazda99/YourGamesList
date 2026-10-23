@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Services;
 using YourGamesList.Api.Services.Auth.Model;
@@ -22,6 +22,7 @@ public class DomainErrorMapperTests
     }
 
     [TestCase(UserAuthError.InternalServerError, ErrorCodes.General.InternalServerError, "An unexpected error occurred.")]
+    [TestCase(UserAuthError.ForbiddenUser, ErrorCodes.UserAuth.ForbiddenUser, "You can only perform this action on your own account.")]
     [TestCase(UserAuthError.UserNotActiveEmailActivation, ErrorCodes.UserAuth.UserNotActiveEmailActivation, "Verify your email address before logging in.")]
     [TestCase(UserAuthError.InvalidEmail, ErrorCodes.UserAuth.InvalidEmail, "Invalid email address.")]
     [TestCase(UserAuthError.EmailAlreadyTaken, ErrorCodes.UserAuth.EmailAlreadyTaken, "Email address is already registered.")]
@@ -68,6 +69,7 @@ public class DomainErrorMapperTests
     [TestCase(ListsError.GameListEntryAlreadyExists, ErrorCodes.Lists.GameListEntryAlreadyExists, "This game is already in the list.")]
     [TestCase(ListsError.GameListEntryNotFound, ErrorCodes.Lists.GameListEntryNotFound, "Game list entry was not found.")]
     [TestCase(ListsError.OwnershipInfoNotFound, ErrorCodes.Lists.OwnershipInfoNotFound, "Ownership info was not found.")]
+    [TestCase(ListsError.InvalidOwnershipInfoEmulation, ErrorCodes.Lists.InvalidOwnershipInfoEmulation, "EmulatedOn can only be set when WasEmulated is true.")]
     public void Map_ListsError_ReturnsMappedError(ListsError listsError, string expectedCode, string expectedDescription)
     {
         //ARRANGE

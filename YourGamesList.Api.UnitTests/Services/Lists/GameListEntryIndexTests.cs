@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -35,29 +35,140 @@ public class GameListEntryIndexTests
         dbContext.GameListEntries.Add(CreateEntry(firstList.Id, 123));
 
         //ASSERT
-        Assert.ThrowsAsync<DbUpdateException>(async () => await dbContext.SaveChangesAsync());
+        await Assert.ThrowsAsync<DbUpdateException>(async () => await dbContext.SaveChangesAsync());
     }
 
-    private static User CreateUser() => new()
+    [TestCase((byte)0)]
+    [TestCase((byte)5)]
+    public async Task RatingCheckConstraint_AllowsRatingWithinRange(byte rating)
     {
-        Id = Guid.NewGuid(),
-        CreatedAt = DateTimeOffset.UtcNow,
-        DateOfBirth = new DateOnly(2000, 1, 1),
-        Email = $"{Guid.NewGuid():N}@example.com",
-        PasswordHash = "hashed-password",
-        UserStatus = UserStatus.Active,
-        Username = Guid.NewGuid().ToString("N")
-    };
+        //ARRANGE
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<YourGamesListDbContext>()
+            .UseSqlite(connection)
+            .Options;
+        await using var dbContext = new YourGamesListDbContext(options);
+        await dbContext.Database.EnsureCreatedAsync();
 
-    private static GamesList CreateList(User user) => new()
+        var list = CreateList(CreateUser());
+        dbContext.GamesLists.Add(list);
+        await dbContext.SaveChangesAsync();
+
+        var entry = CreateEntry(list.Id, 123);
+        entry.Rating = rating;
+
+        //ACT
+        dbContext.GameListEntries.Add(entry);
+
+        //ASSERT
+        await Assert.DoesNotThrowAsync(async () => await dbContext.SaveChangesAsync());
+    }
+
+    [Test]
+    public async Task RatingCheckConstraint_RejectsRatingAboveMaximum()
     {
-        Id = Guid.NewGuid(),
-        CreatedAt = DateTimeOffset.UtcNow,
-        Editable = true,
-        IsPrivate = true,
-        Name = Guid.NewGuid().ToString("N"),
-        User = user
-    };
+        //ARRANGE
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<YourGamesListDbContext>()
+            .UseSqlite(connection)
+            .Options;
+        await using var dbContext = new YourGamesListDbContext(options);
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var list = CreateList(CreateUser());
+        dbContext.GamesLists.Add(list);
+        await dbContext.SaveChangesAsync();
+
+        var entry = CreateEntry(list.Id, 123);
+        entry.Rating = 50;
+
+        //ACT
+        dbContext.GameListEntries.Add(entry);
+
+        //ASSERT
+        await Assert.ThrowsAsync<DbUpdateException>(async () => await dbContext.SaveChangesAsync());
+    }
+    
+    [Test]
+    public async Task UniqueNormalizedListName_IsScopedToEachUser()
+    {
+        //ARRANGE
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<YourGamesListDbContext>()
+            .UseSqlite(connection)
+            .Options;
+        await using var dbContext = new YourGamesListDbContext(options);
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var user = CreateUser();
+        var otherUser = CreateUser();
+        dbContext.GamesLists.AddRange(
+            CreateList(user, "Collection"),
+            CreateList(otherUser, "collection"));
+        await dbContext.SaveChangesAsync();
+
+        //ACT
+        dbContext.GamesLists.Add(CreateList(user, "COLLECTION"));
+
+        //ASSERT
+        await Assert.ThrowsAsync<DbUpdateException>(async () => await dbContext.SaveChangesAsync());
+    }
+
+    [Test]
+    public async Task UniqueNormalizedUsername_RejectsUsernameDifferingOnlyByCase()
+    {
+        //ARRANGE
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<YourGamesListDbContext>()
+            .UseSqlite(connection)
+            .Options;
+        await using var dbContext = new YourGamesListDbContext(options);
+        await dbContext.Database.EnsureCreatedAsync();
+
+        dbContext.Users.Add(CreateUser("Bob"));
+        await dbContext.SaveChangesAsync();
+
+        //ACT
+        dbContext.Users.Add(CreateUser("bob"));
+
+        //ASSERT
+        await Assert.ThrowsAsync<DbUpdateException>(async () => await dbContext.SaveChangesAsync());
+    }
+
+    private static User CreateUser(string? username = null)
+    {
+        username ??= Guid.NewGuid().ToString("N");
+        return new User
+        {
+            Id = Guid.NewGuid(),
+            CreatedAt = DateTimeOffset.UtcNow,
+            DateOfBirth = new DateOnly(2000, 1, 1),
+            Email = $"{Guid.NewGuid():N}@example.com",
+            PasswordHash = "hashed-password",
+            UserStatus = UserStatus.Active,
+            Username = username,
+            NormalizedUsername = username.ToLowerInvariant()
+        };
+    }
+
+    private static GamesList CreateList(User user, string? name = null)
+    {
+        name ??= Guid.NewGuid().ToString("N");
+        return new GamesList
+        {
+            Id = Guid.NewGuid(),
+            CreatedAt = DateTimeOffset.UtcNow,
+            Editable = true,
+            IsPrivate = true,
+            Name = name,
+            NormalizedName = name.ToLowerInvariant(),
+            User = user
+        };
+    }
 
     private static GamesListEntry CreateEntry(Guid gamesListId, long igdbId) => new()
     {

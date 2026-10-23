@@ -43,6 +43,9 @@ public class DomainErrorMapper : IDomainErrorMapper
             case UserAuthError.UserNotActiveEmailActivation:
                 return Create(ErrorCodes.UserAuth.UserNotActiveEmailActivation, "Verify your email address before logging in.");
 
+            case UserAuthError.ForbiddenUser:
+                return Create(ErrorCodes.UserAuth.ForbiddenUser, "You can only perform this action on your own account.");
+
             case UserAuthError.InvalidEmail:
                 return Create(ErrorCodes.UserAuth.InvalidEmail, "Invalid email address.");
 
@@ -87,6 +90,8 @@ public class DomainErrorMapper : IDomainErrorMapper
                 return Create(ErrorCodes.Lists.GameListEntryNotFound, "Game list entry was not found.");
             case ListsError.OwnershipInfoNotFound:
                 return Create(ErrorCodes.Lists.OwnershipInfoNotFound, "Ownership info was not found.");
+            case ListsError.InvalidOwnershipInfoEmulation:
+                return Create(ErrorCodes.Lists.InvalidOwnershipInfoEmulation, "EmulatedOn can only be set when WasEmulated is true.");
             default:
                 _logger.LogInformation("Domain level error {DomainError} was not mapped. Defaulting to {ErrorCode}", listsError.ToString(),
                     ErrorCodes.General.InternalServerError);

@@ -129,12 +129,12 @@ public class ListsManagerService : IListsManagerService
 
         if (ownerName != null)
         {
-            gamesListsQuery = gamesListsQuery.Where(list => list.User.Username.ToLower().Contains(ownerName));
+            gamesListsQuery = gamesListsQuery.Where(list => list.User.NormalizedUsername.Contains(ownerName));
         }
 
         if (listName != null)
         {
-            gamesListsQuery = gamesListsQuery.Where(list => list.Name.ToLower().Contains(listName));
+            gamesListsQuery = gamesListsQuery.Where(list => list.NormalizedName.Contains(listName));
         }
 
         if (searchListsParams.IncludeEntries)
@@ -193,8 +193,9 @@ public class ListsManagerService : IListsManagerService
             return CombinedResult<Guid, ListsError>.Failure(ListsError.UserNotFound);
         }
 
+        var normalizedName = addListParams.Name.ToLowerInvariant();
         var listAlreadyExists = await _yglDbContext.GamesLists
-            .AnyAsync(list => list.UserId == userId && list.Name == addListParams.Name);
+            .AnyAsync(list => list.UserId == userId && list.NormalizedName == normalizedName);
         if (listAlreadyExists)
         {
             _logger.LogInformation("User already has a list named {ListName}.", addListParams.Name);
@@ -207,6 +208,7 @@ public class ListsManagerService : IListsManagerService
             Editable = true,
             IsPrivate = true,
             Name = addListParams.Name,
+            NormalizedName = normalizedName,
             User = user
         };
 
@@ -271,11 +273,12 @@ public class ListsManagerService : IListsManagerService
 
         if (nameChanged)
         {
+            var normalizedName = updateListParams.Name!.ToLowerInvariant();
             var listAlreadyExists = await _yglDbContext.GamesLists
                 .AnyAsync(list =>
                     list.UserId == userId &&
                     list.Id != gamesList.Id &&
-                    list.Name == updateListParams.Name);
+                    list.NormalizedName == normalizedName);
 
             if (listAlreadyExists)
             {
@@ -284,6 +287,7 @@ public class ListsManagerService : IListsManagerService
             }
 
             gamesList.Name = updateListParams.Name!;
+            gamesList.NormalizedName = normalizedName;
         }
 
         if (descriptionChanged)
@@ -367,7 +371,6 @@ public class ListsManagerService : IListsManagerService
     {
         var userId = updateParams.UserInformation.UserId;
         var entry = await _yglDbContext.GameListEntries
-            .Include(gameListEntry => gameListEntry.GamesList)
             .FirstOrDefaultAsync(gameListEntry =>
                 gameListEntry.Id == updateParams.Id &&
                 gameListEntry.GamesListId == updateParams.GamesListId &&
@@ -389,12 +392,6 @@ public class ListsManagerService : IListsManagerService
         if (!completionStatusChanged && !descriptionChanged && !ratingChanged)
         {
             return ErrorResult<ListsError>.Success();
-        }
-
-        if (!entry.GamesList.Editable)
-        {
-            _logger.LogInformation("Cannot edit game list entry {EntryId} in a protected list.", updateParams.Id);
-            return ErrorResult<ListsError>.Failure(ListsError.ListCannotBeEdited);
         }
 
         if (completionStatusChanged)
@@ -499,6 +496,15 @@ public class ListsManagerService : IListsManagerService
             !emulatedOnChanged)
         {
             return ErrorResult<ListsError>.Success();
+        }
+
+        var resultingWasEmulated = wasEmulatedChanged ? updateParams.WasEmulated.Value!.Value : ownershipInfo.WasEmulated;
+        var resultingEmulatedOn = emulatedOnChanged ? updateParams.EmulatedOn.Value : (EmulatorDto?)ownershipInfo.EmulatedOn;
+
+        if (!resultingWasEmulated && resultingEmulatedOn != null)
+        {
+            _logger.LogInformation("Cannot set emulator for ownership info {OwnershipInfoId} that was not emulated.", updateParams.OwnershipInfoId);
+            return ErrorResult<ListsError>.Failure(ListsError.InvalidOwnershipInfoEmulation);
         }
 
         if (isLegitChanged)

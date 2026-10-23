@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using FluentValidation.TestHelper;
 using Microsoft.Extensions.Options;
 using NSubstitute;
@@ -23,7 +23,9 @@ public class AddGameListEntryRequestTests
         {
             Lists = new ListsValidatorOptions
             {
-                MaximumGameListEntryDescriptionLength = 10
+                MaximumGameListEntryDescriptionLength = 10,
+                MinimumGameListEntryRating = 0,
+                MaximumGameListEntryRating = 5
             }
         });
     }
@@ -86,15 +88,46 @@ public class AddGameListEntryRequestTests
             .WithErrorCode(ErrorCodes.Lists.InvalidGameListEntryIgdbId);
     }
 
+    [TestCase((byte)0)]
+    [TestCase((byte)5)]
+    public void Validate_RatingWithinRange_IsValid(byte rating)
+    {
+        //ARRANGE
+        var request = CreateRequest(rating: rating);
+
+        //ACT
+        var result = CreateValidator().TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.True);
+    }
+
+    [TestCase((byte)6)]
+    [TestCase((byte)255)]
+    public void Validate_RatingAboveMaximum_IsInvalid(byte rating)
+    {
+        //ARRANGE
+        var request = CreateRequest(rating: rating);
+
+        //ACT
+        var result = CreateValidator().TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.False);
+        result.ShouldHaveValidationErrorFor(x => x.Body.Rating)
+            .WithErrorCode(ErrorCodes.Lists.InvalidGameListEntryRating);
+    }
+
     private static AddGameListEntryRequest CreateRequest(
         CompletionStatusDto completionStatus = CompletionStatusDto.Played,
         long igdbId = 123,
-        string? description = null) => new()
+        string? description = null,
+        byte? rating = null) => new()
     {
         UserInformation = new UserInformationToken
         {
             RawToken = "token",
-            Username = "testuser",
+            NormalizedUsername = "testuser",
             UserId = Guid.NewGuid()
         },
         ListId = Guid.NewGuid(),
@@ -102,7 +135,8 @@ public class AddGameListEntryRequestTests
         {
             CompletionStatus = completionStatus,
             IgdbId = igdbId,
-            Description = description
+            Description = description,
+            Rating = rating
         }
     };
 

@@ -39,17 +39,17 @@ public class UserInformationTokenProviderTests
         var validFrom = now.ToUnixTimeSeconds();
         var validTo = validFrom + options.ExpirationInMinutes * 60;
         _timeProvider.SetUtcNow(now);
-        const string username = "TestUser";
+        const string normalizedUsername = "testuser";
         var userId = Guid.NewGuid();
         var handler = new JsonWebTokenHandler();
         var tokenProvider = new UserInformationTokenProvider(_options, _timeProvider);
 
         //ACT
-        var rawToken = tokenProvider.CreateToken(username, userId);
+        var rawToken = tokenProvider.CreateToken(normalizedUsername, userId);
         var token = handler.ReadJsonWebToken(rawToken);
 
         //ASSERT
-        Assert.That(token.Claims.Single(x => x.Type == "sub").Value, Is.EqualTo(username.ToLower()));
+        Assert.That(token.Claims.Single(x => x.Type == "sub").Value, Is.EqualTo(normalizedUsername));
         Assert.That(token.Claims.Single(x => x.Type == JwtCustomClaimNames.UserId).Value, Is.EqualTo(userId.ToString()));
         Assert.That(token.Issuer, Is.EqualTo(options.Issuer));
         Assert.That(token.Audiences, Does.Contain(options.Audience));

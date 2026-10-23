@@ -281,7 +281,6 @@ public class ListsController : YourGamesListBaseController
     [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateGameListEntry(UpdateGameListEntryRequest request)
     {
         _logger.LogInformation("Requested to update game list entry {EntryId}.", request.EntryId);
@@ -292,13 +291,6 @@ public class ListsController : YourGamesListBaseController
             if (result.Error is ListsError.GameListEntryNotFound)
             {
                 return Result(StatusCodes.Status404NotFound, new ErrorResponse
-                {
-                    Errors = [_domainErrorMapper.Map(result.Error)]
-                });
-            }
-            else if (result.Error is ListsError.ListCannotBeEdited)
-            {
-                return Result(StatusCodes.Status409Conflict, new ErrorResponse
                 {
                     Errors = [_domainErrorMapper.Map(result.Error)]
                 });
@@ -362,6 +354,14 @@ public class ListsController : YourGamesListBaseController
             if (result.Error is ListsError.GameListEntryNotFound or ListsError.OwnershipInfoNotFound)
             {
                 return Result(StatusCodes.Status404NotFound, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
+            }
+
+            if (result.Error is ListsError.InvalidOwnershipInfoEmulation)
+            {
+                return Result(StatusCodes.Status400BadRequest, new ErrorResponse
                 {
                     Errors = [_domainErrorMapper.Map(result.Error)]
                 });
