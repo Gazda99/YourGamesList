@@ -29,7 +29,6 @@ public class UserInformationTokenProvider : ITokenProvider
 
     public string CreateToken(string username, Guid userId)
     {
-        username = username.ToLower();
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Value.JwtSecret));
 
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
