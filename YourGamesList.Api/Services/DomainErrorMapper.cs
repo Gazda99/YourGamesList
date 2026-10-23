@@ -43,6 +43,9 @@ public class DomainErrorMapper : IDomainErrorMapper
             case UserAuthError.UserNotActiveEmailActivation:
                 return Create(ErrorCodes.UserAuth.UserNotActiveEmailActivation, "Verify your email address before logging in.");
 
+            case UserAuthError.ForbiddenUser:
+                return Create(ErrorCodes.UserAuth.ForbiddenUser, "You can only perform this action on your own account.");
+
             case UserAuthError.InvalidEmail:
                 return Create(ErrorCodes.UserAuth.InvalidEmail, "Invalid email address.");
 

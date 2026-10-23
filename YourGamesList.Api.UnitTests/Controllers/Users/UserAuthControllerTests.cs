@@ -249,6 +249,10 @@ public class UserAuthControllerTests
         var statusCodeResult = res as IStatusCodeActionResult;
         Assert.That(statusCodeResult, Is.Not.Null);
         Assert.That(statusCodeResult.StatusCode, Is.EqualTo(StatusCodes.Status204NoContent));
+        await _userManagerService.Received(1).Delete(Arg.Is<UserDeleteParams>(p =>
+            p.UserInformation == request.UserInformation &&
+            p.Username == request.Body.Username.Trim() &&
+            p.Password == request.Body.Password));
         _logger.ReceivedLog(LogLevel.Information, $"Requested to remove user {request.Body.Username}");
     }
 
@@ -290,6 +294,31 @@ public class UserAuthControllerTests
         var statusCodeResult = res as IStatusCodeActionResult;
         Assert.That(statusCodeResult, Is.Not.Null);
         Assert.That(statusCodeResult.StatusCode, Is.EqualTo(StatusCodes.Status401Unauthorized));
+    }
+
+    [Test]
+    public async Task Delete_ForbiddenUser_ReturnsForbidden()
+    {
+        //ARRANGE
+        var request = _fixture.Create<UserDeleteRequest>();
+        var serviceResult = ErrorResult<UserAuthError>.Failure(UserAuthError.ForbiddenUser);
+        var error = _fixture.Create<Error>();
+        _domainErrorMapper.Map(UserAuthError.ForbiddenUser).Returns(error);
+
+        _userManagerService.Delete(Arg.Any<UserDeleteParams>()).Returns(serviceResult);
+
+        var controller = CreateController();
+
+        //ACT
+        var res = await controller.Remove(request);
+
+        //ASSERT
+        var objectResult = res as ObjectResult;
+        Assert.That(objectResult, Is.Not.Null);
+        Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status403Forbidden));
+        var errorResponse = objectResult.Value as ErrorResponse;
+        Assert.That(errorResponse, Is.Not.Null);
+        Assert.That(errorResponse.Errors.Single(), Is.EqualTo(error));
     }
 
     [Test]

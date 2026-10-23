@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using FluentValidation.TestHelper;
 using YourGamesList.Api.Model;
 using YourGamesList.Api.Model.Requests.Lists;
@@ -16,7 +16,7 @@ public class GetSelfListRequestTests
             UserInformation = new UserInformationToken
             {
                 RawToken = "token",
-                Username = "testuser",
+                NormalizedUsername = "testuser",
                 UserId = Guid.NewGuid()
             }
         };

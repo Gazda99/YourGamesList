@@ -48,7 +48,7 @@ public class UpdateGameListEntryParamsTests
     private static UserInformationToken CreateUserInformation() => new()
     {
         RawToken = "token",
-        Username = "testuser",
+        NormalizedUsername = "testuser",
         UserId = Guid.NewGuid()
     };
 }
