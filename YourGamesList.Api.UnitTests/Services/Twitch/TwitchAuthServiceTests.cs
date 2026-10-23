@@ -5,10 +5,12 @@ using System.Threading.Tasks;
 using AutoFixture;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Refit;
 using YourGamesList.Api.Services.Twitch;
+using YourGamesList.Api.Services.Twitch.Model;
 using YourGamesList.Api.Services.Twitch.Model.Responses;
 using YourGamesList.Api.Services.Twitch.Options;
 using YourGamesList.TestsUtils;
@@ -21,7 +23,8 @@ public class TwitchAuthServiceTests
     private ILogger<TwitchAuthService> _logger;
     private ITwitchAuthApi _twitchAuthApi;
     private IOptions<TwitchAuthOptions> _twitchAuthOptions;
-
+    private FakeTimeProvider _timeProvider;
+    
     [SetUp]
     public void Setup()
     {
@@ -29,6 +32,7 @@ public class TwitchAuthServiceTests
         _logger = Substitute.For<ILogger<TwitchAuthService>>();
         _twitchAuthApi = Substitute.For<ITwitchAuthApi>();
         _twitchAuthOptions = Substitute.For<IOptions<TwitchAuthOptions>>();
+        _timeProvider = new FakeTimeProvider();
     }
 
     [Test]
@@ -39,7 +43,7 @@ public class TwitchAuthServiceTests
         var options = _fixture.Create<TwitchAuthOptions>();
         _twitchAuthOptions.Value.Returns(options);
 
-        var twitchAuthService = new TwitchAuthService(_logger, _twitchAuthApi, _twitchAuthOptions);
+        var twitchAuthService = new TwitchAuthService(_logger, _twitchAuthApi, _twitchAuthOptions, _timeProvider);
 
         //ACT
         var res = twitchAuthService.GetClientId();
@@ -54,23 +58,26 @@ public class TwitchAuthServiceTests
         //ARRANGE
         var options = _fixture.Create<TwitchAuthOptions>();
         _twitchAuthOptions.Value.Returns(options);
-
-        var twitchAuthResponse = _fixture.Create<TwitchAuthResponse>();
+        var now = DateTimeOffset.Now;
+        _timeProvider.SetUtcNow(now);
+        const int expiresIn = 1000;
+        
+        var twitchAuthResponse = _fixture.Build<TwitchAuthResponse>().With(x=>x.ExpiresIn, expiresIn).Create();
         var apiResponse = Substitute.For<IApiResponse<TwitchAuthResponse>>();
         apiResponse.Content.Returns(twitchAuthResponse);
         apiResponse.StatusCode.Returns(HttpStatusCode.OK);
         _twitchAuthApi.GetAccessToken(Arg.Any<FormUrlEncodedContent>()).Returns(apiResponse);
 
-        var twitchAuthService = new TwitchAuthService(_logger, _twitchAuthApi, _twitchAuthOptions);
+        var twitchAuthService = new TwitchAuthService(_logger, _twitchAuthApi, _twitchAuthOptions, _timeProvider);
 
         //ACT
         var res = await twitchAuthService.GetAccessToken();
 
         //ASSERT
         Assert.That(res.IsSuccess, Is.True);
-        Assert.That(res.Value, Is.EquivalentTo(twitchAuthResponse.AccessToken));
+        Assert.That(res.Value.AccessToken, Is.EquivalentTo(twitchAuthResponse.AccessToken));
         await _twitchAuthApi.Received(1).GetAccessToken(Arg.Any<FormUrlEncodedContent>());
-        _logger.ReceivedLog(LogLevel.Information, "Successfully obtained Twitch access token from Twitch.");
+        _logger.ReceivedLog(LogLevel.Information, $"Successfully obtained Twitch access token from Twitch that will expire in {expiresIn}.");
     }
 
     [Test]
@@ -86,7 +93,7 @@ public class TwitchAuthServiceTests
         apiResponse.StatusCode.Returns(HttpStatusCode.OK);
         _twitchAuthApi.GetAccessToken(Arg.Any<FormUrlEncodedContent>()).ThrowsAsync(new Exception());
 
-        var twitchAuthService = new TwitchAuthService(_logger, _twitchAuthApi, _twitchAuthOptions);
+        var twitchAuthService = new TwitchAuthService(_logger, _twitchAuthApi, _twitchAuthOptions, _timeProvider);
 
         //ACT
         var res = await twitchAuthService.GetAccessToken();
@@ -108,7 +115,7 @@ public class TwitchAuthServiceTests
         apiResponse.StatusCode.Returns(status);
         _twitchAuthApi.GetAccessToken(Arg.Any<FormUrlEncodedContent>()).Returns(apiResponse);
 
-        var twitchAuthService = new TwitchAuthService(_logger, _twitchAuthApi, _twitchAuthOptions);
+        var twitchAuthService = new TwitchAuthService(_logger, _twitchAuthApi, _twitchAuthOptions, _timeProvider);
 
         //ACT
         var res = await twitchAuthService.GetAccessToken();
@@ -135,7 +142,7 @@ public class TwitchAuthServiceTests
         apiResponse.StatusCode.Returns(HttpStatusCode.OK);
         _twitchAuthApi.GetAccessToken(Arg.Any<FormUrlEncodedContent>()).Returns(apiResponse);
 
-        var twitchAuthService = new TwitchAuthService(_logger, _twitchAuthApi, _twitchAuthOptions);
+        var twitchAuthService = new TwitchAuthService(_logger, _twitchAuthApi, _twitchAuthOptions, _timeProvider);
 
         //ACT
         var res = await twitchAuthService.GetAccessToken();

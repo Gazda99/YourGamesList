@@ -2,8 +2,10 @@ using System;
 using System.Threading.Tasks;
 using AutoFixture;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
 using YourGamesList.Api.Services.Twitch;
+using YourGamesList.Api.Services.Twitch.Model;
 using YourGamesList.Common;
 using YourGamesList.Common.Caching;
 using YourGamesList.TestsUtils;
@@ -12,14 +14,16 @@ namespace YourGamesList.Api.UnitTests.Services.Twitch;
 
 public class TwitchAuthServiceWithCachingTests
 {
-    private const string TwitchAuthTokenCacheKey = "twitch-auth-token";
-    private const int TwitchAuthTokenCacheDurationInHours = 24;
+    private const string TwitchAuthTokenCacheKey = "YGL_twitch-auth-token";
+    private const int TwitchAuthTokenCacheDurationInHours = 48;
 
     private IFixture _fixture;
     private ILogger<TwitchAuthServiceWithCaching> _logger;
     private ICacheProvider _cacheProvider;
     private ITwitchAuthService _innerService;
     private TwitchAuthServiceWithCaching _service;
+    private FakeTimeProvider _timeProvider;
+    
 
     [SetUp]
     public void SetUp()
@@ -28,7 +32,8 @@ public class TwitchAuthServiceWithCachingTests
         _logger = Substitute.For<ILogger<TwitchAuthServiceWithCaching>>();
         _cacheProvider = Substitute.For<ICacheProvider>();
         _innerService = Substitute.For<ITwitchAuthService>();
-        _service = new TwitchAuthServiceWithCaching(_logger, _cacheProvider, _innerService);
+        _timeProvider = new FakeTimeProvider();
+        _service = new TwitchAuthServiceWithCaching(_logger, _cacheProvider, _innerService, _timeProvider);
     }
 
     [Test]
@@ -50,40 +55,100 @@ public class TwitchAuthServiceWithCachingTests
     public async Task GetAccessToken_ShouldReturnCachedToken_IfExistsInCache()
     {
         //ARRANGE
-        var cachedToken = _fixture.Create<string>();
-        _cacheProvider.Get<string>(TwitchAuthTokenCacheKey, Arg.Any<System.Threading.CancellationToken>())
-            .Returns(Task.FromResult(CombinedResult<string, CacheProviderError>.Success(cachedToken)));
+        var cachedToken = _fixture.Create<TwitchToken>();
+        _cacheProvider.Get<TwitchToken>(TwitchAuthTokenCacheKey, Arg.Any<System.Threading.CancellationToken>())
+            .Returns(Task.FromResult(CombinedResult<TwitchToken, CacheProviderError>.Success(cachedToken)));
 
         //ACT
         var res = await _service.GetAccessToken();
 
         //ASSERT
         Assert.That(res.IsSuccess, Is.True);
-        Assert.That(res.Value, Is.EquivalentTo(cachedToken));
-        await _cacheProvider.Received(1).Get<string>(TwitchAuthTokenCacheKey, Arg.Any<System.Threading.CancellationToken>());
+        Assert.That(res.Value, Is.EqualTo(cachedToken));
+        await _cacheProvider.Received(1).Get<TwitchToken>(TwitchAuthTokenCacheKey, Arg.Any<System.Threading.CancellationToken>());
         await _innerService.Received(0).GetAccessToken();
         _logger.ReceivedLog(LogLevel.Information, "Using cached Twitch Auth token.");
     }
-
+    
     [Test]
-    public async Task GetAccessToken_ShouldCallInnerServiceAndSavesNewTokenOnSuccess_IfNoTokenInCache()
+    public async Task GetAccessToken_ShouldCallInnerService_WhenTokenInCacheExpired()
     {
         //ARRANGE
-        _cacheProvider.Get<string>(TwitchAuthTokenCacheKey, Arg.Any<System.Threading.CancellationToken>())
-            .Returns(Task.FromResult(CombinedResult<string, CacheProviderError>.Failure(CacheProviderError.NotFound)));
+        var now = DateTimeOffset.Now;
+        _timeProvider.SetUtcNow(now);
+        var past = now - TimeSpan.FromHours(1);
+        
+        var cachedToken = _fixture.Build<TwitchToken>().With(x=>x.ExpiresOn, past).Create();
+        _cacheProvider.Get<TwitchToken>(TwitchAuthTokenCacheKey, Arg.Any<System.Threading.CancellationToken>())
+            .Returns(Task.FromResult(CombinedResult<TwitchToken, CacheProviderError>.Success(cachedToken)));
 
-        var newToken = _fixture.Create<string>();
-        _innerService.GetAccessToken().Returns(ValueResult<string>.Success(newToken));
+        var newToken = _fixture.Create<TwitchToken>();
+        _innerService.GetAccessToken().Returns(ValueResult<TwitchToken>.Success(newToken));
 
         //ACT
         var res = await _service.GetAccessToken();
 
         //ASSERT
         Assert.That(res.IsSuccess, Is.True);
-        Assert.That(res.Value, Is.EquivalentTo(newToken));
-        await _cacheProvider.Received(1).Get<string>(TwitchAuthTokenCacheKey, Arg.Any<System.Threading.CancellationToken>());
+        Assert.That(res.Value, Is.EqualTo(newToken));
+        await _cacheProvider.Received(1).Get<TwitchToken>(TwitchAuthTokenCacheKey, Arg.Any<System.Threading.CancellationToken>());
+        await _innerService.Received(1).GetAccessToken();
+        await _cacheProvider.Received(1).Set(TwitchAuthTokenCacheKey, newToken, Arg.Is<CacheOptions>(x => x != null && x.AbsoluteExpiration.HasValue), Arg.Any<System.Threading.CancellationToken>());
+        _logger.ReceivedLog(LogLevel.Information, "Cached token is expired.");
+        _logger.NotReceivedLog(LogLevel.Information, "Using cached Twitch Auth token.");
+        _logger.ReceivedLog(LogLevel.Information, "Caching new Twitch Auth token.");
+    }
+
+    [Test]
+    public async Task GetAccessToken_ShouldCallInnerServiceAndSavesNewTokenOnSuccess_IfNoTokenInCache_WithDefaultExpiration()
+    {
+        //ARRANGE
+        var now = DateTimeOffset.Now;
+        _timeProvider.SetUtcNow(now);
+        
+        _cacheProvider.Get<TwitchToken>(TwitchAuthTokenCacheKey, Arg.Any<System.Threading.CancellationToken>())
+            .Returns(Task.FromResult(CombinedResult<TwitchToken, CacheProviderError>.Failure(CacheProviderError.NotFound)));
+
+        // 1 < TwitchAuthTokenCacheDurationInHours
+        var newToken = _fixture.Build<TwitchToken>().With(x=> x.ExpiresOn, now + TimeSpan.FromHours(1)).Create();
+        _innerService.GetAccessToken().Returns(ValueResult<TwitchToken>.Success(newToken));
+
+        //ACT
+        var res = await _service.GetAccessToken();
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.True);
+        Assert.That(res.Value, Is.EqualTo(newToken));
+        await _cacheProvider.Received(1).Get<TwitchToken>(TwitchAuthTokenCacheKey, Arg.Any<System.Threading.CancellationToken>());
         await _innerService.Received(1).GetAccessToken();
         await _cacheProvider.Received(1).Set(TwitchAuthTokenCacheKey, newToken, Arg.Is<CacheOptions>(x => x != null && x.AbsoluteExpiration.HasValue && x.AbsoluteExpiration.Value.TotalHours == TwitchAuthTokenCacheDurationInHours), Arg.Any<System.Threading.CancellationToken>());
+        _logger.ReceivedLog(LogLevel.Information, "Caching new Twitch Auth token.");
+    }
+    
+    [Test]
+    public async Task GetAccessToken_ShouldCallInnerServiceAndSavesNewTokenOnSuccess_IfNoTokenInCache_WithTokenExpiration()
+    {
+        //ARRANGE
+        var now = DateTimeOffset.Now;
+        _timeProvider.SetUtcNow(now);
+        
+        _cacheProvider.Get<TwitchToken>(TwitchAuthTokenCacheKey, Arg.Any<System.Threading.CancellationToken>())
+            .Returns(Task.FromResult(CombinedResult<TwitchToken, CacheProviderError>.Failure(CacheProviderError.NotFound)));
+
+        // 2 * TwitchAuthTokenCacheDurationInHours > TwitchAuthTokenCacheDurationInHours
+        var tokenExpiration = TwitchAuthTokenCacheDurationInHours * 2;
+        var newToken = _fixture.Build<TwitchToken>().With(x=> x.ExpiresOn, now + TimeSpan.FromHours(tokenExpiration)).Create();
+        _innerService.GetAccessToken().Returns(ValueResult<TwitchToken>.Success(newToken));
+
+        //ACT
+        var res = await _service.GetAccessToken();
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.True);
+        Assert.That(res.Value, Is.EqualTo(newToken));
+        await _cacheProvider.Received(1).Get<TwitchToken>(TwitchAuthTokenCacheKey, Arg.Any<System.Threading.CancellationToken>());
+        await _innerService.Received(1).GetAccessToken();
+        await _cacheProvider.Received(1).Set(TwitchAuthTokenCacheKey, newToken, Arg.Is<CacheOptions>(x => x != null && x.AbsoluteExpiration.HasValue && x.AbsoluteExpiration.Value.TotalHours == tokenExpiration), Arg.Any<System.Threading.CancellationToken>());
         _logger.ReceivedLog(LogLevel.Information, "Caching new Twitch Auth token.");
     }
 
@@ -91,19 +156,19 @@ public class TwitchAuthServiceWithCachingTests
     public async Task GetAccessToken_ShouldCallInnerServiceButDoesNotSavesNewTokenOnFailure_IfNoTokenInCache()
     {
         //ARRANGE
-        _cacheProvider.Get<string>(TwitchAuthTokenCacheKey, Arg.Any<System.Threading.CancellationToken>())
-            .Returns(Task.FromResult(CombinedResult<string, CacheProviderError>.Failure(CacheProviderError.NotFound)));
+        _cacheProvider.Get<TwitchToken>(TwitchAuthTokenCacheKey, Arg.Any<System.Threading.CancellationToken>())
+            .Returns(Task.FromResult(CombinedResult<TwitchToken, CacheProviderError>.Failure(CacheProviderError.NotFound)));
 
-        _innerService.GetAccessToken().Returns(ValueResult<string>.Failure());
+        _innerService.GetAccessToken().Returns(ValueResult<TwitchToken>.Failure());
 
         //ACT
         var res = await _service.GetAccessToken();
 
         //ASSERT
         Assert.That(res.IsSuccess, Is.False);
-        await _cacheProvider.Received(1).Get<string>(TwitchAuthTokenCacheKey, Arg.Any<System.Threading.CancellationToken>());
+        await _cacheProvider.Received(1).Get<TwitchToken>(TwitchAuthTokenCacheKey, Arg.Any<System.Threading.CancellationToken>());
         await _innerService.Received(1).GetAccessToken();
-        await _cacheProvider.Received(0).Set(TwitchAuthTokenCacheKey, Arg.Any<string>(), Arg.Any<CacheOptions>(), Arg.Any<System.Threading.CancellationToken>());
+        await _cacheProvider.Received(0).Set(TwitchAuthTokenCacheKey, Arg.Any<TwitchToken>(), Arg.Any<CacheOptions>(), Arg.Any<System.Threading.CancellationToken>());
         _logger.NotReceivedLog(LogLevel.Information, "Caching new Twitch Auth token.");
     }
 }
