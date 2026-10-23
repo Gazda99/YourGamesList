@@ -78,7 +78,7 @@ public class IgdbGamesServiceTests
     public async Task GetGamesByIds_SuccessfulScenario_ReturnsIgdbGames()
     {
         //ARRANGE
-        var gameIds = _fixture.CreateMany<int>().ToArray();
+        var gameIds = _fixture.CreateMany<long>().ToArray();
         var ids = string.Join(",", gameIds);
         var games = _fixture.CreateMany<IgdbGame>().ToArray();
         _igdbService.CallIgdb<IgdbGame[]>(IgdbEndpoints.Game, Arg.Is<string>(x =>

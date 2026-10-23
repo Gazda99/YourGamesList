@@ -188,6 +188,7 @@ public static class AppBuilder
         //Auth controller validators
         services
             .AddScoped<IValidator<UserRegisterRequest>, UserRegisterRequestValidator>()
+            .AddScoped<IValidator<ConfirmEmailRequest>, ConfirmEmailRequestValidator>()
             .AddScoped<IValidator<UserLoginRequest>, UserLoginRequestValidator>()
             .AddScoped<IValidator<UserDeleteRequest>, UserDeleteRequestValidator>()
             ;

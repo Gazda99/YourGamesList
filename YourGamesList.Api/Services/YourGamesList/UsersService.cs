@@ -21,7 +21,7 @@ public interface IUsersService
 
 public class UsersService : IUsersService
 {
-    public readonly ILogger<UsersService> _logger;
+    private readonly ILogger<UsersService> _logger;
     private readonly YourGamesListDbContext _yglDbContext;
 
     public UsersService(
