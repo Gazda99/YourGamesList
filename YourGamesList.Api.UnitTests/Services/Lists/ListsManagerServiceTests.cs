@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentValidation.TestHelper;
@@ -55,6 +55,7 @@ public class ListsManagerServiceTests
             Editable = true,
             IsPrivate = true,
             Name = "My list",
+            NormalizedName = "my list",
             User = user
         };
         var entry = new GamesListEntry
@@ -110,8 +111,7 @@ public class ListsManagerServiceTests
     [Test]
     public async Task Search_WithOwnerAndListName_UsesCaseInsensitiveSubstringAndAnd()
     {
-        var owner = CreateUser();
-        owner.Username = "GameOwner";
+        var owner = CreateUser("GameOwner");
         var matchingList = CreateList(owner, "My Games");
         matchingList.IsPrivate = false;
         var wrongOwnerList = CreateList(CreateUser(), "My Games");
@@ -134,8 +134,7 @@ public class ListsManagerServiceTests
     [Test]
     public async Task Search_ExcludesOtherUsersPrivateListsAndIncludesPublicLists()
     {
-        var owner = CreateUser();
-        owner.Username = "Owner";
+        var owner = CreateUser("Owner");
         var privateList = CreateList(owner, "Private collection");
         var publicList = CreateList(owner, "Public collection");
         publicList.IsPrivate = false;
@@ -154,8 +153,7 @@ public class ListsManagerServiceTests
     [Test]
     public async Task Search_OwnerCanFindPrivateLists_AndControlsEntryInclusion()
     {
-        var owner = CreateUser();
-        owner.Username = "Owner";
+        var owner = CreateUser("Owner");
         var list = CreateList(owner, "Games");
         CreateEntry(list, 123);
         _dbContext.GamesLists.Add(list);
@@ -199,6 +197,7 @@ public class ListsManagerServiceTests
         Assert.That(result.Value, Is.EqualTo(list.Id));
         Assert.That(list.UserId, Is.EqualTo(user.Id));
         Assert.That(list.Name, Is.EqualTo("Collection"));
+        Assert.That(list.NormalizedName, Is.EqualTo("collection"));
         Assert.That(list.IsPrivate, Is.True);
         Assert.That(list.Editable, Is.True);
         Assert.That(list.CreatedAt, Is.EqualTo(createdAt));
@@ -220,6 +219,45 @@ public class ListsManagerServiceTests
 
         Assert.That(result.IsFailure, Is.True);
         Assert.That(result.Error, Is.EqualTo(ListsError.ListAlreadyExists));
+    }
+
+    [Test]
+    public async Task Create_NameDiffersOnlyByCase_ReturnsAlreadyExists()
+    {
+        var user = CreateUser();
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(CreateList(user, "Collection"));
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().Create(new AddListParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            Name = "COLLECTION"
+        });
+
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.ListAlreadyExists));
+        Assert.That(await _dbContext.GamesLists.CountAsync(), Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task Create_NameUsedByAnotherUser_CreatesList()
+    {
+        var user = CreateUser();
+        var otherUser = CreateUser();
+        _dbContext.Users.AddRange(user, otherUser);
+        _dbContext.GamesLists.Add(CreateList(otherUser, "Collection"));
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().Create(new AddListParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            Name = "collection"
+        });
+
+        Assert.That(result.IsSuccess, Is.True);
+        var list = await _dbContext.GamesLists.SingleAsync(l => l.UserId == user.Id);
+        Assert.That(list.Name, Is.EqualTo("collection"));
     }
 
     [Test]
@@ -305,6 +343,7 @@ public class ListsManagerServiceTests
 
         Assert.That(result.IsSuccess, Is.True);
         Assert.That(list.Name, Is.EqualTo("Updated"));
+        Assert.That(list.NormalizedName, Is.EqualTo("updated"));
         Assert.That(list.Description, Is.Null);
         Assert.That(list.IsPrivate, Is.False);
         Assert.That(list.ModifiedAt, Is.EqualTo(modifiedAt));
@@ -375,6 +414,48 @@ public class ListsManagerServiceTests
         Assert.That(result.IsFailure, Is.True);
         Assert.That(result.Error, Is.EqualTo(ListsError.ListAlreadyExists));
         Assert.That(list.Name, Is.EqualTo("Collection"));
+    }
+
+    [Test]
+    public async Task Update_NameDiffersOnlyByCaseFromAnotherList_ReturnsAlreadyExists()
+    {
+        var user = CreateUser();
+        var list = CreateList(user, "Collection");
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.AddRange(list, CreateList(user, "Other"));
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().Update(new UpdateListParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            Id = list.Id,
+            Name = "OTHER"
+        });
+
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.ListAlreadyExists));
+        Assert.That(list.Name, Is.EqualTo("Collection"));
+    }
+
+    [Test]
+    public async Task Update_OnlyCaseOfOwnNameChanged_UpdatesName()
+    {
+        var user = CreateUser();
+        var list = CreateList(user, "Collection");
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().Update(new UpdateListParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            Id = list.Id,
+            Name = "COLLECTION"
+        });
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(list.Name, Is.EqualTo("COLLECTION"));
+        Assert.That(list.NormalizedName, Is.EqualTo("collection"));
     }
 
     [Test]
@@ -989,16 +1070,21 @@ public class ListsManagerServiceTests
 
     private ListsManagerService CreateService() => new(_logger, _dbContext, _timeProvider);
 
-    private static User CreateUser() => new()
+    private static User CreateUser(string? username = null)
     {
-        Id = Guid.NewGuid(),
-        CreatedAt = DateTimeOffset.UtcNow,
-        DateOfBirth = new DateOnly(2000, 1, 1),
-        Email = $"{Guid.NewGuid():N}@example.com",
-        PasswordHash = "hashed-password",
-        UserStatus = UserStatus.Active,
-        Username = Guid.NewGuid().ToString("N")
-    };
+        username ??= Guid.NewGuid().ToString("N");
+        return new User
+        {
+            Id = Guid.NewGuid(),
+            CreatedAt = DateTimeOffset.UtcNow,
+            DateOfBirth = new DateOnly(2000, 1, 1),
+            Email = $"{Guid.NewGuid():N}@example.com",
+            PasswordHash = "hashed-password",
+            UserStatus = UserStatus.Active,
+            Username = username,
+            NormalizedUsername = username.ToLowerInvariant()
+        };
+    }
 
     private static GamesList CreateList(User user, string name, bool editable = true) => new()
     {
@@ -1007,6 +1093,7 @@ public class ListsManagerServiceTests
         Editable = editable,
         IsPrivate = true,
         Name = name,
+        NormalizedName = name.ToLowerInvariant(),
         User = user
     };
 

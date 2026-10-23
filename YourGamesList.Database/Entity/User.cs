@@ -28,6 +28,7 @@ public class User
     public required UserStatus UserStatus { get; set; }
 
     [StringLength(64)] public required string Username { get; set; }
+    [StringLength(64)] public required string NormalizedUsername { get; set; }
 
     public virtual ICollection<GamesList> GamesLists { get; } = [];
 }

@@ -49,7 +49,7 @@ public class UserInformationTokenProviderTests
         var token = handler.ReadJsonWebToken(rawToken);
 
         //ASSERT
-        Assert.That(token.Claims.Single(x => x.Type == "sub").Value, Is.EqualTo(username.ToLower()));
+        Assert.That(token.Claims.Single(x => x.Type == "sub").Value, Is.EqualTo(username));
         Assert.That(token.Claims.Single(x => x.Type == JwtCustomClaimNames.UserId).Value, Is.EqualTo(userId.ToString()));
         Assert.That(token.Issuer, Is.EqualTo(options.Issuer));
         Assert.That(token.Audiences, Does.Contain(options.Audience));

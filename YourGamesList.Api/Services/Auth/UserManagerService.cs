@@ -71,8 +71,8 @@ public class UserManagerService : IUserManagerService
 
     public async Task<CombinedResult<string, UserAuthError>> Login(UserLoginParams userLoginParams)
     {
-        var username = userLoginParams.Username;
-        var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
+        var normalizedUsername = userLoginParams.Username.ToLowerInvariant();
+        var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.NormalizedUsername == normalizedUsername);
 
         if (user == null)
         {
@@ -95,7 +95,7 @@ public class UserManagerService : IUserManagerService
             return CombinedResult<string, UserAuthError>.Failure(UserAuthError.UnauthorizedUser);
         }
 
-        var newToken = _tokenProvider.CreateToken(user.Username, user.Id);
+        var newToken = _tokenProvider.CreateToken(user.NormalizedUsername, user.Id);
         _logger.LogInformation("Created new user token. User logged in.");
 
         var now = _timeProvider.GetUtcNow();
@@ -111,27 +111,28 @@ public class UserManagerService : IUserManagerService
         var email = userRegisterParams.Email;
         var dob = userRegisterParams.DateOfBirth;
 
-        var doesUsernameExists = _yglDbContext.Users.AnyAsync(u => u.Username == username);
-        var doesEmailExists = _yglDbContext.Users.AnyAsync(u => u.Email == email);
-        var dbChecks = Task.WhenAll(doesUsernameExists, doesEmailExists);
+        var normalizedUsername = username.ToLowerInvariant();
+        bool doesEmailExists;
+        bool doesUsernameExists;
 
         try
         {
-            await dbChecks;
+            doesEmailExists = await _yglDbContext.Users.AnyAsync(u => u.Email == email);
+            doesUsernameExists = !doesEmailExists && await _yglDbContext.Users.AnyAsync(u => u.NormalizedUsername == normalizedUsername);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            _logger.LogError(dbChecks.Exception, "Register failed while checking username and email availability in db.");
+            _logger.LogError(ex, "Register failed while checking username and email availability in db.");
             return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.InternalServerError);
         }
 
-        if (doesEmailExists.Result)
+        if (doesEmailExists)
         {
             _logger.LogInformation("Email already registered.");
             return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.EmailAlreadyTaken);
         }
 
-        if (doesUsernameExists.Result)
+        if (doesUsernameExists)
         {
             _logger.LogInformation("Username already registered.");
             return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.UsernameAlreadyTaken);
@@ -157,6 +158,7 @@ public class UserManagerService : IUserManagerService
                 DateOfBirth = dob,
                 Email = email,
                 Username = username,
+                NormalizedUsername = normalizedUsername,
                 PasswordHash = hashedPassword.Value,
                 UserStatus = UserStatus.Active,
                 ExpiryAt = null
@@ -174,6 +176,7 @@ public class UserManagerService : IUserManagerService
                 DateOfBirth = dob,
                 Email = email,
                 Username = username,
+                NormalizedUsername = normalizedUsername,
                 PasswordHash = hashedPassword.Value,
                 UserStatus = UserStatus.Pending,
                 ExpiryAt = userExpiration
@@ -213,7 +216,8 @@ public class UserManagerService : IUserManagerService
 
     public async Task<ErrorResult<UserAuthError>> Delete(UserDeleteParams userDeleteParams)
     {
-        if (userDeleteParams.Username != userDeleteParams.UserInformation.Username)
+        var normalizedUsername = userDeleteParams.Username.ToLowerInvariant();
+        if (normalizedUsername != userDeleteParams.UserInformation.Username)
         {
             _logger.LogInformation("Requested username does not match authenticated user.");
             return ErrorResult<UserAuthError>.Failure(UserAuthError.ForbiddenUser);
