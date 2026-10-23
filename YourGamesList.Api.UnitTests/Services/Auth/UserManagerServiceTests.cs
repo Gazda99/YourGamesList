@@ -179,6 +179,40 @@ public class UserManagerServiceTests
         _logger.ReceivedLog(LogLevel.Information, "Created new user token. User logged in.");
     }
 
+    [Test]
+    public async Task Login_UsernameWithDifferentCasing_ReturnsTokenWithStoredUsername()
+    {
+        //ARRANGE
+        const string storedUsername = "TestUser";
+        const string password = "correct_password";
+        const string hashedPassword = "hashed_password";
+        const string expectedToken = "jwt_token_sample";
+
+        var userId = Guid.NewGuid();
+        var user = CreateUser(id: userId, username: storedUsername, passwordHash: hashedPassword, status: UserStatus.Active);
+
+        await _dbContext.Users.AddAsync(user);
+        await _dbContext.SaveChangesAsync();
+
+        _passwordHasher.VerifyHashedPassword(password, hashedPassword).Returns(true);
+        _tokenProvider.CreateToken(storedUsername, userId).Returns(expectedToken);
+
+        var dto = new UserLoginParams()
+        {
+            Username = "tESTuSER",
+            Password = password
+        };
+        var service = CreateService();
+
+        //ACT
+        var res = await service.Login(dto);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.True);
+        Assert.That(res.Value, Is.EqualTo(expectedToken));
+        _tokenProvider.Received(1).CreateToken(storedUsername, userId);
+    }
+
     #endregion
 
     #region Register
@@ -236,6 +270,31 @@ public class UserManagerServiceTests
     }
 
     [Test]
+    public async Task Register_UsernameDiffersOnlyByCase_ReturnsUsernameAlreadyTaken()
+    {
+        //ARRANGE
+        await _dbContext.Users.AddAsync(CreateUser(username: "ExistingUser", email: "other@example.com"));
+        await _dbContext.SaveChangesAsync();
+
+        var dto = new UserRegisterParams()
+        {
+            Username = "existinguser",
+            Email = "new@example.com",
+            Password = "password123",
+            DateOfBirth = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-20))
+        };
+        var service = CreateService();
+
+        //ACT
+        var res = await service.Register(dto);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.False);
+        Assert.That(res.Error, Is.EqualTo(UserAuthError.UsernameAlreadyTaken));
+        _logger.ReceivedLog(LogLevel.Information, "Username already registered.");
+    }
+
+    [Test]
     public async Task Register_PasswordHashingFails_ReturnsInternalServerError()
     {
         //ARRANGE
@@ -269,7 +328,7 @@ public class UserManagerServiceTests
 
         var dto = new UserRegisterParams()
         {
-            Username = "newuser",
+            Username = "NewUser",
             Email = "new@example.com",
             Password = "password123",
             DateOfBirth = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-20))
@@ -282,8 +341,9 @@ public class UserManagerServiceTests
         //ASSERT
         Assert.That(res.IsSuccess, Is.True);
 
-        var dbUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == "newuser");
+        var dbUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == "NewUser");
         Assert.That(dbUser, Is.Not.Null);
+        Assert.That(dbUser.NormalizedUsername, Is.EqualTo("newuser"));
         Assert.That(dbUser.UserStatus, Is.EqualTo(UserStatus.Active));
         Assert.That(dbUser.CreatedAt, Is.EqualTo(now));
         Assert.That(dbUser.ExpiryAt, Is.Null);
@@ -309,7 +369,7 @@ public class UserManagerServiceTests
 
         var dto = new UserRegisterParams()
         {
-            Username = "newuser",
+            Username = "NewUser",
             Email = "new@example.com",
             Password = "password123",
             DateOfBirth = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-20))
@@ -336,7 +396,7 @@ public class UserManagerServiceTests
     {
         //ARRANGE
         var now = DateTimeOffset.UtcNow;
-        var username = "newuser2137";
+        var username = "NewUser2137";
         var password = "password123";
         var email = "email@com.pl";
         var rawToken = _fixture.Create<string>();
@@ -372,6 +432,7 @@ public class UserManagerServiceTests
         
         Assert.That(res.Value, Is.EqualTo(dbUser.Id));
 
+        Assert.That(dbUser.NormalizedUsername, Is.EqualTo("newuser2137"));
         Assert.That(dbUser.UserStatus, Is.EqualTo(UserStatus.Pending));
         Assert.That(dbUser.ExpiryAt, Is.EqualTo(now + TimeSpan.FromMinutes(60)));
 
@@ -464,6 +525,37 @@ public class UserManagerServiceTests
         Assert.That(res.IsSuccess, Is.True);
 
         var dbUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
+        Assert.That(dbUser, Is.Null);
+        _logger.ReceivedLog(LogLevel.Information, "Removed user from database.");
+    }
+
+    [Test]
+    public async Task Delete_UsernameWithDifferentCasing_RemovesUserAndReturnsSuccess()
+    {
+        //ARRANGE
+        const string password = "correct_password";
+        const string hashedPassword = "hashed_password";
+
+        var user = CreateUser(username: "User_To_Delete", passwordHash: hashedPassword);
+        await _dbContext.Users.AddAsync(user);
+        await _dbContext.SaveChangesAsync();
+
+        _passwordHasher.VerifyHashedPassword(password, hashedPassword).Returns(true);
+
+        var dto = new UserDeleteParams()
+        {
+            Username = "user_to_delete",
+            Password = password
+        };
+        var service = CreateService();
+
+        //ACT
+        var res = await service.Delete(dto);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.True);
+
+        var dbUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == user.Id);
         Assert.That(dbUser, Is.Null);
         _logger.ReceivedLog(LogLevel.Information, "Removed user from database.");
     }
@@ -637,6 +729,7 @@ public class UserManagerServiceTests
         {
             Id = id ?? Guid.NewGuid(),
             Username = username,
+            NormalizedUsername = username.ToLowerInvariant(),
             Email = email,
             PasswordHash = passwordHash,
             CreatedAt = DateTimeOffset.UtcNow,

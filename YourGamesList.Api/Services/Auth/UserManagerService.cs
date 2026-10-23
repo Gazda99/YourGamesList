@@ -71,8 +71,8 @@ public class UserManagerService : IUserManagerService
 
     public async Task<CombinedResult<string, UserAuthError>> Login(UserLoginParams userLoginParams)
     {
-        var username = userLoginParams.Username;
-        var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
+        var normalizedUsername = userLoginParams.Username.ToLowerInvariant();
+        var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.NormalizedUsername == normalizedUsername);
 
         if (user == null)
         {
@@ -111,13 +111,14 @@ public class UserManagerService : IUserManagerService
         var email = userRegisterParams.Email;
         var dob = userRegisterParams.DateOfBirth;
 
+        var normalizedUsername = username.ToLowerInvariant();
         bool doesEmailExists;
         bool doesUsernameExists;
 
         try
         {
             doesEmailExists = await _yglDbContext.Users.AnyAsync(u => u.Email == email);
-            doesUsernameExists = !doesEmailExists && await _yglDbContext.Users.AnyAsync(u => u.Username == username);
+            doesUsernameExists = !doesEmailExists && await _yglDbContext.Users.AnyAsync(u => u.NormalizedUsername == normalizedUsername);
         }
         catch (Exception ex)
         {
@@ -157,6 +158,7 @@ public class UserManagerService : IUserManagerService
                 DateOfBirth = dob,
                 Email = email,
                 Username = username,
+                NormalizedUsername = normalizedUsername,
                 PasswordHash = hashedPassword.Value,
                 UserStatus = UserStatus.Active,
                 ExpiryAt = null
@@ -174,6 +176,7 @@ public class UserManagerService : IUserManagerService
                 DateOfBirth = dob,
                 Email = email,
                 Username = username,
+                NormalizedUsername = normalizedUsername,
                 PasswordHash = hashedPassword.Value,
                 UserStatus = UserStatus.Pending,
                 ExpiryAt = userExpiration
@@ -213,8 +216,8 @@ public class UserManagerService : IUserManagerService
 
     public async Task<ErrorResult<UserAuthError>> Delete(UserDeleteParams userDeleteParams)
     {
-        var username = userDeleteParams.Username;
-        var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
+        var normalizedUsername = userDeleteParams.Username.ToLowerInvariant();
+        var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.NormalizedUsername == normalizedUsername);
 
         if (user == null)
         {

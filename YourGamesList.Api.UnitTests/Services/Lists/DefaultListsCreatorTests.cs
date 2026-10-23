@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -51,7 +51,8 @@ public class DefaultListsCreatorTests
             Email = "user@example.com",
             PasswordHash = "hashed_password",
             UserStatus = UserStatus.Active,
-            Username = "testuser"
+            Username = "testuser",
+            NormalizedUsername = "testuser"
         };
         await _dbContext.Users.AddAsync(user);
 
@@ -68,9 +69,11 @@ public class DefaultListsCreatorTests
         var playedList = lists.FirstOrDefault(list => list.Name == "Played");
         Assert.That(playedList, Is.Not.Null);
         Assert.That(playedList.Description, Is.EqualTo("Games I have played so far."));
+        Assert.That(playedList.NormalizedName, Is.EqualTo("played"));
         var wishList = lists.FirstOrDefault(list => list.Name == "Wishlist");
         Assert.That(wishList, Is.Not.Null);
         Assert.That(wishList.Description, Is.EqualTo("Games I would like to play."));
+        Assert.That(wishList.NormalizedName, Is.EqualTo("wishlist"));
 
         Assert.That(lists, Has.All.Matches<GamesList>(list =>
             list.CreatedAt == now &&
