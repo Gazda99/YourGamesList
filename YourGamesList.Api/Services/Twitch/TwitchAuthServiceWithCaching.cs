@@ -13,6 +13,9 @@ namespace YourGamesList.Api.Services.Twitch;
 public class TwitchAuthServiceWithCaching : ITwitchAuthService
 {
     private const string TwitchAuthTokenCacheKey = "YGL_twitch-auth-token";
+    private const string TwitchAuthLockKey = "YGL_twitch-auth-lock";
+    private const int TwitchAuthLockDurationInSeconds = 60;
+
     private const int TwitchAuthTokenDefaultCacheDurationInHours = 48;
 
     private readonly ILogger<TwitchAuthServiceWithCaching> _logger;
@@ -40,20 +43,19 @@ public class TwitchAuthServiceWithCaching : ITwitchAuthService
 
     public async Task<ValueResult<TwitchToken>> GetAccessToken()
     {
-        var cacheResult = await _cacheProvider.Get<TwitchToken>(TwitchAuthTokenCacheKey);
-        if (cacheResult.IsSuccess && !string.IsNullOrWhiteSpace(cacheResult.Value.AccessToken))
+        var cachedToken = await GetCachedToken();
+        if (cachedToken is not null)
         {
-            var twitchToken = cacheResult.Value;
-            var now = _timeProvider.GetUtcNow();
-            if (now < twitchToken.ExpiresOn)
-            {
-                _logger.LogInformation("Using cached Twitch Auth token.");
-                return ValueResult<TwitchToken>.Success(cacheResult.Value);
-            }
-            else
-            {
-                _logger.LogInformation("Cached token is expired.");
-            }
+            return ValueResult<TwitchToken>.Success(cachedToken);
+        }
+
+        await using var lease = await _cacheProvider.AcquireLock(TwitchAuthLockKey, TimeSpan.FromSeconds(TwitchAuthLockDurationInSeconds));
+
+        // Double check cache, because we were waiting for lock for indefinitive amount of time, cache might expired in the meantime 
+        cachedToken = await GetCachedToken();
+        if (cachedToken is not null)
+        {
+            return ValueResult<TwitchToken>.Success(cachedToken);
         }
 
         _logger.LogInformation("Not using cached Twitch Auth token. Trying to obtain new one.");
@@ -66,15 +68,31 @@ public class TwitchAuthServiceWithCaching : ITwitchAuthService
             var now = _timeProvider.GetUtcNow();
             var defaultTtl = TimeSpan.FromHours(TwitchAuthTokenDefaultCacheDurationInHours);
             var diff = result.Value.ExpiresOn - now;
-            
             var absoluteExpiration = defaultTtl > diff ? defaultTtl : diff;
             
-            await _cacheProvider.Set(TwitchAuthTokenCacheKey, result.Value, new CacheOptions()
-            {
-                AbsoluteExpiration = absoluteExpiration
-            });
+            var cacheOptions = new CacheOptions { AbsoluteExpiration = absoluteExpiration };
+            await _cacheProvider.Set(TwitchAuthTokenCacheKey, result.Value, cacheOptions);
         }
 
         return result;
+    }
+
+    private async Task<TwitchToken?> GetCachedToken()
+    {
+        var cacheResult = await _cacheProvider.Get<TwitchToken>(TwitchAuthTokenCacheKey);
+        if (!cacheResult.IsSuccess || string.IsNullOrWhiteSpace(cacheResult.Value.AccessToken))
+        {
+            return null;
+        }
+
+        var token = cacheResult.Value;
+        if (_timeProvider.GetUtcNow() >= token.ExpiresOn)
+        {
+            _logger.LogInformation("Cached token is expired.");
+            return null;
+        }
+
+        _logger.LogInformation("Using cached Twitch Auth token.");
+        return token;
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture;
 using Microsoft.Extensions.Caching.Memory;
@@ -118,5 +119,55 @@ public class InMemoryCacheProviderTests
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.IsFailure, Is.True);
         Assert.That(result.Error, Is.EqualTo(CacheProviderError.NotFound));
+    }
+
+    [Test]
+    public async Task AcquireLock_WhenSameKeyIsAlreadyLocked_WaitsUntilLeaseIsDisposed()
+    {
+        //ARRANGE
+        var key = _fixture.Create<string>();
+        var firstLease = await _cacheProvider.AcquireLock(key, TimeSpan.FromSeconds(5));
+
+        //ACT
+        var secondLeaseTask = _cacheProvider.AcquireLock(key, TimeSpan.FromSeconds(5));
+        await Task.Delay(50);
+
+        //ASSERT
+        Assert.That(secondLeaseTask.IsCompleted, Is.False);
+
+        await firstLease.DisposeAsync();
+        var secondLease = await secondLeaseTask.WaitAsync(TimeSpan.FromSeconds(1));
+        await secondLease.DisposeAsync();
+    }
+
+    [Test]
+    public async Task AcquireLock_WhenLeaseExpires_ReleasesLock()
+    {
+        //ARRANGE
+        var key = _fixture.Create<string>();
+        var firstLease = await _cacheProvider.AcquireLock(key, TimeSpan.FromMilliseconds(100));
+
+        //ACT
+        var secondLease = await _cacheProvider.AcquireLock(key, TimeSpan.FromSeconds(5)).WaitAsync(TimeSpan.FromSeconds(1));
+
+        //ASSERT
+        await firstLease.DisposeAsync();
+        await secondLease.DisposeAsync();
+    }
+
+    [Test]
+    public async Task AcquireLock_WhenWaitIsCancelled_ThrowsOperationCanceledException()
+    {
+        //ARRANGE
+        var key = _fixture.Create<string>();
+        var lease = await _cacheProvider.AcquireLock(key, TimeSpan.FromSeconds(5));
+        using var cancellationTokenSource = new CancellationTokenSource();
+        await cancellationTokenSource.CancelAsync();
+
+        //ACT & ASSERT
+        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+            await _cacheProvider.AcquireLock(key, TimeSpan.FromSeconds(5), cancellationTokenSource.Token));
+
+        await lease.DisposeAsync();
     }
 }
