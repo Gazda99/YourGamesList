@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
+using YourGamesList.Api.Model;
 using YourGamesList.Api.Services.Auth;
 using YourGamesList.Api.Services.Auth.Model;
 using YourGamesList.Api.Services.Auth.Options;
@@ -391,10 +392,42 @@ public class UserManagerServiceTests
     #region Delete
 
     [Test]
+    public async Task Delete_UsernameDoesNotMatchToken_ReturnsForbiddenUserError()
+    {
+        //ARRANGE
+        var user = CreateUser(username: "victim");
+        await _dbContext.Users.AddAsync(user);
+        await _dbContext.SaveChangesAsync();
+
+        var dto = new UserDeleteParams()
+        {
+            UserInformation = CreateUserInformation(Guid.NewGuid(), "attacker"),
+            Username = "victim",
+            Password = "password"
+        };
+        var service = CreateService();
+
+        //ACT
+        var res = await service.Delete(dto);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.False);
+        Assert.That(res.Error, Is.EqualTo(UserAuthError.ForbiddenUser));
+        _passwordHasher.DidNotReceive().VerifyHashedPassword(Arg.Any<string>(), Arg.Any<string>());
+        Assert.That(await _dbContext.Users.AnyAsync(u => u.Id == user.Id), Is.True);
+        _logger.ReceivedLog(LogLevel.Information, "Requested username does not match authenticated user.");
+    }
+
+    [Test]
     public async Task Delete_UserNotFound_ReturnsNoUserFoundError()
     {
         //ARRANGE
-        var dto = _fixture.Create<UserDeleteParams>();
+        var dto = new UserDeleteParams()
+        {
+            UserInformation = CreateUserInformation(Guid.NewGuid(), "missing_user"),
+            Username = "missing_user",
+            Password = "password"
+        };
         var service = CreateService();
 
         //ACT
@@ -422,6 +455,7 @@ public class UserManagerServiceTests
 
         var dto = new UserDeleteParams()
         {
+            UserInformation = CreateUserInformation(user.Id, username),
             Username = username,
             Password = password
         };
@@ -452,6 +486,7 @@ public class UserManagerServiceTests
 
         var dto = new UserDeleteParams()
         {
+            UserInformation = CreateUserInformation(user.Id, username),
             Username = username,
             Password = password
         };
@@ -642,6 +677,16 @@ public class UserManagerServiceTests
             CreatedAt = DateTimeOffset.UtcNow,
             DateOfBirth = new DateOnly(2000, 1, 1),
             UserStatus = status
+        };
+    }
+
+    private static UserInformationToken CreateUserInformation(Guid userId, string username)
+    {
+        return new UserInformationToken
+        {
+            RawToken = "token",
+            Username = username,
+            UserId = userId
         };
     }
 

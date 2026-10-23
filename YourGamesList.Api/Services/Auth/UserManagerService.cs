@@ -213,8 +213,14 @@ public class UserManagerService : IUserManagerService
 
     public async Task<ErrorResult<UserAuthError>> Delete(UserDeleteParams userDeleteParams)
     {
-        var username = userDeleteParams.Username;
-        var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
+        if (userDeleteParams.Username != userDeleteParams.UserInformation.Username)
+        {
+            _logger.LogInformation("Requested username does not match authenticated user.");
+            return ErrorResult<UserAuthError>.Failure(UserAuthError.ForbiddenUser);
+        }
+
+        var userId = userDeleteParams.UserInformation.UserId;
+        var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
         if (user == null)
         {

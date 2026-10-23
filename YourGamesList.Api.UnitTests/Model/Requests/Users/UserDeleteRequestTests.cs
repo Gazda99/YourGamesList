@@ -1,5 +1,6 @@
 ﻿using AutoFixture;
 using FluentValidation.TestHelper;
+using YourGamesList.Api.Model;
 using YourGamesList.Api.Model.Requests.Users;
 using YourGamesList.Contracts.Requests.Users;
 using YourGamesList.Contracts.Responses;
@@ -34,10 +35,27 @@ public class UserDeleteRequestTests
     }
 
     [Test]
+    public void Validate_UserInformationMissing_ReturnsValidationError()
+    {
+        //ARRANGE
+        var request = _fixture.Build<UserDeleteRequest>()
+            .With(x => x.UserInformation, (UserInformationToken)null!)
+            .Create();
+        var validator = new UserDeleteRequestValidator();
+
+        //ACT
+        var result = validator.TestValidate(request);
+
+        //ASSERT
+        Assert.That(result.IsValid, Is.False);
+        result.ShouldHaveValidationErrorFor(x => x.UserInformation);
+    }
+
+    [Test]
     public void Validate_BodyMissing_ReturnsValidationError()
     {
         //ARRANGE
-        var request = new UserDeleteRequest { Body = null! };
+        var request = new UserDeleteRequest { UserInformation = _fixture.Create<UserInformationToken>(), Body = null! };
         var validator = new UserDeleteRequestValidator();
 
         //ACT
