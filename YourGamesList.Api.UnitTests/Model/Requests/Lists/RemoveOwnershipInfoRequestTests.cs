@@ -70,7 +70,7 @@ public class RemoveOwnershipInfoRequestTests
         UserInformation = new UserInformationToken
         {
             RawToken = "token",
-            Username = "testuser",
+            NormalizedUsername = "testuser",
             UserId = Guid.NewGuid()
         },
         ListId = listId ?? Guid.NewGuid(),
