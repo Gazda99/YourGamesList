@@ -255,10 +255,8 @@ public class ListsManagerService : IListsManagerService
         }
 
         var nameChanged = updateListParams.Name != null && updateListParams.Name != gamesList.Name;
-        var descriptionChanged = updateListParams.HasDescription &&
-                                 updateListParams.Description != gamesList.Description;
-        var privacyChanged = updateListParams.IsPrivate.HasValue &&
-                             updateListParams.IsPrivate.Value != gamesList.IsPrivate;
+        var descriptionChanged = updateListParams.HasDescription && updateListParams.Description != gamesList.Description;
+        var privacyChanged = updateListParams.IsPrivate.HasValue && updateListParams.IsPrivate.Value != gamesList.IsPrivate;
 
         if (!nameChanged && !descriptionChanged && !privacyChanged)
         {
@@ -382,12 +380,9 @@ public class ListsManagerService : IListsManagerService
             return ErrorResult<ListsError>.Failure(ListsError.GameListEntryNotFound);
         }
 
-        var completionStatusChanged = updateParams.CompletionStatus.HasValue &&
-                                      updateParams.CompletionStatus.Value != (CompletionStatusDto)entry.CompletionStatus;
-        var descriptionChanged = updateParams.Description.HasValue &&
-                                 updateParams.Description.Value != entry.Description;
-        var ratingChanged = updateParams.Rating.HasValue &&
-                            updateParams.Rating.Value != entry.Rating;
+        var completionStatusChanged = updateParams.CompletionStatus.HasValue && updateParams.CompletionStatus.Value != (CompletionStatusDto)entry.CompletionStatus;
+        var descriptionChanged = updateParams.Description.HasValue && updateParams.Description.Value != entry.Description;
+        var ratingChanged = updateParams.Rating.HasValue && updateParams.Rating.Value != entry.Rating;
 
         if (!completionStatusChanged && !descriptionChanged && !ratingChanged)
         {
@@ -423,10 +418,7 @@ public class ListsManagerService : IListsManagerService
 
         if (!entryExists)
         {
-            _logger.LogInformation(
-                "Cannot find game list entry {EntryId} in list {GamesListId} for the requesting user.",
-                addParams.GameListEntryId,
-                addParams.GamesListId);
+            _logger.LogInformation("Cannot find game list entry {EntryId} in list {GamesListId} for the requesting user.", addParams.GameListEntryId, addParams.GamesListId);
             return CombinedResult<Guid, ListsError>.Failure(ListsError.GameListEntryNotFound);
         }
 
@@ -459,10 +451,7 @@ public class ListsManagerService : IListsManagerService
 
         if (!entryExists)
         {
-            _logger.LogInformation(
-                "Cannot find game list entry {EntryId} in list {GamesListId} for the requesting user.",
-                updateParams.GameListEntryId,
-                updateParams.GamesListId);
+            _logger.LogInformation("Cannot find game list entry {EntryId} in list {GamesListId} for the requesting user.", updateParams.GameListEntryId, updateParams.GamesListId);
             return ErrorResult<ListsError>.Failure(ListsError.GameListEntryNotFound);
         }
 
@@ -476,18 +465,11 @@ public class ListsManagerService : IListsManagerService
             return ErrorResult<ListsError>.Failure(ListsError.OwnershipInfoNotFound);
         }
 
-        var isLegitChanged = updateParams.IsLegit.HasValue &&
-                             updateParams.IsLegit.Value != ownershipInfo.IsLegit;
-        var platformChanged = updateParams.Platform.HasValue &&
-                              updateParams.Platform.Value != (PlatformDto)ownershipInfo.Platform;
-        var gameDistributionChanged = updateParams.GameDistribution.HasValue &&
-                                      updateParams.GameDistribution.Value !=
-                                      (GameDistributionDto)ownershipInfo.GameDistribution;
-        var wasEmulatedChanged = updateParams.WasEmulated.HasValue &&
-                                 updateParams.WasEmulated.Value != ownershipInfo.WasEmulated;
-        var emulatedOnChanged = updateParams.EmulatedOn.HasValue &&
-                                updateParams.EmulatedOn.Value !=
-                                (EmulatorDto?)ownershipInfo.EmulatedOn;
+        var isLegitChanged = updateParams.IsLegit.HasValue && updateParams.IsLegit.Value != ownershipInfo.IsLegit;
+        var platformChanged = updateParams.Platform.HasValue && updateParams.Platform.Value != (PlatformDto)ownershipInfo.Platform;
+        var gameDistributionChanged = updateParams.GameDistribution.HasValue && updateParams.GameDistribution.Value != (GameDistributionDto)ownershipInfo.GameDistribution;
+        var wasEmulatedChanged = updateParams.WasEmulated.HasValue && updateParams.WasEmulated.Value != ownershipInfo.WasEmulated;
+        var emulatedOnChanged = updateParams.EmulatedOn.HasValue && updateParams.EmulatedOn.Value != (EmulatorDto?)ownershipInfo.EmulatedOn;
 
         if (!isLegitChanged &&
             !platformChanged &&
@@ -548,10 +530,7 @@ public class ListsManagerService : IListsManagerService
 
         if (!entryExists)
         {
-            _logger.LogInformation(
-                "Cannot find game list entry {EntryId} in list {GamesListId} for the requesting user.",
-                removeParams.GameListEntryId,
-                removeParams.GamesListId);
+            _logger.LogInformation("Cannot find game list entry {EntryId} in list {GamesListId} for the requesting user.", removeParams.GameListEntryId, removeParams.GamesListId);
             return ErrorResult<ListsError>.Failure(ListsError.GameListEntryNotFound);
         }
 

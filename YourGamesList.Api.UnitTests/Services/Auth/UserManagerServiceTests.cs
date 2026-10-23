@@ -573,7 +573,7 @@ public class UserManagerServiceTests
         const string password = "correct_password";
         const string hashedPassword = "hashed_password";
 
-        var user = CreateUser(username: "User_To_Delete", passwordHash: hashedPassword);
+        var user = CreateUser(username: username, passwordHash: hashedPassword);
         await _dbContext.Users.AddAsync(user);
         await _dbContext.SaveChangesAsync();
 
@@ -582,7 +582,7 @@ public class UserManagerServiceTests
         var dto = new UserDeleteParams()
         {
             UserInformation = CreateUserInformation(user.Id, "stale-token-username"),
-            Username = "USER_TO_DELETE",
+            Username = username.ToUpperInvariant(),
             Password = password
         };
         var service = CreateService();
