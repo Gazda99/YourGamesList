@@ -137,13 +137,13 @@ public class UserInformationTokenTests
     public void FromHttpContext_WhenValidRequest_ReturnsSuccessResult()
     {
         //ARRANGE
-        var expectedUsername = _fixture.Create<string>();
+        const string expectedNormalizedUsername = "testuser";
         var expectedUserId = Guid.NewGuid();
         const string expectedRawToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.sample.token";
 
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, expectedUsername),
+            new Claim(JwtRegisteredClaimNames.Sub, expectedNormalizedUsername),
             new Claim(JwtCustomClaimNames.UserId, expectedUserId.ToString())
         };
 
@@ -160,7 +160,7 @@ public class UserInformationTokenTests
         //ASSERT
         Assert.That(result.IsSuccess, Is.True);
         Assert.That(result.Value.RawToken, Is.EqualTo(expectedRawToken));
-        Assert.That(result.Value.Username, Is.EqualTo(expectedUsername));
+        Assert.That(result.Value.NormalizedUsername, Is.EqualTo(expectedNormalizedUsername));
         Assert.That(result.Value.UserId, Is.EqualTo(expectedUserId));
     }
 }

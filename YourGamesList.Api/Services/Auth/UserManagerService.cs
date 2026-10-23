@@ -95,7 +95,7 @@ public class UserManagerService : IUserManagerService
             return CombinedResult<string, UserAuthError>.Failure(UserAuthError.UnauthorizedUser);
         }
 
-        var newToken = _tokenProvider.CreateToken(user.Username, user.Id);
+        var newToken = _tokenProvider.CreateToken(user.NormalizedUsername, user.Id);
         _logger.LogInformation("Created new user token. User logged in.");
 
         var now = _timeProvider.GetUtcNow();
@@ -217,12 +217,19 @@ public class UserManagerService : IUserManagerService
     public async Task<ErrorResult<UserAuthError>> Delete(UserDeleteParams userDeleteParams)
     {
         var normalizedUsername = userDeleteParams.Username.ToLowerInvariant();
-        var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.NormalizedUsername == normalizedUsername);
+        var userId = userDeleteParams.UserInformation.UserId;
+        var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
         if (user == null)
         {
             _logger.LogInformation("Not user found.");
             return ErrorResult<UserAuthError>.Failure(UserAuthError.NoUserFound);
+        }
+
+        if (normalizedUsername != user.NormalizedUsername)
+        {
+            _logger.LogInformation("Requested username does not match authenticated user.");
+            return ErrorResult<UserAuthError>.Failure(UserAuthError.ForbiddenUser);
         }
 
         var hashedPassword = user.PasswordHash;

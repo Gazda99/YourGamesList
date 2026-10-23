@@ -21,6 +21,7 @@ public static class ErrorCodes
         public const string EmailVerificationExpired = "EmailVerificationExpired";
 
         public const string UserNotActiveEmailActivation = "UserNotActiveEmailActivation";
+        public const string ForbiddenUser = "ForbiddenUser";
 
         public const string InvalidPassword = "InvalidPassword";
         public const string PasswordIsTooShort = "PasswordIsTooShort";

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoFixture;
@@ -41,7 +41,7 @@ public class UserControllerTests
         var userInformation = new UserInformationToken
         {
             RawToken = "token",
-            Username = "testuser",
+            NormalizedUsername = "testuser",
             UserId = Guid.NewGuid()
         };
         var request = new UserGetSelfRequest { UserInformation = userInformation };
@@ -49,7 +49,7 @@ public class UserControllerTests
         {
             Id = userInformation.UserId,
             CreatedAt = DateTimeOffset.UtcNow,
-            Username = userInformation.Username,
+            Username = userInformation.NormalizedUsername,
             Description = null,
             DateOfBirth = new DateOnly(2000, 1, 1)
         };
@@ -113,7 +113,7 @@ public class UserControllerTests
             UserInformation = new UserInformationToken
             {
                 RawToken = "token",
-                Username = "testuser",
+                NormalizedUsername = "testuser",
                 UserId = Guid.NewGuid()
             }
         };

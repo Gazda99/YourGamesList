@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -661,7 +661,7 @@ public class ListsControllerTests
         return new UserInformationToken()
         {
             RawToken = _fixture.Create<string>(),
-            Username = _fixture.Create<string>(),
+            NormalizedUsername = _fixture.Create<string>(),
             UserId = Guid.NewGuid()
         };
     }

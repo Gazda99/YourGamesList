@@ -123,7 +123,7 @@ public class UsersServiceTests
         return new UserInformationToken
         {
             RawToken = "token",
-            Username = "testuser",
+            NormalizedUsername = "testuser",
             UserId = userId
         };
     }
