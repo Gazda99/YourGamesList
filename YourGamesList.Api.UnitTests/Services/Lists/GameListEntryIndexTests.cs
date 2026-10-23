@@ -35,7 +35,7 @@ public class GameListEntryIndexTests
         dbContext.GameListEntries.Add(CreateEntry(firstList.Id, 123));
 
         //ASSERT
-        Assert.ThrowsAsync<DbUpdateException>(async () => await dbContext.SaveChangesAsync());
+        await Assert.ThrowsAsync<DbUpdateException>(async () => await dbContext.SaveChangesAsync());
     }
 
     [Test]
@@ -61,7 +61,7 @@ public class GameListEntryIndexTests
         dbContext.GamesLists.Add(CreateList(user, "COLLECTION"));
 
         //ASSERT
-        Assert.ThrowsAsync<DbUpdateException>(async () => await dbContext.SaveChangesAsync());
+        await Assert.ThrowsAsync<DbUpdateException>(async () => await dbContext.SaveChangesAsync());
     }
 
     [Test]
@@ -83,7 +83,7 @@ public class GameListEntryIndexTests
         dbContext.Users.Add(CreateUser("bob"));
 
         //ASSERT
-        Assert.ThrowsAsync<DbUpdateException>(async () => await dbContext.SaveChangesAsync());
+        await Assert.ThrowsAsync<DbUpdateException>(async () => await dbContext.SaveChangesAsync());
     }
 
     private static User CreateUser(string? username = null)
