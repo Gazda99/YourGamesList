@@ -82,7 +82,7 @@ public class GameListEntryIndexTests
         await dbContext.SaveChangesAsync();
 
         var entry = CreateEntry(list.Id, 123);
-        entry.Rating = 1;
+        entry.Rating = 50;
 
         //ACT
         dbContext.GameListEntries.Add(entry);
