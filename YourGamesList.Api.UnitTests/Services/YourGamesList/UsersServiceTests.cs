@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -57,7 +57,8 @@ public class UsersServiceTests
             Email = "test@example.com",
             PasswordHash = "password-hash",
             UserStatus = UserStatus.Active,
-            Username = username
+            Username = username,
+            NormalizedUsername = username.ToLowerInvariant()
         });
         _dbContext.GamesLists.Add(new GamesList
         {
@@ -67,6 +68,7 @@ public class UsersServiceTests
             Description = gamesListDescription,
             IsPrivate = false,
             Name = gamesListName,
+            NormalizedName = gamesListName.ToLowerInvariant(),
             UserId = userId
         });
         await _dbContext.SaveChangesAsync();
