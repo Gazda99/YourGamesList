@@ -957,6 +957,7 @@ public class UserManagerServiceTests
 
         var dbVerification = await _dbContext.EmailVerifications.FirstOrDefaultAsync(x => x.Token == hashedToken);
         Assert.That(dbVerification, Is.Null);
+        _logger.ReceivedLog(LogLevel.Information, $"Email confirmed. User {user.Id} is now {nameof(UserStatus.Active)}.");
     }
 
     #endregion

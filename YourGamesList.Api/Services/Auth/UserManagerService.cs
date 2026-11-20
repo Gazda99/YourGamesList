@@ -285,6 +285,7 @@ public class UserManagerService : IUserManagerService
     {
         if (string.IsNullOrWhiteSpace(confirmEmailParams.Token))
         {
+            _logger.LogInformation("Email verification token is empty.");
             return ErrorResult<UserAuthError>.Failure(UserAuthError.EmailVerificationInvalid);
         }
 
@@ -326,6 +327,7 @@ public class UserManagerService : IUserManagerService
 
         _yglDbContext.EmailVerifications.Remove(emailVerification);
         await _yglDbContext.SaveChangesAsync();
+        _logger.LogInformation("Email confirmed. User {UserId} is now {UserStatus}.", user.Id, nameof(UserStatus.Active));
 
         return ErrorResult<UserAuthError>.Success();
     }
