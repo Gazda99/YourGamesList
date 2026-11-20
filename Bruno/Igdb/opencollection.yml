@@ -15,6 +15,9 @@ config:
       bypassProxy: ""
 
 request:
+  headers:
+    - name: Client-ID
+      value: "{{client_id}}"
   auth:
     type: bearer
     token: "{{twitch_token}}"

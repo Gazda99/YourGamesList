@@ -6,9 +6,6 @@ info:
 http:
   method: POST
   url: https://api.igdb.com/v4/games
-  headers:
-    - name: Client-ID
-      value: aaskuwor85er232a6pw2pq86avtt1o
   body:
     type: text
     data: |-
