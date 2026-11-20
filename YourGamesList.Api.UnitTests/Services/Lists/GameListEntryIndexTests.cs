@@ -47,6 +47,7 @@ public class GameListEntryIndexTests
         await connection.OpenAsync();
         var options = new DbContextOptionsBuilder<YourGamesListDbContext>()
             .UseSqlite(connection)
+            .UseSnakeCaseNamingConvention()
             .Options;
         await using var dbContext = new YourGamesListDbContext(options);
         await dbContext.Database.EnsureCreatedAsync();
@@ -73,6 +74,7 @@ public class GameListEntryIndexTests
         await connection.OpenAsync();
         var options = new DbContextOptionsBuilder<YourGamesListDbContext>()
             .UseSqlite(connection)
+            .UseSnakeCaseNamingConvention()
             .Options;
         await using var dbContext = new YourGamesListDbContext(options);
         await dbContext.Database.EnsureCreatedAsync();

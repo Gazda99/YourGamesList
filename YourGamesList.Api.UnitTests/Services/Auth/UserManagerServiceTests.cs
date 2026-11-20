@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoFixture;
 using Microsoft.EntityFrameworkCore;
@@ -385,12 +386,47 @@ public class UserManagerServiceTests
         Assert.That(res.IsSuccess, Is.False);
         Assert.That(res.Error, Is.EqualTo(UserAuthError.InternalServerError));
 
-        var dbUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == "newuser");
-        Assert.That(dbUser, Is.Null);
-        await _defaultListsCreator.DidNotReceive().AddDefaultListsToGivenUser(Arg.Any<YourGamesListDbContext>(), Arg.Any<User>());
+        Assert.That(await _dbContext.Users.AnyAsync(), Is.False);
+        Assert.That(await _dbContext.EmailVerifications.AnyAsync(), Is.False);
+        await _defaultListsCreator.Received(1).AddDefaultListsToGivenUser(_dbContext, Arg.Any<User>());
 
         _logger.ReceivedLog(LogLevel.Information, $"Email confirmation is enabled. Proceeding with adding the User with status {nameof(UserStatus.Pending)}");
         _logger.ReceivedLog(LogLevel.Warning, "Email verification was not sent!");
+        _logger.ReceivedLog(LogLevel.Information, "Removed user from database after failed email verification sending.");
+    }
+
+    [Test]
+    public async Task Register_EmailConfirmationEnabled_SavesUserBeforeSendingEmail()
+    {
+        //ARRANGE
+        const string email = "new@example.com";
+        _options.Value.Returns(new UserManagerServiceOptions
+        {
+            EnableEmailConfirmation = true,
+            DefaultPendingUserExpiryInMinutes = 60,
+            DefaultEmailVerificationExpiryInMinutes = 30
+        });
+
+        _passwordHasher.HashPassword(Arg.Any<string>()).Returns(ValueResult<string>.Success("hashed_password"));
+        _verificationTokenHasher.GenerateToken().Returns(("raw_token", "hashed_token"));
+
+        var userSavedBeforeEmail = false;
+        var verificationSavedBeforeEmail = false;
+        _verificationEmailSender.SendVerificationEmail(email, Arg.Any<string>(), "raw_token").Returns(_ =>
+        {
+            userSavedBeforeEmail = _dbContext.Users.AsNoTracking().Any(u => u.Email == email);
+            verificationSavedBeforeEmail = _dbContext.EmailVerifications.AsNoTracking().Any(v => v.Token == "hashed_token");
+            return Task.FromResult(true);
+        });
+        var service = CreateService();
+
+        //ACT
+        var res = await service.Register(CreateRegisterParams("NewUser", email));
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.True);
+        Assert.That(userSavedBeforeEmail, Is.True);
+        Assert.That(verificationSavedBeforeEmail, Is.True);
     }
 
     [Test]
@@ -447,6 +483,139 @@ public class UserManagerServiceTests
         _logger.ReceivedLog(LogLevel.Information, $"Email confirmation is enabled. Proceeding with adding the User with status {nameof(UserStatus.Pending)}");
         _logger.ReceivedLog(LogLevel.Information, "Email verification sent!");
         _logger.ReceivedLog(LogLevel.Information, "Added user to database");
+    }
+
+    [Test]
+    public async Task Register_ExpiredPendingUserWithSameEmail_ReplacesUserAndReturnsSuccess()
+    {
+        //ARRANGE
+        var now = DateTimeOffset.UtcNow;
+        _timeProvider.SetUtcNow(now);
+        const string email = "pending@example.com";
+        var expiredUser = CreateUser(username: "olduser", email: email, status: UserStatus.Pending, expiryAt: now - TimeSpan.FromMinutes(1));
+        await _dbContext.Users.AddAsync(expiredUser);
+        await _dbContext.SaveChangesAsync();
+
+        _passwordHasher.HashPassword(Arg.Any<string>()).Returns(ValueResult<string>.Success("hashed_password"));
+        var service = CreateService();
+
+        //ACT
+        var res = await service.Register(CreateRegisterParams("newUser", email));
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.True);
+        Assert.That(await _dbContext.Users.AnyAsync(u => u.Id == expiredUser.Id), Is.False);
+        var dbUser = await _dbContext.Users.SingleAsync(u => u.Email == email);
+        Assert.That(dbUser.Id, Is.EqualTo(res.Value));
+        Assert.That(dbUser.NormalizedUsername, Is.EqualTo("newuser"));
+        _logger.ReceivedLog(LogLevel.Information, "Replacing 1 expired pending user(s).");
+    }
+
+    [Test]
+    public async Task Register_ExpiredPendingUserWithSameUsername_ReplacesUserAndReturnsSuccess()
+    {
+        //ARRANGE
+        var now = DateTimeOffset.UtcNow;
+        _timeProvider.SetUtcNow(now);
+        var expiredUser = CreateUser(username: "NewUser", email: "old@example.com", status: UserStatus.Pending, expiryAt: now);
+        await _dbContext.Users.AddAsync(expiredUser);
+        await _dbContext.SaveChangesAsync();
+
+        _passwordHasher.HashPassword(Arg.Any<string>()).Returns(ValueResult<string>.Success("hashed_password"));
+        var service = CreateService();
+
+        //ACT
+        var res = await service.Register(CreateRegisterParams("newuser", "new@example.com"));
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.True);
+        Assert.That(await _dbContext.Users.AnyAsync(u => u.Id == expiredUser.Id), Is.False);
+        var dbUser = await _dbContext.Users.SingleAsync(u => u.NormalizedUsername == "newuser");
+        Assert.That(dbUser.Email, Is.EqualTo("new@example.com"));
+        _logger.ReceivedLog(LogLevel.Information, "Replacing 1 expired pending user(s).");
+    }
+
+    [Test]
+    public async Task Register_ExpiredPendingUsersMatchingEmailAndUsernameSeparately_RemovesBoth()
+    {
+        //ARRANGE
+        var now = DateTimeOffset.UtcNow;
+        _timeProvider.SetUtcNow(now);
+        var expiredByEmail = CreateUser(username: "first", email: "new@example.com", status: UserStatus.Pending, expiryAt: now - TimeSpan.FromHours(1));
+        var expiredByUsername = CreateUser(username: "newuser", email: "second@example.com", status: UserStatus.Pending, expiryAt: now - TimeSpan.FromHours(1));
+        await _dbContext.Users.AddRangeAsync(expiredByEmail, expiredByUsername);
+        await _dbContext.SaveChangesAsync();
+
+        _passwordHasher.HashPassword(Arg.Any<string>()).Returns(ValueResult<string>.Success("hashed_password"));
+        var service = CreateService();
+
+        //ACT
+        var res = await service.Register(CreateRegisterParams("newuser", "new@example.com"));
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.True);
+        var users = await _dbContext.Users.ToListAsync();
+        Assert.That(users, Has.Count.EqualTo(1));
+        Assert.That(users[0].Id, Is.EqualTo(res.Value));
+        _logger.ReceivedLog(LogLevel.Information, "Replacing 2 expired pending user(s).");
+    }
+
+    [Test]
+    public async Task Register_NonExpiredPendingUserWithSameEmail_ReturnsEmailAlreadyTaken()
+    {
+        //ARRANGE
+        var now = DateTimeOffset.UtcNow;
+        _timeProvider.SetUtcNow(now);
+        const string email = "pending@example.com";
+        await _dbContext.Users.AddAsync(CreateUser(username: "olduser", email: email, status: UserStatus.Pending, expiryAt: now + TimeSpan.FromMinutes(1)));
+        await _dbContext.SaveChangesAsync();
+        var service = CreateService();
+
+        //ACT
+        var res = await service.Register(CreateRegisterParams("newUser", email));
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.False);
+        Assert.That(res.Error, Is.EqualTo(UserAuthError.EmailAlreadyTaken));
+        Assert.That(await _dbContext.Users.CountAsync(), Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task Register_PendingUserWithoutExpiry_ReturnsUsernameAlreadyTaken()
+    {
+        //ARRANGE
+        _timeProvider.SetUtcNow(DateTimeOffset.UtcNow);
+        await _dbContext.Users.AddAsync(CreateUser(username: "newuser", email: "old@example.com", status: UserStatus.Pending, expiryAt: null));
+        await _dbContext.SaveChangesAsync();
+        var service = CreateService();
+
+        //ACT
+        var res = await service.Register(CreateRegisterParams("newUser", "new@example.com"));
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.False);
+        Assert.That(res.Error, Is.EqualTo(UserAuthError.UsernameAlreadyTaken));
+    }
+
+    [Test]
+    public async Task Register_ExpiredPendingUserButActiveUserHasSameEmail_ReturnsEmailAlreadyTakenAndKeepsBoth()
+    {
+        //ARRANGE
+        var now = DateTimeOffset.UtcNow;
+        _timeProvider.SetUtcNow(now);
+        await _dbContext.Users.AddRangeAsync(
+            CreateUser(username: "active", email: "new@example.com"),
+            CreateUser(username: "newuser", email: "pending@example.com", status: UserStatus.Pending, expiryAt: now - TimeSpan.FromHours(1)));
+        await _dbContext.SaveChangesAsync();
+        var service = CreateService();
+
+        //ACT
+        var res = await service.Register(CreateRegisterParams("newuser", "new@example.com"));
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.False);
+        Assert.That(res.Error, Is.EqualTo(UserAuthError.EmailAlreadyTaken));
+        Assert.That(await _dbContext.Users.CountAsync(), Is.EqualTo(2));
     }
 
     #endregion
@@ -706,6 +875,42 @@ public class UserManagerServiceTests
     }
 
     [Test]
+    public async Task ConfirmEmail_PendingUserExpired_ReturnsEmailVerificationExpired()
+    {
+        //ARRANGE
+        var now = DateTimeOffset.UtcNow;
+        _timeProvider.SetUtcNow(now);
+
+        const string rawToken = "valid_token";
+        const string hashedToken = "hashed_valid_token";
+        _verificationTokenHasher.HashToken(rawToken).Returns(hashedToken);
+
+        var user = CreateUser(username: "pendinguser", status: UserStatus.Pending, expiryAt: now - TimeSpan.FromMinutes(1));
+        await _dbContext.Users.AddAsync(user);
+        await _dbContext.EmailVerifications.AddAsync(new EmailVerification
+        {
+            CreatedAt = now,
+            Id = Guid.NewGuid(),
+            Token = hashedToken,
+            ExpiryAt = now.AddMinutes(30),
+            UserId = user.Id
+        });
+        await _dbContext.SaveChangesAsync();
+        var service = CreateService();
+
+        //ACT
+        var res = await service.ConfirmEmail(new ConfirmEmailParams { Token = rawToken });
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.False);
+        Assert.That(res.Error, Is.EqualTo(UserAuthError.EmailVerificationExpired));
+        var dbUser = await _dbContext.Users.SingleAsync(u => u.Id == user.Id);
+        Assert.That(dbUser.UserStatus, Is.EqualTo(UserStatus.Pending));
+        Assert.That(await _dbContext.EmailVerifications.AnyAsync(x => x.Token == hashedToken), Is.True);
+        _logger.ReceivedLog(LogLevel.Information, "User associated with email confirmation has expired.");
+    }
+
+    [Test]
     public async Task ConfirmEmail_ValidToken_ActivatesUserRemovesVerificationAndReturnsSuccess()
     {
         //ARRANGE
@@ -752,6 +957,7 @@ public class UserManagerServiceTests
 
         var dbVerification = await _dbContext.EmailVerifications.FirstOrDefaultAsync(x => x.Token == hashedToken);
         Assert.That(dbVerification, Is.Null);
+        _logger.ReceivedLog(LogLevel.Information, $"Email confirmed. User {user.Id} is now {nameof(UserStatus.Active)}.");
     }
 
     #endregion
@@ -761,7 +967,8 @@ public class UserManagerServiceTests
         string username = "testuser",
         string email = "test@example.com",
         string passwordHash = "hashed_password",
-        UserStatus status = UserStatus.Active)
+        UserStatus status = UserStatus.Active,
+        DateTimeOffset? expiryAt = null)
     {
         return new User
         {
@@ -772,7 +979,19 @@ public class UserManagerServiceTests
             PasswordHash = passwordHash,
             CreatedAt = DateTimeOffset.UtcNow,
             DateOfBirth = new DateOnly(2000, 1, 1),
-            UserStatus = status
+            UserStatus = status,
+            ExpiryAt = expiryAt
+        };
+    }
+
+    private static UserRegisterParams CreateRegisterParams(string username, string email)
+    {
+        return new UserRegisterParams()
+        {
+            Username = username,
+            Email = email,
+            Password = "password123",
+            DateOfBirth = new DateOnly(2000, 1, 1)
         };
     }
 
