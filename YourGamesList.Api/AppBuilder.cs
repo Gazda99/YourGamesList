@@ -42,7 +42,7 @@ public static class AppBuilder
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.AddConfigAndVariables();
+        builder.AddConfigAndVariables(args);
 
         //Logger
         builder.Logging.ClearProviders();
@@ -226,13 +226,11 @@ public static class AppBuilder
         return host;
     }
 
-    private static WebApplicationBuilder AddConfigAndVariables(this WebApplicationBuilder builder)
+    private static WebApplicationBuilder AddConfigAndVariables(this WebApplicationBuilder builder, string[] args)
     {
         const string appsettingsFileName = "appsettings";
         const string serilogsettingsFileName = "serilogsettings";
         const string envVariableName = "ENV";
-
-        builder.Configuration.AddEnvironmentVariables();
 
         var env = Environment.GetEnvironmentVariable(envVariableName);
         env = env?.ToLower();
@@ -247,6 +245,10 @@ public static class AppBuilder
 #else
         builder.Configuration.AddJsonFile($"{serilogsettingsFileName}.{env}.json", optional: false, reloadOnChange: true);
 #endif
+
+        // Added last so environment variables and command-line args override JSON files.
+        builder.Configuration.AddEnvironmentVariables();
+        builder.Configuration.AddCommandLine(args);
 
         return builder;
     }
