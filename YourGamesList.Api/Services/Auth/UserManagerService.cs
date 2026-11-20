@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -112,13 +114,13 @@ public class UserManagerService : IUserManagerService
         var dob = userRegisterParams.DateOfBirth;
 
         var normalizedUsername = username.ToLowerInvariant();
-        bool doesEmailExists;
-        bool doesUsernameExists;
+        List<User> conflictingUsers;
 
         try
         {
-            doesEmailExists = await _yglDbContext.Users.AnyAsync(u => u.Email == email);
-            doesUsernameExists = !doesEmailExists && await _yglDbContext.Users.AnyAsync(u => u.NormalizedUsername == normalizedUsername);
+            conflictingUsers = await _yglDbContext.Users
+                .Where(u => u.Email == email || u.NormalizedUsername == normalizedUsername)
+                .ToListAsync();
         }
         catch (Exception ex)
         {
@@ -126,16 +128,26 @@ public class UserManagerService : IUserManagerService
             return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.InternalServerError);
         }
 
-        if (doesEmailExists)
+        var checkTime = _timeProvider.GetUtcNow();
+        var expiredPendingUsers = conflictingUsers.Where(u => IsExpiredPendingUser(u, checkTime)).ToList();
+        var activeConflicts = conflictingUsers.Except(expiredPendingUsers).ToList();
+
+        if (activeConflicts.Any(u => u.Email == email))
         {
             _logger.LogInformation("Email already registered.");
             return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.EmailAlreadyTaken);
         }
 
-        if (doesUsernameExists)
+        if (activeConflicts.Any(u => u.NormalizedUsername == normalizedUsername))
         {
             _logger.LogInformation("Username already registered.");
             return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.UsernameAlreadyTaken);
+        }
+
+        if (expiredPendingUsers.Count > 0)
+        {
+            _logger.LogInformation("Replacing {ExpiredPendingUsersCount} expired pending user(s).", expiredPendingUsers.Count);
+            _yglDbContext.Users.RemoveRange(expiredPendingUsers);
         }
 
         var hashedPassword = _passwordHasher.HashPassword(userRegisterParams.Password);
@@ -148,6 +160,7 @@ public class UserManagerService : IUserManagerService
         var now = _timeProvider.GetUtcNow();
 
         User user;
+        (string RawToken, string TokenHash)? emailVerificationToken = null;
         if (!_options.Value.EnableEmailConfirmation)
         {
             _logger.LogInformation("Email confirmation is disabled. Proceeding with adding the User with status {UserStatus}", nameof(UserStatus.Active));
@@ -182,25 +195,15 @@ public class UserManagerService : IUserManagerService
                 ExpiryAt = userExpiration
             };
 
-            var emailVerificationTokens = _verificationTokenHasher.GenerateToken();
-            now = _timeProvider.GetUtcNow();
-
-            var wasEmailSent = await _verificationEmailSender.SendVerificationEmail(email, username, emailVerificationTokens.RawToken);
-            if (!wasEmailSent)
-            {
-                _logger.LogWarning("Email verification was not sent!");
-                return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.InternalServerError);
-            }
-            _logger.LogInformation("Email verification sent!");
-
             _yglDbContext.Users.Add(user);
-            
+
+            emailVerificationToken = _verificationTokenHasher.GenerateToken();
             var emailVerificationExpiration = now + TimeSpan.FromMinutes(_options.Value.DefaultEmailVerificationExpiryInMinutes);
             var emailVerification = new EmailVerification()
             {
                 CreatedAt = now,
                 ExpiryAt = emailVerificationExpiration,
-                Token = emailVerificationTokens.TokenHash,
+                Token = emailVerificationToken.Value.TokenHash,
                 User = user
             };
 
@@ -211,7 +214,37 @@ public class UserManagerService : IUserManagerService
         await _yglDbContext.SaveChangesAsync();
         _logger.LogInformation("Added user to database");
 
+        // Email is sent only after the user is persisted, so the link always points to an existing verification.
+        if (emailVerificationToken.HasValue)
+        {
+            var wasEmailSent = await _verificationEmailSender.SendVerificationEmail(email, username, emailVerificationToken.Value.RawToken);
+            if (!wasEmailSent)
+            {
+                _logger.LogWarning("Email verification was not sent!");
+                await RemoveUserAfterFailedEmail(user);
+                return CombinedResult<Guid, UserAuthError>.Failure(UserAuthError.InternalServerError);
+            }
+
+            _logger.LogInformation("Email verification sent!");
+        }
+
         return CombinedResult<Guid, UserAuthError>.Success(user.Id);
+    }
+
+    private async Task RemoveUserAfterFailedEmail(User user)
+    {
+        try
+        {
+            // Db cascades remove the email verification and default lists.
+            _yglDbContext.Users.Remove(user);
+            await _yglDbContext.SaveChangesAsync();
+            _logger.LogInformation("Removed user from database after failed email verification sending.");
+        }
+        catch (Exception ex)
+        {
+            // User stays Pending with ExpiryAt, so it becomes replaceable by Register once expired.
+            _logger.LogError(ex, "Failed to remove user from database after failed email verification sending.");
+        }
     }
 
     public async Task<ErrorResult<UserAuthError>> Delete(UserDeleteParams userDeleteParams)
@@ -250,12 +283,12 @@ public class UserManagerService : IUserManagerService
 
     public async Task<ErrorResult<UserAuthError>> ConfirmEmail(ConfirmEmailParams confirmEmailParams)
     {
-        var token = confirmEmailParams.Token.ToLower();
-        if (string.IsNullOrWhiteSpace(token))
+        if (string.IsNullOrWhiteSpace(confirmEmailParams.Token))
         {
             return ErrorResult<UserAuthError>.Failure(UserAuthError.EmailVerificationInvalid);
         }
-        
+
+        var token = confirmEmailParams.Token.ToLower();
         var hashToken = _verificationTokenHasher.HashToken(token);
         var emailVerification = await _yglDbContext.EmailVerifications.FirstOrDefaultAsync(x => x.Token == hashToken);
         if (emailVerification == null)
@@ -281,6 +314,12 @@ public class UserManagerService : IUserManagerService
         }
 
         now = _timeProvider.GetUtcNow();
+        if (IsExpiredPendingUser(user, now))
+        {
+            _logger.LogInformation("User associated with email confirmation has expired.");
+            return ErrorResult<UserAuthError>.Failure(UserAuthError.EmailVerificationExpired);
+        }
+
         user.ExpiryAt = null;
         user.UserStatus = UserStatus.Active;
         user.ModifiedAt = now;
@@ -289,5 +328,10 @@ public class UserManagerService : IUserManagerService
         await _yglDbContext.SaveChangesAsync();
 
         return ErrorResult<UserAuthError>.Success();
+    }
+
+    private static bool IsExpiredPendingUser(User user, DateTimeOffset now)
+    {
+        return user.UserStatus == UserStatus.Pending && user.ExpiryAt.HasValue && user.ExpiryAt.Value <= now;
     }
 }

@@ -157,7 +157,7 @@ public class UserAuthController : YourGamesListBaseController
         }
     }
 
-    [HttpGet("confirmEmail")]
+    [HttpPost("confirmEmail")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]

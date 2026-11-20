@@ -13,7 +13,7 @@ public static class ConfirmEmailParamsMappingExtensions
     {
         return new ConfirmEmailParams
         {
-            Token = request.Token
+            Token = request.Body.Token.Trim()
         };
     }
 }
