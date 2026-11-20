@@ -10,12 +10,12 @@ http:
     type: json
     data: |-
       {
-        "username": {{username}},
-        "password" : {{password}}
+        "username": "{{username}}",
+        "password" : "{{password}}"
       }
   auth:
     type: bearer
-    token: "{{USER_TOKEN}}"
+    token: "{{user_token}}"
 
 settings:
   encodeUrl: true
