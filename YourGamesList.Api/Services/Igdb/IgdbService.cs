@@ -41,7 +41,7 @@ public class IgdbService : IIgdbService
         _logger.LogInformation("Calling IGDB API Endpoint: {IgdbEndpoint}", endpoint.Endpoint);
 
         var callResult = await _igdbApi.TryRefit(
-            () => _igdbApi.Endpoint<TResponseFormat>(endpoint.Endpoint, accessToken.Value, clientId, query),
+            () => _igdbApi.Endpoint<TResponseFormat>(endpoint.Endpoint, accessToken.Value.AccessToken, clientId, query),
             _logger,
             $"IGDB API '{endpoint.Endpoint}'"
         );

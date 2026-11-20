@@ -164,7 +164,8 @@ public static class AppBuilder
             new TwitchAuthServiceWithCaching(
                 x.GetRequiredService<ILogger<TwitchAuthServiceWithCaching>>(),
                 x.GetRequiredKeyedService<ICacheProvider>(CacheProviders.InMemory),
-                x.GetRequiredService<TwitchAuthService>()
+                x.GetRequiredService<TwitchAuthService>(),
+                x.GetRequiredService<TimeProvider>()
             ));
 
         return services;

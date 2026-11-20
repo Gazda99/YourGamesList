@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YourGamesList.Api.Services.Igdb;
 using YourGamesList.Api.Services.Twitch;
+using YourGamesList.Api.Services.Twitch.Model;
 using YourGamesList.Common;
 using YourGamesList.TestsUtils;
 
@@ -33,14 +34,14 @@ public class IgdbServiceTests
         var endpoint = _fixture.Create<IgdbEndpoint>();
         var query = _fixture.Create<string>();
         var twitchClientId = _fixture.Create<string>();
-        var accessToken = _fixture.Create<string>();
+        var twitchToken = _fixture.Create<TwitchToken>();
 
         _twitchAuthService.GetClientId().Returns(twitchClientId);
-        _twitchAuthService.GetAccessToken().Returns(ValueResult<string>.Success(accessToken));
+        _twitchAuthService.GetAccessToken().Returns(ValueResult<TwitchToken>.Success(twitchToken));
 
         var testIgdbData = _fixture.Create<TestIgdbData>();
         var apiResponse = RefitHelper.ApiResponseSubstitute(HttpStatusCode.OK, testIgdbData);
-        _igdbApi.Endpoint<TestIgdbData>(endpoint.Endpoint, accessToken, twitchClientId, query).Returns(apiResponse);
+        _igdbApi.Endpoint<TestIgdbData>(endpoint.Endpoint, twitchToken.AccessToken, twitchClientId, query).Returns(apiResponse);
 
         var igdbService = new IgdbService(_logger, _igdbApi, _twitchAuthService);
 
@@ -61,15 +62,15 @@ public class IgdbServiceTests
         var endpoint = _fixture.Create<IgdbEndpoint>();
         var query = _fixture.Create<string>();
         var twitchClientId = _fixture.Create<string>();
-        var accessToken = _fixture.Create<string>();
+        var twitchToken = _fixture.Create<TwitchToken>();
 
         _twitchAuthService.GetClientId().Returns(twitchClientId);
-        _twitchAuthService.GetAccessToken().Returns(ValueResult<string>.Success(accessToken));
+        _twitchAuthService.GetAccessToken().Returns(ValueResult<TwitchToken>.Success(twitchToken));
 
         var testIgdbData = _fixture.Create<TestIgdbData>();
         var statusCode = HttpStatusCode.BadRequest;
         var apiResponse = RefitHelper.ApiResponseSubstitute(statusCode, testIgdbData);
-        _igdbApi.Endpoint<TestIgdbData>(endpoint.Endpoint, accessToken, twitchClientId, query).Returns(apiResponse);
+        _igdbApi.Endpoint<TestIgdbData>(endpoint.Endpoint, twitchToken.AccessToken, twitchClientId, query).Returns(apiResponse);
 
         var igdbService = new IgdbService(_logger, _igdbApi, _twitchAuthService);
 
@@ -92,7 +93,7 @@ public class IgdbServiceTests
         var twitchClientId = _fixture.Create<string>();
 
         _twitchAuthService.GetClientId().Returns(twitchClientId);
-        _twitchAuthService.GetAccessToken().Returns(ValueResult<string>.Failure());
+        _twitchAuthService.GetAccessToken().Returns(ValueResult<TwitchToken>.Failure());
 
         var igdbService = new IgdbService(_logger, _igdbApi, _twitchAuthService);
 
