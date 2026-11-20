@@ -139,7 +139,8 @@ public static class AppBuilder
                 var options = provider.GetRequiredService<IOptions<IgdbHttpClientOptions>>();
                 client.BaseAddress = new Uri(options.Value.BaseAddress);
             })
-            .ConfigureLogging();
+            .ConfigureLogging()
+            .ConfigureResilience<IgdbHttpClientOptions>(options => options.Resilience);
 
         services.AddScoped<IIgdbService, IgdbService>();
         services.AddScoped<IIgdbGamesService, IgdbGamesService>();
@@ -157,7 +158,8 @@ public static class AppBuilder
                 var options = provider.GetRequiredService<IOptions<TwitchAuthHttpClientOptions>>();
                 client.BaseAddress = new Uri(options.Value.BaseAddress);
             })
-            .ConfigureLogging();
+            .ConfigureLogging()
+            .ConfigureResilience<TwitchAuthHttpClientOptions>(options => options.Resilience);
 
         services.AddScoped<TwitchAuthService>();
         services.AddScoped<ITwitchAuthService>(x =>

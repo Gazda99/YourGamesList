@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoFixture;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Polly.Timeout;
 using Refit;
 using YourGamesList.Common.Refit;
 using YourGamesList.TestsUtils;
@@ -41,17 +42,65 @@ public class RefitExtensionsTests
     }
 
     [Test]
-    public async Task TryRefit_WhenCallThrowsTaskCanceledException_ReturnsTimeout()
+    public async Task TryRefit_WhenHttpClientTimeoutElapses_ReturnsTimeout()
     {
-        //ACT
+        //ARRANGE
         var destinationName = _fixture.Create<string>();
-        var exception = new TaskCanceledException();
+        var exception = new TaskCanceledException("The request was canceled due to the configured HttpClient.Timeout.", new TimeoutException());
+
+        //ACT
         var result = await _refitApi.TryRefit<string>(() => throw exception, _logger, destinationName);
 
         //ASSERT
         Assert.That(result.IsFailure, Is.True);
         Assert.That(result.Error, Is.EqualTo(RefitFailureReason.Timeout));
         _logger.ReceivedLog(LogLevel.Warning, $"Exception occurred while making HTTP request with Refit to {destinationName}, resulting in error {nameof(RefitFailureReason.Timeout)}", ex => ex == null);
+    }
+
+    [Test]
+    public async Task TryRefit_WhenResiliencePipelineTimeoutElapses_ReturnsTimeout()
+    {
+        //ARRANGE
+        var destinationName = _fixture.Create<string>();
+        var exception = new TimeoutRejectedException();
+
+        //ACT
+        var result = await _refitApi.TryRefit<string>(() => throw exception, _logger, destinationName);
+
+        //ASSERT
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(RefitFailureReason.Timeout));
+        _logger.ReceivedLog(LogLevel.Warning, $"Exception occurred while making HTTP request with Refit to {destinationName}, resulting in error {nameof(RefitFailureReason.Timeout)}", ex => ex == null);
+    }
+
+    [Test]
+    public async Task TryRefit_WhenCallIsCancelled_ReturnsCancelled()
+    {
+        //ARRANGE
+        var destinationName = _fixture.Create<string>();
+        var exception = new TaskCanceledException();
+
+        //ACT
+        var result = await _refitApi.TryRefit<string>(() => throw exception, _logger, destinationName);
+
+        //ASSERT
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(RefitFailureReason.Cancelled));
+        _logger.ReceivedLog(LogLevel.Warning, $"Exception occurred while making HTTP request with Refit to {destinationName}, resulting in error {nameof(RefitFailureReason.Cancelled)}", ex => ex == null);
+    }
+
+    [Test]
+    public async Task TryRefit_WhenCallThrowsOperationCanceledException_ReturnsCancelled()
+    {
+        //ARRANGE
+        var exception = new OperationCanceledException();
+
+        //ACT
+        var result = await _refitApi.TryRefit<string>(() => throw exception, _logger);
+
+        //ASSERT
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(RefitFailureReason.Cancelled));
     }
 
     [Test]

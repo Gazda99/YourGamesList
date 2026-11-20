@@ -1,6 +1,8 @@
-﻿using System.Linq;
-using AutoFixture;
+﻿using AutoFixture;
+using System;
 using FluentValidation.TestHelper;
+using Microsoft.Extensions.Http.Resilience;
+using YourGamesList.Common.Http;
 using YourGamesList.Api.Services.Igdb.Options;
 
 namespace YourGamesList.Api.UnitTests.Services.Igdb.Options;
@@ -21,6 +23,7 @@ public class IgdbHttpClientOptionsTests
         //ARRANGE
         var options = _fixture.Build<IgdbHttpClientOptions>()
             .With(x => x.BaseAddress, "https://api.igdb.com")
+            .With(x => x.Resilience, new HttpResilienceOptions())
             .WithAutoProperties()
             .Create();
 
@@ -43,6 +46,7 @@ public class IgdbHttpClientOptionsTests
         //ARRANGE
         var options = _fixture.Build<IgdbHttpClientOptions>()
             .With(x => x.BaseAddress, invalidBaseAddress)
+            .With(x => x.Resilience, new HttpResilienceOptions())
             .WithAutoProperties()
             .Create();
 
@@ -55,5 +59,47 @@ public class IgdbHttpClientOptionsTests
         Assert.That(res.IsValid, Is.False);
         Assert.That(res.Errors, Is.Not.Null);
         res.ShouldHaveValidationErrorFor(x => x.BaseAddress);
+    }
+
+    [Test]
+    public void Validate_InvalidResilienceTimeout_ReturnsFalse()
+    {
+        //ARRANGE
+        var options = new IgdbHttpClientOptions
+        {
+            BaseAddress = "https://api.igdb.com",
+            Resilience = new HttpResilienceOptions
+            {
+                TotalRequestTimeout = new HttpTimeoutStrategyOptions { Timeout = TimeSpan.Zero }
+            }
+        };
+
+        var validator = new IgdbHttpClientOptionsValidator();
+
+        //ACT
+        var res = validator.TestValidate(options);
+
+        //ASSERT
+        Assert.That(res.IsValid, Is.False);
+        res.ShouldHaveValidationErrorFor("Resilience.TotalRequestTimeout.Timeout");
+    }
+
+    [Test]
+    public void Validate_ResilienceNotConfigured_ReturnsTrue()
+    {
+        //ARRANGE
+        var options = new IgdbHttpClientOptions
+        {
+            BaseAddress = "https://api.igdb.com",
+            Resilience = null
+        };
+
+        var validator = new IgdbHttpClientOptionsValidator();
+
+        //ACT
+        var res = validator.TestValidate(options);
+
+        //ASSERT
+        res.ShouldNotHaveAnyValidationErrors();
     }
 }

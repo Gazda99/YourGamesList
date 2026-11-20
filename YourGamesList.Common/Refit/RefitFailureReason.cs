@@ -5,5 +5,6 @@ public enum RefitFailureReason
     Timeout,
     Network,
     General,
-    Deserialization
+    Deserialization,
+    Cancelled
 }
