@@ -77,7 +77,7 @@ public class TwitchAuthServiceTests
         Assert.That(res.IsSuccess, Is.True);
         Assert.That(res.Value.AccessToken, Is.EquivalentTo(twitchAuthResponse.AccessToken));
         await _twitchAuthApi.Received(1).GetAccessToken(Arg.Any<FormUrlEncodedContent>());
-        _logger.ReceivedLog(LogLevel.Information, $"Successfully obtained Twitch access token from Twitch that will expire in {expiresIn}.");
+        _logger.ReceivedLog(LogLevel.Information, $"Successfully obtained Twitch access token from Twitch that will expire in {expiresIn}s.");
     }
 
     [Test]

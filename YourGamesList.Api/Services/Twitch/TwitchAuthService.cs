@@ -65,7 +65,7 @@ public class TwitchAuthService : ITwitchAuthService
                 return ValueResult<TwitchToken>.Failure();
             }
 
-            _logger.LogInformation("Successfully obtained Twitch access token from Twitch that will expire in {TwitchTokenExpiryInSeconds}.", content.ExpiresIn);
+            _logger.LogInformation("Successfully obtained Twitch access token from Twitch that will expire in {TwitchTokenExpiryInSeconds}s.", content.ExpiresIn);
             var now = _timeProvider.GetUtcNow();
             var finalExpirySeconds = content.ExpiresIn - ExpirationThresholdInSeconds;
             
