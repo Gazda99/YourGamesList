@@ -16,7 +16,7 @@ public class TwitchAuthServiceWithCaching : ITwitchAuthService
     private const string TwitchAuthLockKey = "YGL_twitch-auth-lock";
     private const int TwitchAuthLockDurationInSeconds = 60;
 
-    private const int TwitchAuthTokenDefaultCacheDurationInHours = 48;
+    private const int TwitchAuthTokenMaxCacheDurationInHours = 48;
 
     private readonly ILogger<TwitchAuthServiceWithCaching> _logger;
     private readonly ICacheProvider _cacheProvider;
@@ -63,14 +63,19 @@ public class TwitchAuthServiceWithCaching : ITwitchAuthService
 
         if (result.IsSuccess)
         {
+            var maxTtl = TimeSpan.FromHours(TwitchAuthTokenMaxCacheDurationInHours);
+            var tokenTtl = result.Value.ExpiresOn - _timeProvider.GetUtcNow();
+
+            if (tokenTtl <= TimeSpan.Zero)
+            {
+                _logger.LogWarning("Obtained Twitch Auth token is already expired. Not caching it.");
+                return result;
+            }
+
             _logger.LogInformation("Caching new Twitch Auth token.");
 
-            var now = _timeProvider.GetUtcNow();
-            var defaultTtl = TimeSpan.FromHours(TwitchAuthTokenDefaultCacheDurationInHours);
-            var diff = result.Value.ExpiresOn - now;
-            var absoluteExpiration = defaultTtl > diff ? defaultTtl : diff;
-            
-            var cacheOptions = new CacheOptions { AbsoluteExpiration = absoluteExpiration };
+            // Never keep the token in cache longer than it is valid, and refresh it at least every max TTL.
+            var cacheOptions = new CacheOptions { AbsoluteExpiration = tokenTtl < maxTtl ? tokenTtl : maxTtl };
             await _cacheProvider.Set(TwitchAuthTokenCacheKey, result.Value, cacheOptions);
         }
 
