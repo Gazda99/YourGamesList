@@ -1,0 +1,29 @@
+info:
+  name: Game-Artwork
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: https://api.igdb.com/v4/games
+  headers:
+    - name: Client-ID
+      value: aaskuwor85er232a6pw2pq86avtt1o
+  body:
+    type: text
+    data: |-
+      where id = 1877;
+      fields 
+      cover.id,
+      cover.image_id,
+      cover.image_type.name,
+      cover.url
+      ;
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

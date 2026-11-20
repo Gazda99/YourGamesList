@@ -1,0 +1,5 @@
+name: IGDB Vars - [EXAMPLE]
+variables:
+  - secret: true
+    name: twitch_token
+    description: ""

@@ -1,0 +1,33 @@
+info:
+  name: Entry - Add
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{ygl_url}}/lists/{{games_list_id}}/entries"
+  body:
+    type: json
+    data: |-
+      {
+        "completionStatus": 20,
+        "igdbId": 123456,
+        "description": "A note about this game 2",
+        "rating": 3
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        if (res.getStatus() === 200) {
+          bru.setEnvVar("game_list_entry_id", res.getBody());
+        }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -1,0 +1,26 @@
+info:
+  name: Ownership - Update
+  type: http
+  seq: 10
+
+http:
+  method: PATCH
+  url: "{{ygl_url}}/lists/{{games_list_id}}/entries/{{game_list_entry_id}}/ownershipInfos/{{ownership_info_id}}"
+  body:
+    type: json
+    data: |-
+      {
+        "isLegit": null,
+        "platform": 204,
+        "gameDistribution": 1,
+        "wasEmulated": true,
+        "emulatedOn": 201
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

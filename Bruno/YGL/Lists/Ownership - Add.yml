@@ -1,0 +1,30 @@
+info:
+  name: Ownership - Add
+  type: http
+  seq: 9
+
+http:
+  method: POST
+  url: "{{ygl_url}}/lists/{{games_list_id}}/entries/{{game_list_entry_id}}/ownershipInfos"
+  body:
+    type: json
+    data: |-
+      {
+        "platform": 100,
+        "gameDistribution": 3,
+        "isLegit": true,
+        "wasEmulated": false
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: bru.setEnvVar("ownership_info_id", res.getBody());
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

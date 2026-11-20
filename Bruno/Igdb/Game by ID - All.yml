@@ -1,0 +1,44 @@
+info:
+  name: Game by ID - All
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: https://api.igdb.com/v4/games
+  headers:
+    - name: Client-ID
+      value: aaskuwor85er232a6pw2pq86avtt1o
+  body:
+    type: text
+    data: |-
+      where id = 1942;
+      fields 
+      cover.id,
+      cover.image_id,
+      cover.image_type.name,
+      cover.url,
+      first_release_date,
+      game_engines.name,
+      game_type.type,
+      genres.name,
+      id,
+      name,
+      rating_count,
+      release_dates.date,
+      release_dates.platform.name,
+      storyline,
+      summary,
+      themes.name,
+      involved_companies.company.name,
+      involved_companies.developer,
+      involved_companies.publisher
+      ;
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

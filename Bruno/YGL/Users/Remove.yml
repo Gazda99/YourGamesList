@@ -1,0 +1,25 @@
+info:
+  name: Remove
+  type: http
+  seq: 3
+
+http:
+  method: DELETE
+  url: "{{ygl_url}}/users/auth/remove"
+  body:
+    type: json
+    data: |-
+      {
+        "username": {{username}},
+        "password" : {{password}}
+      }
+  auth:
+    type: bearer
+    token: "{{USER_TOKEN}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

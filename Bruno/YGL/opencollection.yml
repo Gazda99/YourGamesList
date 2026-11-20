@@ -1,0 +1,29 @@
+opencollection: 1.0.0
+
+info:
+  name: YGL
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+
+request:
+  auth:
+    type: bearer
+    token: "{{user_token}}"
+  variables:
+    - name: user_token
+      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwOi8veW91cmdhbWVzbGlzdC5jb20iLCJpc3MiOiJodHRwOi8veW91cmdhbWVzbGlzdC5jb20iLCJleHAiOjE3OTUxNzcwOTgsIm5iZiI6MTc5NTE2OTg5OCwic3ViIjoiZ2F6ZGEiLCJ1c2VySWQiOiI3ZDVmN2M0Ni0wZmQ2LTQ0MTgtYTYyNS02MmYzMjA2ZDVkOTciLCJpYXQiOjE3OTUxNjk4OTh9.o_KN43XF2bar5U5Ph4wRRkzjnEdLWLootKt2aT4RMFs
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git
