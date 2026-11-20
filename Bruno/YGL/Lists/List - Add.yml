@@ -1,0 +1,30 @@
+info:
+  name: List - Add
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{ygl_url}}/lists"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Test List"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        if (res.getStatus() === 200) {
+          bru.setEnvVar("games_list_id", res.getBody());
+        }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

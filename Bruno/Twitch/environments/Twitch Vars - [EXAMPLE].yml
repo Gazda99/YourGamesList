@@ -1,0 +1,8 @@
+name: Twitch Vars - [EXAMPLE]
+variables:
+  - secret: true
+    name: client_id
+  - secret: true
+    name: client_secret
+  - name: IDM_URL
+    value: https://id.twitch.tv

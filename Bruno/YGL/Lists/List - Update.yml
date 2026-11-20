@@ -1,0 +1,22 @@
+info:
+  name: List - Update
+  type: http
+  seq: 2
+
+http:
+  method: PATCH
+  url: "{{ygl_url}}/lists/{{games_list_id}}"
+  body:
+    type: json
+    data: |-
+      {
+        "isPrivate": false
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

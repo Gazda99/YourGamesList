@@ -1,0 +1,12 @@
+environments/*
+!environments/Twitch Vars - \[EXAMPLE\].yml
+
+# Secrets
+.env*
+
+# Dependencies
+node_modules
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,24 @@
+info:
+  name: Game by ID - Chosen
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: https://api.igdb.com/v4/games
+  body:
+    type: text
+    data: |-
+      where id = 1942;
+      fields 
+      release_dates.date,
+      release_dates.platform.name
+      ;
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
