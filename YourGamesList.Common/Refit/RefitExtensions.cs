@@ -2,6 +2,7 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Polly.Timeout;
 using Refit;
 
 namespace YourGamesList.Common.Refit;
@@ -35,7 +36,12 @@ public static class RefitExtensions
         {
             var enumValue = ex switch
             {
-                TaskCanceledException => RefitFailureReason.Timeout,
+                // Resilience pipeline timeout (Polly)
+                TimeoutRejectedException => RefitFailureReason.Timeout,
+                // HttpClient.Timeout
+                TaskCanceledException { InnerException: TimeoutException } => RefitFailureReason.Timeout,
+                // Any other cancellation comes from a cancelled CancellationToken
+                OperationCanceledException => RefitFailureReason.Cancelled,
                 HttpRequestException => RefitFailureReason.Network,
                 _ => RefitFailureReason.General,
             };
