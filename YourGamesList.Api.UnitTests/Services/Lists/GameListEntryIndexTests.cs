@@ -151,6 +151,7 @@ public class GameListEntryIndexTests
             DateOfBirth = new DateOnly(2000, 1, 1),
             Email = $"{Guid.NewGuid():N}@example.com",
             PasswordHash = "hashed-password",
+            SecurityStamp = "test-security-stamp",
             UserStatus = UserStatus.Active,
             Username = username,
             NormalizedUsername = username.ToLowerInvariant()

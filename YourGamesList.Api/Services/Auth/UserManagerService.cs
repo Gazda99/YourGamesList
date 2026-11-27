@@ -35,6 +35,11 @@ public interface IUserManagerService
     /// Confirms a user's email address.
     /// </summary>
     Task<ErrorResult<UserAuthError>> ConfirmEmail(ConfirmEmailParams confirmEmailParams);
+
+    /// <summary>
+    /// Changes the password of the authenticated user, rotates their security stamp (invalidating previously issued tokens) and returns a fresh token.
+    /// </summary>
+    Task<CombinedResult<string, UserAuthError>> ChangePassword(ChangePasswordParams changePasswordParams);
 }
 
 public class UserManagerService : IUserManagerService
@@ -97,7 +102,7 @@ public class UserManagerService : IUserManagerService
             return CombinedResult<string, UserAuthError>.Failure(UserAuthError.UnauthorizedUser);
         }
 
-        var newToken = _tokenProvider.CreateToken(user.NormalizedUsername, user.Id);
+        var newToken = _tokenProvider.CreateToken(user.NormalizedUsername, user.Id, user.SecurityStamp);
         _logger.LogInformation("Created new user token. User logged in.");
 
         var now = _timeProvider.GetUtcNow();
@@ -173,6 +178,7 @@ public class UserManagerService : IUserManagerService
                 Username = username,
                 NormalizedUsername = normalizedUsername,
                 PasswordHash = hashedPassword.Value,
+                SecurityStamp = NewSecurityStamp(),
                 UserStatus = UserStatus.Active,
                 ExpiryAt = null
             };
@@ -191,6 +197,7 @@ public class UserManagerService : IUserManagerService
                 Username = username,
                 NormalizedUsername = normalizedUsername,
                 PasswordHash = hashedPassword.Value,
+                SecurityStamp = NewSecurityStamp(),
                 UserStatus = UserStatus.Pending,
                 ExpiryAt = userExpiration
             };
@@ -330,6 +337,46 @@ public class UserManagerService : IUserManagerService
         _logger.LogInformation("Email confirmed. User {UserId} is now {UserStatus}.", user.Id, nameof(UserStatus.Active));
 
         return ErrorResult<UserAuthError>.Success();
+    }
+
+    public async Task<CombinedResult<string, UserAuthError>> ChangePassword(ChangePasswordParams changePasswordParams)
+    {
+        var userId = changePasswordParams.UserInformation.UserId;
+        var user = await _yglDbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+        {
+            _logger.LogInformation("Not user found.");
+            return CombinedResult<string, UserAuthError>.Failure(UserAuthError.NoUserFound);
+        }
+
+        var passwordMatch = _passwordHasher.VerifyHashedPassword(changePasswordParams.CurrentPassword, user.PasswordHash);
+        if (!passwordMatch)
+        {
+            _logger.LogInformation("Current password does not match.");
+            return CombinedResult<string, UserAuthError>.Failure(UserAuthError.UnauthorizedUser);
+        }
+
+        var newHashedPassword = _passwordHasher.HashPassword(changePasswordParams.NewPassword);
+        if (newHashedPassword.IsFailure)
+        {
+            _logger.LogError("Hashing of new password failed.");
+            return CombinedResult<string, UserAuthError>.Failure(UserAuthError.InternalServerError);
+        }
+
+        user.PasswordHash = newHashedPassword.Value;
+        user.SecurityStamp = NewSecurityStamp();
+        user.ModifiedAt = _timeProvider.GetUtcNow();
+        await _yglDbContext.SaveChangesAsync();
+        _logger.LogInformation("Password changed for user {UserId}. Previously issued tokens are now invalid.", user.Id);
+
+        var newToken = _tokenProvider.CreateToken(user.NormalizedUsername, user.Id, user.SecurityStamp);
+        return CombinedResult<string, UserAuthError>.Success(newToken);
+    }
+
+    private static string NewSecurityStamp()
+    {
+        return Guid.NewGuid().ToString("N");
     }
 
     private static bool IsExpiredPendingUser(User user, DateTimeOffset now)

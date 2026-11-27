@@ -113,33 +113,7 @@ public class UserRegisterRequestValidator : AbstractValidator<UserRegisterReques
                     ;
 
                 body.RuleFor(x => x.Password)
-                    .Cascade(CascadeMode.Stop)
-                    .NotEmpty()
-                    .WithErrorCode(ErrorCodes.UserAuth.InvalidPassword)
-                    .WithMessage("Password is required.")
-                    .Must(password =>
-                    {
-                        if (password.Length < validatorOptions.Password.MinimumPasswordLength)
-                        {
-                            logger.LogInformation("Password is too short. {PasswordLength} < {PasswordMinimumLength}", password.Length, validatorOptions.Password.MinimumPasswordLength);
-                            return false;
-                        }
-                        return true;
-                    })
-                    .WithErrorCode(ErrorCodes.UserAuth.PasswordIsTooShort)
-                    .WithMessage($"Password must be between {validatorOptions.Password.MinimumPasswordLength} and {validatorOptions.Password.MaximumPasswordLength} characters long.")
-                    .Must(password =>
-                    {
-                        if (password.Length > validatorOptions.Password.MaximumPasswordLength)
-                        {
-                            logger.LogInformation("Password is too long. {PasswordLength} > {PasswordMaximumLength}", password.Length, validatorOptions.Password.MaximumPasswordLength);
-                            return false;
-                        }
-                        return true;
-                    })
-                    .WithErrorCode(ErrorCodes.UserAuth.PasswordIsTooLong)
-                    .WithMessage($"Password must be between {validatorOptions.Password.MinimumPasswordLength} and {validatorOptions.Password.MaximumPasswordLength} characters long.")
-                    ;
+                    .MustBeValidNewPassword(validatorOptions.Password, logger);
                 
                 body.RuleFor(x => x.DateOfBirth)
                     .Cascade(CascadeMode.Stop)

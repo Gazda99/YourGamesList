@@ -26,6 +26,7 @@ public static class ErrorCodes
         public const string InvalidPassword = "InvalidPassword";
         public const string PasswordIsTooShort = "PasswordIsTooShort";
         public const string PasswordIsTooLong = "PasswordIsTooLong";
+        public const string NewPasswordSameAsCurrent = "NewPasswordSameAsCurrent";
 
         public const string InvalidDateOfBirth = "InvalidDateOfBirth";
         public const string UnderMinimumAge = "UnderMinimumAge";

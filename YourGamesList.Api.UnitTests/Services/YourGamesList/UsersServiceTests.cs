@@ -56,6 +56,7 @@ public class UsersServiceTests
             Description = description,
             Email = "test@example.com",
             PasswordHash = "password-hash",
+            SecurityStamp = "test-security-stamp",
             UserStatus = UserStatus.Active,
             Username = username,
             NormalizedUsername = username.ToLowerInvariant()

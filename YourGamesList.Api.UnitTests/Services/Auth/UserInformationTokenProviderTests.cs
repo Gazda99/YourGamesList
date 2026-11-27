@@ -41,16 +41,18 @@ public class UserInformationTokenProviderTests
         _timeProvider.SetUtcNow(now);
         const string normalizedUsername = "testuser";
         var userId = Guid.NewGuid();
+        const string securityStamp = "security-stamp-value";
         var handler = new JsonWebTokenHandler();
         var tokenProvider = new UserInformationTokenProvider(_options, _timeProvider);
 
         //ACT
-        var rawToken = tokenProvider.CreateToken(normalizedUsername, userId);
+        var rawToken = tokenProvider.CreateToken(normalizedUsername, userId, securityStamp);
         var token = handler.ReadJsonWebToken(rawToken);
 
         //ASSERT
         Assert.That(token.Claims.Single(x => x.Type == "sub").Value, Is.EqualTo(normalizedUsername));
         Assert.That(token.Claims.Single(x => x.Type == JwtCustomClaimNames.UserId).Value, Is.EqualTo(userId.ToString()));
+        Assert.That(token.Claims.Single(x => x.Type == JwtCustomClaimNames.SecurityStamp).Value, Is.EqualTo(securityStamp));
         Assert.That(token.Issuer, Is.EqualTo(options.Issuer));
         Assert.That(token.Audiences, Does.Contain(options.Audience));
         Assert.That(token.Alg, Is.EqualTo(SecurityAlgorithms.HmacSha256));

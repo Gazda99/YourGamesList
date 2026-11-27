@@ -62,6 +62,18 @@ public static class AppBuilder
                 ValidIssuer = builder.Configuration[$"{TokenAuthOptions.SectionName}:{nameof(TokenAuthOptions.Issuer)}"],
                 ValidateAudience = false
             };
+            o.Events = new JwtBearerEvents
+            {
+                // Rejects tokens issued before the user's security stamp was rotated (e.g. password change) or for deleted users.
+                OnTokenValidated = async ctx =>
+                {
+                    var securityStampValidator = ctx.HttpContext.RequestServices.GetRequiredService<ISecurityStampValidator>();
+                    if (ctx.Principal == null || !await securityStampValidator.IsValid(ctx.Principal))
+                    {
+                        ctx.Fail("Token security stamp is invalid.");
+                    }
+                }
+            };
         });
 
         builder.Services.Configure<ApiBehaviorOptions>(options => { options.SuppressModelStateInvalidFilter = true; });
@@ -111,6 +123,7 @@ public static class AppBuilder
         services.AddSingleton<ISmtpClientFactory, SmtpClientFactory>();
         services.AddScoped<IVerificationEmailSender, VerificationEmailSender>();
         services.AddScoped<IUserManagerService, UserManagerService>();
+        services.AddScoped<ISecurityStampValidator, SecurityStampValidator>();
         
         return services;
     }
@@ -194,6 +207,7 @@ public static class AppBuilder
             .AddScoped<IValidator<ConfirmEmailRequest>, ConfirmEmailRequestValidator>()
             .AddScoped<IValidator<UserLoginRequest>, UserLoginRequestValidator>()
             .AddScoped<IValidator<UserDeleteRequest>, UserDeleteRequestValidator>()
+            .AddScoped<IValidator<UserChangePasswordRequest>, UserChangePasswordRequestValidator>()
             ;
         
         //Users controller validators
