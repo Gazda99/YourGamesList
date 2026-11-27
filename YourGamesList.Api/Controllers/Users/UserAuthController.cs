@@ -157,6 +157,45 @@ public class UserAuthController : YourGamesListBaseController
         }
     }
 
+    [HttpPost("changePassword")]
+    [Authorize]
+    [ProducesResponseType(typeof(AuthLoginResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ChangePassword(UserChangePasswordRequest userChangePasswordRequest)
+    {
+        _logger.LogInformation("Requested to change password for user {UserId}", userChangePasswordRequest.UserInformation.UserId);
+
+        var changePasswordParams = userChangePasswordRequest.ToParams();
+
+        var result = await _userManagerService.ChangePassword(changePasswordParams);
+
+        if (result.IsFailure)
+        {
+            if (result.Error is UserAuthError.NoUserFound)
+            {
+                return Result(StatusCodes.Status404NotFound);
+            }
+            else if (result.Error is UserAuthError.UnauthorizedUser)
+            {
+                return Result(StatusCodes.Status401Unauthorized);
+            }
+            else
+            {
+                return Result(StatusCodes.Status500InternalServerError);
+            }
+        }
+        else
+        {
+            var response = new AuthLoginResponse()
+            {
+                Token = result.Value
+            };
+            return Result(StatusCodes.Status200OK, response);
+        }
+    }
+
     [HttpPost("confirmEmail")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]

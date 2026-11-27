@@ -25,6 +25,12 @@ public class User
     [StringLength(128)]
     public required string PasswordHash { get; set; }
 
+    /// <summary>
+    /// Random value rotated whenever credentials change. Embedded in issued tokens; tokens carrying a stale stamp are rejected.
+    /// </summary>
+    [StringLength(64)]
+    public required string SecurityStamp { get; set; }
+
     public required UserStatus UserStatus { get; set; }
 
     [StringLength(64)] public required string Username { get; set; }

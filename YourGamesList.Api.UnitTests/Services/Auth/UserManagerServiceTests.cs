@@ -159,7 +159,7 @@ public class UserManagerServiceTests
         await _dbContext.SaveChangesAsync();
 
         _passwordHasher.VerifyHashedPassword(password, hashedPassword).Returns(true);
-        _tokenProvider.CreateToken(username, userId).Returns(expectedToken);
+        _tokenProvider.CreateToken(username, userId, user.SecurityStamp).Returns(expectedToken);
 
         var dto = new UserLoginParams()
         {
@@ -198,7 +198,7 @@ public class UserManagerServiceTests
         await _dbContext.SaveChangesAsync();
 
         _passwordHasher.VerifyHashedPassword(password, hashedPassword).Returns(true);
-        _tokenProvider.CreateToken(normalizedUsername, userId).Returns(expectedToken);
+        _tokenProvider.CreateToken(normalizedUsername, userId, user.SecurityStamp).Returns(expectedToken);
 
         var dto = new UserLoginParams()
         {
@@ -213,7 +213,7 @@ public class UserManagerServiceTests
         //ASSERT
         Assert.That(res.IsSuccess, Is.True);
         Assert.That(res.Value, Is.EqualTo(expectedToken));
-        _tokenProvider.Received(1).CreateToken(normalizedUsername, userId);
+        _tokenProvider.Received(1).CreateToken(normalizedUsername, userId, user.SecurityStamp);
     }
 
     #endregion
@@ -350,6 +350,7 @@ public class UserManagerServiceTests
         Assert.That(dbUser.UserStatus, Is.EqualTo(UserStatus.Active));
         Assert.That(dbUser.CreatedAt, Is.EqualTo(now));
         Assert.That(dbUser.ExpiryAt, Is.Null);
+        Assert.That(dbUser.SecurityStamp, Is.Not.Null.And.Not.Empty);
         await _defaultListsCreator.Received(1).AddDefaultListsToGivenUser(_dbContext, dbUser);
         
         _logger.ReceivedLog(LogLevel.Information, $"Email confirmation is disabled. Proceeding with adding the User with status {nameof(UserStatus.Active)}");
@@ -962,6 +963,125 @@ public class UserManagerServiceTests
 
     #endregion
 
+    #region ChangePassword
+
+    [Test]
+    public async Task ChangePassword_UserNotFound_ReturnsNoUserFoundError()
+    {
+        //ARRANGE
+        var dto = CreateChangePasswordParams(Guid.NewGuid(), "missing_user", "current_password", "new_password");
+        var service = CreateService();
+
+        //ACT
+        var res = await service.ChangePassword(dto);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.False);
+        Assert.That(res.Error, Is.EqualTo(UserAuthError.NoUserFound));
+        _passwordHasher.DidNotReceive().VerifyHashedPassword(Arg.Any<string>(), Arg.Any<string>());
+        _logger.ReceivedLog(LogLevel.Information, "Not user found.");
+    }
+
+    [Test]
+    public async Task ChangePassword_InvalidCurrentPassword_ReturnsUnauthorizedUserErrorAndKeepsCredentials()
+    {
+        //ARRANGE
+        const string hashedPassword = "hashed_password";
+        var user = CreateUser(passwordHash: hashedPassword);
+        await _dbContext.Users.AddAsync(user);
+        await _dbContext.SaveChangesAsync();
+        var originalStamp = user.SecurityStamp;
+
+        _passwordHasher.VerifyHashedPassword("wrong_password", hashedPassword).Returns(false);
+
+        var dto = CreateChangePasswordParams(user.Id, user.NormalizedUsername, "wrong_password", "new_password");
+        var service = CreateService();
+
+        //ACT
+        var res = await service.ChangePassword(dto);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.False);
+        Assert.That(res.Error, Is.EqualTo(UserAuthError.UnauthorizedUser));
+        _passwordHasher.DidNotReceive().HashPassword(Arg.Any<string>());
+        _tokenProvider.DidNotReceive().CreateToken(Arg.Any<string>(), Arg.Any<Guid>(), Arg.Any<string>());
+
+        var dbUser = await _dbContext.Users.AsNoTracking().SingleAsync(u => u.Id == user.Id);
+        Assert.That(dbUser.PasswordHash, Is.EqualTo(hashedPassword));
+        Assert.That(dbUser.SecurityStamp, Is.EqualTo(originalStamp));
+        _logger.ReceivedLog(LogLevel.Information, "Current password does not match.");
+    }
+
+    [Test]
+    public async Task ChangePassword_HashingFails_ReturnsInternalServerErrorAndKeepsCredentials()
+    {
+        //ARRANGE
+        const string hashedPassword = "hashed_password";
+        var user = CreateUser(passwordHash: hashedPassword);
+        await _dbContext.Users.AddAsync(user);
+        await _dbContext.SaveChangesAsync();
+        var originalStamp = user.SecurityStamp;
+
+        _passwordHasher.VerifyHashedPassword("current_password", hashedPassword).Returns(true);
+        _passwordHasher.HashPassword("new_password").Returns(ValueResult<string>.Failure());
+
+        var dto = CreateChangePasswordParams(user.Id, user.NormalizedUsername, "current_password", "new_password");
+        var service = CreateService();
+
+        //ACT
+        var res = await service.ChangePassword(dto);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.False);
+        Assert.That(res.Error, Is.EqualTo(UserAuthError.InternalServerError));
+        _tokenProvider.DidNotReceive().CreateToken(Arg.Any<string>(), Arg.Any<Guid>(), Arg.Any<string>());
+
+        var dbUser = await _dbContext.Users.AsNoTracking().SingleAsync(u => u.Id == user.Id);
+        Assert.That(dbUser.PasswordHash, Is.EqualTo(hashedPassword));
+        Assert.That(dbUser.SecurityStamp, Is.EqualTo(originalStamp));
+        _logger.ReceivedLog(LogLevel.Error, "Hashing of new password failed.");
+    }
+
+    [Test]
+    public async Task ChangePassword_ValidRequest_UpdatesHashRotatesStampAndReturnsNewToken()
+    {
+        //ARRANGE
+        var now = DateTimeOffset.UtcNow;
+        _timeProvider.SetUtcNow(now);
+
+        const string oldHash = "old_hash";
+        const string newHash = "new_hash";
+        const string expectedToken = "new_jwt_token";
+        var user = CreateUser(username: "TestUser", passwordHash: oldHash);
+        await _dbContext.Users.AddAsync(user);
+        await _dbContext.SaveChangesAsync();
+        var originalStamp = user.SecurityStamp;
+
+        _passwordHasher.VerifyHashedPassword("current_password", oldHash).Returns(true);
+        _passwordHasher.HashPassword("new_password").Returns(ValueResult<string>.Success(newHash));
+        _tokenProvider.CreateToken(Arg.Any<string>(), Arg.Any<Guid>(), Arg.Any<string>()).Returns(expectedToken);
+
+        var dto = CreateChangePasswordParams(user.Id, user.NormalizedUsername, "current_password", "new_password");
+        var service = CreateService();
+
+        //ACT
+        var res = await service.ChangePassword(dto);
+
+        //ASSERT
+        Assert.That(res.IsSuccess, Is.True);
+        Assert.That(res.Value, Is.EqualTo(expectedToken));
+
+        var dbUser = await _dbContext.Users.AsNoTracking().SingleAsync(u => u.Id == user.Id);
+        Assert.That(dbUser.PasswordHash, Is.EqualTo(newHash));
+        Assert.That(dbUser.SecurityStamp, Is.Not.Null.And.Not.Empty);
+        Assert.That(dbUser.SecurityStamp, Is.Not.EqualTo(originalStamp));
+        Assert.That(dbUser.ModifiedAt, Is.EqualTo(now));
+        _tokenProvider.Received(1).CreateToken("testuser", user.Id, dbUser.SecurityStamp);
+        _logger.ReceivedLog(LogLevel.Information, $"Password changed for user {user.Id}. Previously issued tokens are now invalid.");
+    }
+
+    #endregion
+
     private static User CreateUser(
         Guid? id = null,
         string username = "testuser",
@@ -977,6 +1097,7 @@ public class UserManagerServiceTests
             NormalizedUsername = username.ToLowerInvariant(),
             Email = email,
             PasswordHash = passwordHash,
+            SecurityStamp = "test-security-stamp",
             CreatedAt = DateTimeOffset.UtcNow,
             DateOfBirth = new DateOnly(2000, 1, 1),
             UserStatus = status,
@@ -1002,6 +1123,16 @@ public class UserManagerServiceTests
             RawToken = "token",
             NormalizedUsername = normalizedUsername,
             UserId = userId
+        };
+    }
+
+    private static ChangePasswordParams CreateChangePasswordParams(Guid userId, string normalizedUsername, string currentPassword, string newPassword)
+    {
+        return new ChangePasswordParams()
+        {
+            UserInformation = CreateUserInformation(userId, normalizedUsername),
+            CurrentPassword = currentPassword,
+            NewPassword = newPassword
         };
     }
 

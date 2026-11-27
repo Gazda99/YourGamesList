@@ -50,6 +50,7 @@ public class DefaultListsCreatorTests
             DateOfBirth = new DateOnly(2000, 1, 1),
             Email = "user@example.com",
             PasswordHash = "hashed_password",
+            SecurityStamp = "test-security-stamp",
             UserStatus = UserStatus.Active,
             Username = "testuser",
             NormalizedUsername = "testuser"

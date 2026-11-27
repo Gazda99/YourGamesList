@@ -343,6 +343,62 @@ public class UserAuthControllerTests
 
     #endregion
 
+    #region ChangePassword
+
+    [Test]
+    public async Task ChangePassword_ValidRequest_ReturnsOkWithNewToken()
+    {
+        //ARRANGE
+        var request = _fixture.Create<UserChangePasswordRequest>();
+        const string newToken = "new_jwt_token";
+        var serviceResult = CombinedResult<string, UserAuthError>.Success(newToken);
+
+        _userManagerService.ChangePassword(Arg.Any<ChangePasswordParams>()).Returns(serviceResult);
+
+        var controller = CreateController();
+
+        //ACT
+        var res = await controller.ChangePassword(request);
+
+        //ASSERT
+        var objectResult = res as ObjectResult;
+        Assert.That(objectResult, Is.Not.Null);
+        Assert.That(objectResult.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
+        var response = objectResult.Value as AuthLoginResponse;
+        Assert.That(response, Is.Not.Null);
+        Assert.That(response.Token, Is.EqualTo(newToken));
+        await _userManagerService.Received(1).ChangePassword(Arg.Is<ChangePasswordParams>(p =>
+            p.UserInformation == request.UserInformation &&
+            p.CurrentPassword == request.Body.CurrentPassword &&
+            p.NewPassword == request.Body.NewPassword));
+        _logger.ReceivedLog(LogLevel.Information, $"Requested to change password for user {request.UserInformation.UserId}");
+    }
+
+    [TestCase(UserAuthError.NoUserFound, StatusCodes.Status404NotFound)]
+    [TestCase(UserAuthError.UnauthorizedUser, StatusCodes.Status401Unauthorized)]
+    [TestCase(UserAuthError.InternalServerError, StatusCodes.Status500InternalServerError)]
+    [TestCase(UserAuthError.InvalidEmail, StatusCodes.Status500InternalServerError)]
+    public async Task ChangePassword_ServiceError_ReturnsMappedStatusCode(UserAuthError authError, int expectedStatusCode)
+    {
+        //ARRANGE
+        var request = _fixture.Create<UserChangePasswordRequest>();
+        var serviceResult = CombinedResult<string, UserAuthError>.Failure(authError);
+
+        _userManagerService.ChangePassword(Arg.Any<ChangePasswordParams>()).Returns(serviceResult);
+
+        var controller = CreateController();
+
+        //ACT
+        var res = await controller.ChangePassword(request);
+
+        //ASSERT
+        var statusCodeResult = res as IStatusCodeActionResult;
+        Assert.That(statusCodeResult, Is.Not.Null);
+        Assert.That(statusCodeResult.StatusCode, Is.EqualTo(expectedStatusCode));
+    }
+
+    #endregion
+
     #region ConfirmEmail
 
     [Test]

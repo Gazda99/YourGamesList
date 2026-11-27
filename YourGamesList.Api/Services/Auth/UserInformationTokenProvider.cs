@@ -13,7 +13,7 @@ public interface ITokenProvider
     /// <summary>
     /// Creates an authentication token for a user.
     /// </summary>
-    string CreateToken(string normalizedUsername, Guid userId);
+    string CreateToken(string normalizedUsername, Guid userId, string securityStamp);
 }
 
 public class UserInformationTokenProvider : ITokenProvider
@@ -27,7 +27,7 @@ public class UserInformationTokenProvider : ITokenProvider
         _timeProvider = timeProvider;
     }
 
-    public string CreateToken(string normalizedUsername, Guid userId)
+    public string CreateToken(string normalizedUsername, Guid userId, string securityStamp)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Value.JwtSecret));
 
@@ -40,6 +40,7 @@ public class UserInformationTokenProvider : ITokenProvider
                 [
                     new Claim(JwtRegisteredClaimNames.Sub, normalizedUsername),
                     new Claim(JwtCustomClaimNames.UserId, userId.ToString()),
+                    new Claim(JwtCustomClaimNames.SecurityStamp, securityStamp),
                     new Claim(JwtRegisteredClaimNames.Aud, _options.Value.Audience),
                 ]
             ),
