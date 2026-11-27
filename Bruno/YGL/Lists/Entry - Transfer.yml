@@ -1,0 +1,23 @@
+info:
+  name: Entry - Transfer
+  type: http
+  seq: 11
+
+http:
+  method: POST
+  url: "{{ygl_url}}/lists/{{games_list_id}}/entries/{{game_list_entry_id}}/transfer"
+  body:
+    type: json
+    data: |-
+      {
+        "targetListId": "",
+        "move": false
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

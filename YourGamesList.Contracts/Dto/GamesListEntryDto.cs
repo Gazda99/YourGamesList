@@ -5,6 +5,8 @@ namespace YourGamesList.Contracts.Dto;
 
 public class GamesListEntryDto
 {
+    public required DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset? ModifiedAt { get; set; }
     public required CompletionStatusDto CompletionStatus { get; set; }
     public string? Description { get; set; }
     public required Guid Id { get; set; }

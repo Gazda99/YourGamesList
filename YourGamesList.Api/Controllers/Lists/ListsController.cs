@@ -37,54 +37,6 @@ public class ListsController : YourGamesListBaseController
 
     #region Lists
 
-    [HttpGet]
-    [Authorize]
-    [ProducesResponseType(typeof(List<GamesListDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetSelfLists(GetSelfListRequest getSelfListRequest)
-    {
-        _logger.LogInformation("Requested to get self lists");
-
-        var dto = getSelfListRequest.ToParams();
-
-        var result = await _listsManagerService.GetSelf(dto);
-
-        if (result.IsFailure)
-        {
-            if (result.Error is ListsError.UserNotFound)
-            {
-                return Result(StatusCodes.Status404NotFound, new ErrorResponse
-                {
-                    Errors = [_domainErrorMapper.Map(result.Error)]
-                });
-            }
-            else
-            {
-                return Result(StatusCodes.Status500InternalServerError);
-            }
-        }
-        else
-        {
-            return Result(StatusCodes.Status200OK, result.Value);
-        }
-    }
-
-    [HttpGet("search")]
-    [Authorize]
-    [ProducesResponseType(typeof(List<GamesListDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> SearchList([FromQuery] SearchListsRequest searchListsRequest)
-    {
-        _logger.LogInformation(
-            "Requested to search lists by owner {OwnerName} and list name {ListName}.",
-            searchListsRequest.OwnerName,
-            searchListsRequest.ListName);
-
-        var gamesLists = await _listsManagerService.Search(searchListsRequest.ToParams());
-        return Result(StatusCodes.Status200OK, gamesLists);
-    }
-
     [HttpPost]
     [Authorize]
     [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
@@ -124,6 +76,73 @@ public class ListsController : YourGamesListBaseController
         {
             return Result(StatusCodes.Status200OK, result.Value);
         }
+    }
+
+    [HttpGet("{listId:guid}")]
+    [Authorize]
+    [ProducesResponseType(typeof(GamesListDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetList(GetListRequest getListRequest)
+    {
+        _logger.LogInformation("Requested to get list {GamesListId}.", getListRequest.ListId);
+
+        var result = await _listsManagerService.Get(getListRequest.ToParams());
+
+        if (result.IsFailure)
+        {
+            if (result.Error is ListsError.ListNotFound)
+            {
+                return Result(StatusCodes.Status404NotFound, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
+            }
+            else
+            {
+                return Result(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        return Result(StatusCodes.Status200OK, result.Value);
+    }
+
+    [HttpPatch("{listId:guid}")]
+    [Authorize]
+    [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Update(UpdateListRequest updateListRequest)
+    {
+        _logger.LogInformation("Requested to update list with id: {GamesListId}", updateListRequest.ListId);
+
+        var dto = updateListRequest.ToParams();
+        var result = await _listsManagerService.Update(dto);
+
+        if (result.IsFailure)
+        {
+            if (result.Error is ListsError.ListNotFound)
+            {
+                return Result(StatusCodes.Status404NotFound, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
+            }
+            else if (result.Error is ListsError.ListAlreadyExists or ListsError.ListCannotBeEdited)
+            {
+                return Result(StatusCodes.Status409Conflict, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
+            }
+            else
+            {
+                return Result(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        return Result(StatusCodes.Status204NoContent);
     }
 
     [HttpDelete("{listId:guid}")]
@@ -167,31 +186,25 @@ public class ListsController : YourGamesListBaseController
         }
     }
 
-    [HttpPatch("{listId:guid}")]
+
+    [HttpGet]
     [Authorize]
-    [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(List<GamesListDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Update(UpdateListRequest updateListRequest)
+    public async Task<IActionResult> GetSelfLists(GetSelfListRequest getSelfListRequest)
     {
-        _logger.LogInformation("Requested to update list with id: {GamesListId}", updateListRequest.ListId);
+        _logger.LogInformation("Requested to get self lists");
 
-        var dto = updateListRequest.ToParams();
-        var result = await _listsManagerService.Update(dto);
+        var dto = getSelfListRequest.ToParams();
+
+        var result = await _listsManagerService.GetSelf(dto);
 
         if (result.IsFailure)
         {
-            if (result.Error is ListsError.ListNotFound)
+            if (result.Error is ListsError.UserNotFound)
             {
                 return Result(StatusCodes.Status404NotFound, new ErrorResponse
-                {
-                    Errors = [_domainErrorMapper.Map(result.Error)]
-                });
-            }
-            else if (result.Error is ListsError.ListAlreadyExists or ListsError.ListCannotBeEdited)
-            {
-                return Result(StatusCodes.Status409Conflict, new ErrorResponse
                 {
                     Errors = [_domainErrorMapper.Map(result.Error)]
                 });
@@ -201,8 +214,26 @@ public class ListsController : YourGamesListBaseController
                 return Result(StatusCodes.Status500InternalServerError);
             }
         }
+        else
+        {
+            return Result(StatusCodes.Status200OK, result.Value);
+        }
+    }
 
-        return Result(StatusCodes.Status204NoContent);
+
+    [HttpGet("search")]
+    [Authorize]
+    [ProducesResponseType(typeof(List<GamesListDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SearchList([FromQuery] SearchListsRequest searchListsRequest)
+    {
+        _logger.LogInformation(
+            "Requested to search lists by owner {OwnerName} and list name {ListName}.",
+            searchListsRequest.OwnerName,
+            searchListsRequest.ListName);
+
+        var gamesLists = await _listsManagerService.Search(searchListsRequest.ToParams());
+        return Result(StatusCodes.Status200OK, gamesLists);
     }
 
     #endregion
@@ -248,16 +279,17 @@ public class ListsController : YourGamesListBaseController
         return Result(StatusCodes.Status200OK, result.Value);
     }
 
-    [HttpDelete("{listId:guid}/entries/{entryId:guid}")]
+
+    [HttpGet("{listId:guid}/entries/{entryId:guid}")]
     [Authorize]
-    [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(GamesListEntryDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> RemoveGameListEntry(RemoveGameListEntryRequest request)
+    public async Task<IActionResult> GetGameListEntry(GetGameListEntryRequest request)
     {
-        _logger.LogInformation("Requested to remove game list entry {EntryId}.", request.EntryId);
+        _logger.LogInformation("Requested to get game list entry {EntryId} from list {GamesListId}.", request.EntryId, request.ListId);
 
-        var result = await _listsManagerService.RemoveGameListEntry(request.ToParams());
+        var result = await _listsManagerService.GetGameListEntry(request.ToParams());
         if (result.IsFailure)
         {
             if (result.Error is ListsError.GameListEntryNotFound)
@@ -273,7 +305,7 @@ public class ListsController : YourGamesListBaseController
             }
         }
 
-        return Result(StatusCodes.Status204NoContent);
+        return Result(StatusCodes.Status200OK, result.Value);
     }
 
     [HttpPatch("{listId:guid}/entries/{entryId:guid}")]
@@ -302,6 +334,75 @@ public class ListsController : YourGamesListBaseController
         }
 
         return Result(StatusCodes.Status204NoContent);
+    }
+
+    [HttpDelete("{listId:guid}/entries/{entryId:guid}")]
+    [Authorize]
+    [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemoveGameListEntry(RemoveGameListEntryRequest request)
+    {
+        _logger.LogInformation("Requested to remove game list entry {EntryId}.", request.EntryId);
+
+        var result = await _listsManagerService.RemoveGameListEntry(request.ToParams());
+        if (result.IsFailure)
+        {
+            if (result.Error is ListsError.GameListEntryNotFound)
+            {
+                return Result(StatusCodes.Status404NotFound, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
+            }
+            else
+            {
+                return Result(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        return Result(StatusCodes.Status204NoContent);
+    }
+
+    [HttpPost("{listId:guid}/entries/{entryId:guid}/transfer")]
+    [Authorize]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> TransferGameListEntry(TransferGameListEntryRequest request)
+    {
+        _logger.LogInformation(
+            "Requested to {TransferMode} game list entry {EntryId} from list {GamesListId} to list {TargetGamesListId}.",
+            request.Body.Move ? "move" : "copy",
+            request.EntryId,
+            request.ListId,
+            request.Body.TargetListId);
+
+        var result = await _listsManagerService.TransferGameListEntry(request.ToParams());
+        if (result.IsFailure)
+        {
+            if (result.Error is ListsError.GameListEntryNotFound or ListsError.ListNotFound)
+            {
+                return Result(StatusCodes.Status404NotFound, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
+            }
+            else if (result.Error is ListsError.GameListEntryAlreadyExists)
+            {
+                return Result(StatusCodes.Status409Conflict, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
+            }
+            else
+            {
+                return Result(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        return Result(StatusCodes.Status200OK, result.Value);
     }
 
     #endregion

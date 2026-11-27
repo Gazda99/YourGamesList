@@ -93,6 +93,8 @@ public class UsersServiceTests
         Assert.That(gamesList.CreatedAt, Is.EqualTo(gamesListCreatedAt));
         Assert.That(gamesList.Description, Is.EqualTo(gamesListDescription));
         Assert.That(gamesList.IsPrivate, Is.False);
+        Assert.That(gamesList.Editable, Is.True);
+        Assert.That(gamesList.ModifiedAt, Is.Null);
         Assert.That(gamesList.Name, Is.EqualTo(gamesListName));
         Assert.That(gamesList.GameListEntries, Is.Empty);
     }

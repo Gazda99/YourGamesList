@@ -204,13 +204,16 @@ public static class AppBuilder
         //Lists controller validators
         services
             .AddScoped<IValidator<GetSelfListRequest>, GetSelfListRequestValidator>()
+            .AddScoped<IValidator<GetListRequest>, GetListRequestValidator>()
             .AddScoped<IValidator<AddListRequest>, CreateListRequestValidator>()
             .AddScoped<IValidator<DeleteListRequest>, DeleteListRequestValidator>()
             .AddScoped<IValidator<UpdateListRequest>, UpdateListRequestValidator>()
             .AddScoped<IValidator<SearchListsRequest>, SearchListsRequestValidator>()
+            .AddScoped<IValidator<GetGameListEntryRequest>, GetGameListEntryRequestValidator>()
             .AddScoped<IValidator<AddGameListEntryRequest>, AddGameListEntryRequestValidator>()
             .AddScoped<IValidator<RemoveGameListEntryRequest>, RemoveGameListEntryRequestValidator>()
             .AddScoped<IValidator<UpdateGameListEntryRequest>, UpdateGameListEntryRequestValidator>()
+            .AddScoped<IValidator<TransferGameListEntryRequest>, TransferGameListEntryRequestValidator>()
             .AddScoped<IValidator<AddOwnershipInfoRequest>, AddOwnershipInfoRequestValidator>()
             .AddScoped<IValidator<UpdateOwnershipInfoRequest>, UpdateOwnershipInfoRequestValidator>()
             .AddScoped<IValidator<RemoveOwnershipInfoRequest>, RemoveOwnershipInfoRequestValidator>()

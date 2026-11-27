@@ -9,6 +9,9 @@ variables:
   - name: games_list_id
     value: ""
     description: ""
+  - name: target_games_list_id
+    value: ""
+    description: ""
   - name: game_list_entry_id
     value: ""
     description: ""
