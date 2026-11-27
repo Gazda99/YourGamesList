@@ -304,6 +304,47 @@ public class ListsController : YourGamesListBaseController
         return Result(StatusCodes.Status204NoContent);
     }
 
+    [HttpPost("{listId:guid}/entries/{entryId:guid}/transfer")]
+    [Authorize]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> TransferGameListEntry(TransferGameListEntryRequest request)
+    {
+        _logger.LogInformation(
+            "Requested to {TransferMode} game list entry {EntryId} from list {GamesListId} to list {TargetGamesListId}.",
+            request.Body.Move ? "move" : "copy",
+            request.EntryId,
+            request.ListId,
+            request.Body.TargetListId);
+
+        var result = await _listsManagerService.TransferGameListEntry(request.ToParams());
+        if (result.IsFailure)
+        {
+            if (result.Error is ListsError.GameListEntryNotFound or ListsError.ListNotFound)
+            {
+                return Result(StatusCodes.Status404NotFound, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
+            }
+            else if (result.Error is ListsError.GameListEntryAlreadyExists)
+            {
+                return Result(StatusCodes.Status409Conflict, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
+            }
+            else
+            {
+                return Result(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        return Result(StatusCodes.Status200OK, result.Value);
+    }
+
     #endregion
 
     #region Ownership info

@@ -55,6 +55,7 @@ public static class ErrorCodes
         public const string InvalidGameListEntryDescription = "InvalidGameListEntryDescription";
         public const string InvalidGameListEntryRating = "InvalidGameListEntryRating";
         public const string InvalidListSearchCriteria = "InvalidListSearchCriteria";
+        public const string InvalidTransferTargetList = "InvalidTransferTargetList";
         public const string OwnershipInfoNotFound = "OwnershipInfoNotFound";
         public const string InvalidOwnershipInfoEmulation = "InvalidOwnershipInfoEmulation";
     }

@@ -501,6 +501,79 @@ public class ListsControllerTests
                 parameters.Rating.Value == 10));
     }
 
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TransferGameListEntry_Success_ReturnsEntryIdAndPassesParams(bool move)
+    {
+        //ARRANGE
+        var userInformation = CreateUserInformation();
+        var listId = Guid.NewGuid();
+        var entryId = Guid.NewGuid();
+        var targetListId = Guid.NewGuid();
+        var resultEntryId = Guid.NewGuid();
+        _listsManagerService.TransferGameListEntry(Arg.Any<TransferGameListEntryParams>())
+            .Returns(CombinedResult<Guid, ListsError>.Success(resultEntryId));
+
+        //ACT
+        var result = await CreateController().TransferGameListEntry(new TransferGameListEntryRequest
+        {
+            UserInformation = userInformation,
+            ListId = listId,
+            EntryId = entryId,
+            Body = new TransferGameListEntryRequestBody
+            {
+                TargetListId = targetListId,
+                Move = move
+            }
+        });
+
+        //ASSERT
+        var objectResult = result as ObjectResult;
+        Assert.That(objectResult?.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
+        Assert.That(objectResult?.Value, Is.EqualTo(resultEntryId));
+        await _listsManagerService.Received(1).TransferGameListEntry(
+            Arg.Is<TransferGameListEntryParams>(parameters =>
+                parameters.UserInformation == userInformation &&
+                parameters.GamesListId == listId &&
+                parameters.Id == entryId &&
+                parameters.TargetGamesListId == targetListId &&
+                parameters.Move == move));
+    }
+
+    [TestCase(ListsError.GameListEntryNotFound, StatusCodes.Status404NotFound)]
+    [TestCase(ListsError.ListNotFound, StatusCodes.Status404NotFound)]
+    [TestCase(ListsError.GameListEntryAlreadyExists, StatusCodes.Status409Conflict)]
+    public async Task TransferGameListEntry_KnownFailure_ReturnsMappedErrorResponse(ListsError listsError, int expectedStatusCode)
+    {
+        //ARRANGE
+        var error = _fixture.Create<Error>();
+        _domainErrorMapper.Map(listsError).Returns(error);
+        _listsManagerService.TransferGameListEntry(Arg.Any<TransferGameListEntryParams>())
+            .Returns(CombinedResult<Guid, ListsError>.Failure(listsError));
+
+        //ACT
+        var result = await CreateController().TransferGameListEntry(CreateTransferRequest());
+
+        //ASSERT
+        var objectResult = result as ObjectResult;
+        Assert.That(objectResult?.StatusCode, Is.EqualTo(expectedStatusCode));
+        Assert.That(((ErrorResponse)objectResult!.Value!).Errors.Single(), Is.SameAs(error));
+    }
+
+    [Test]
+    public async Task TransferGameListEntry_UnexpectedFailure_ReturnsInternalServerError()
+    {
+        //ARRANGE
+        _listsManagerService.TransferGameListEntry(Arg.Any<TransferGameListEntryParams>())
+            .Returns(CombinedResult<Guid, ListsError>.Failure(ListsError.InternalServerError));
+
+        //ACT
+        var result = await CreateController().TransferGameListEntry(CreateTransferRequest());
+
+        //ASSERT
+        Assert.That((result as IStatusCodeActionResult)?.StatusCode, Is.EqualTo(StatusCodes.Status500InternalServerError));
+    }
+
     #endregion
 
     #region OwnershipInfo
@@ -743,6 +816,18 @@ public class ListsControllerTests
     {
         return new ListsController(_logger, _listsManagerService, _domainErrorMapper);
     }
+
+    private TransferGameListEntryRequest CreateTransferRequest() => new()
+    {
+        UserInformation = CreateUserInformation(),
+        ListId = Guid.NewGuid(),
+        EntryId = Guid.NewGuid(),
+        Body = new TransferGameListEntryRequestBody
+        {
+            TargetListId = Guid.NewGuid(),
+            Move = true
+        }
+    };
 
     private UserInformationToken CreateUserInformation()
     {

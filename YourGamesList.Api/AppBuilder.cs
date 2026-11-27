@@ -211,6 +211,7 @@ public static class AppBuilder
             .AddScoped<IValidator<AddGameListEntryRequest>, AddGameListEntryRequestValidator>()
             .AddScoped<IValidator<RemoveGameListEntryRequest>, RemoveGameListEntryRequestValidator>()
             .AddScoped<IValidator<UpdateGameListEntryRequest>, UpdateGameListEntryRequestValidator>()
+            .AddScoped<IValidator<TransferGameListEntryRequest>, TransferGameListEntryRequestValidator>()
             .AddScoped<IValidator<AddOwnershipInfoRequest>, AddOwnershipInfoRequestValidator>()
             .AddScoped<IValidator<UpdateOwnershipInfoRequest>, UpdateOwnershipInfoRequestValidator>()
             .AddScoped<IValidator<RemoveOwnershipInfoRequest>, RemoveOwnershipInfoRequestValidator>()

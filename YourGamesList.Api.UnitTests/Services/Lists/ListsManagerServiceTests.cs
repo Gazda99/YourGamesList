@@ -800,6 +800,193 @@ public class ListsManagerServiceTests
         Assert.That(entry.Rating, Is.Null);
     }
 
+    [Test]
+    public async Task TransferGameListEntry_Move_ChangesListKeepsIdAndOwnershipInfos()
+    {
+        var user = CreateUser();
+        var source = CreateList(user, "Wishlist", editable: false);
+        var target = CreateList(user, "Played", editable: false);
+        var entry = CreateEntry(source, 123);
+        var ownershipInfo = CreateOwnershipInfo(entry);
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.AddRange(source, target);
+        await _dbContext.SaveChangesAsync();
+        var modifiedAt = DateTimeOffset.UtcNow.AddMinutes(1);
+        _timeProvider.SetUtcNow(modifiedAt);
+
+        var result = await CreateService().TransferGameListEntry(new TransferGameListEntryParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            GamesListId = source.Id,
+            Id = entry.Id,
+            TargetGamesListId = target.Id,
+            Move = true
+        });
+
+        var movedEntry = await _dbContext.GameListEntries.Include(x => x.OwnershipInfo).SingleAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo(entry.Id));
+        Assert.That(movedEntry.Id, Is.EqualTo(entry.Id));
+        Assert.That(movedEntry.GamesListId, Is.EqualTo(target.Id));
+        Assert.That(movedEntry.ModifiedAt, Is.EqualTo(modifiedAt));
+        Assert.That(movedEntry.OwnershipInfo.Single().Id, Is.EqualTo(ownershipInfo.Id));
+    }
+
+    [Test]
+    public async Task TransferGameListEntry_Copy_CreatesNewEntryWithClonedOwnershipInfos_SourceUnchanged()
+    {
+        var user = CreateUser();
+        var source = CreateList(user, "Wishlist");
+        var target = CreateList(user, "Played");
+        var entry = CreateEntry(source, 123);
+        entry.Description = "A note";
+        entry.Rating = 4;
+        var ownershipInfo = CreateOwnershipInfo(entry);
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.AddRange(source, target);
+        await _dbContext.SaveChangesAsync();
+        var createdAt = DateTimeOffset.UtcNow.AddMinutes(1);
+        _timeProvider.SetUtcNow(createdAt);
+
+        var result = await CreateService().TransferGameListEntry(new TransferGameListEntryParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            GamesListId = source.Id,
+            Id = entry.Id,
+            TargetGamesListId = target.Id,
+            Move = false
+        });
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.Not.EqualTo(entry.Id));
+
+        var sourceEntry = await _dbContext.GameListEntries.Include(x => x.OwnershipInfo).SingleAsync(x => x.Id == entry.Id);
+        Assert.That(sourceEntry.GamesListId, Is.EqualTo(source.Id));
+        Assert.That(sourceEntry.OwnershipInfo.Single().Id, Is.EqualTo(ownershipInfo.Id));
+
+        var copiedEntry = await _dbContext.GameListEntries.Include(x => x.OwnershipInfo).SingleAsync(x => x.Id == result.Value);
+        Assert.That(copiedEntry.GamesListId, Is.EqualTo(target.Id));
+        Assert.That(copiedEntry.IgdbId, Is.EqualTo(123));
+        Assert.That(copiedEntry.CompletionStatus, Is.EqualTo(entry.CompletionStatus));
+        Assert.That(copiedEntry.Description, Is.EqualTo("A note"));
+        Assert.That(copiedEntry.Rating, Is.EqualTo(4));
+        Assert.That(copiedEntry.CreatedAt, Is.EqualTo(createdAt));
+
+        var copiedOwnershipInfo = copiedEntry.OwnershipInfo.Single();
+        Assert.That(copiedOwnershipInfo.Id, Is.Not.EqualTo(ownershipInfo.Id));
+        Assert.That(copiedOwnershipInfo.IsLegit, Is.EqualTo(ownershipInfo.IsLegit));
+        Assert.That(copiedOwnershipInfo.Platform, Is.EqualTo(ownershipInfo.Platform));
+        Assert.That(copiedOwnershipInfo.GameDistribution, Is.EqualTo(ownershipInfo.GameDistribution));
+        Assert.That(copiedOwnershipInfo.WasEmulated, Is.EqualTo(ownershipInfo.WasEmulated));
+        Assert.That(copiedOwnershipInfo.EmulatedOn, Is.EqualTo(ownershipInfo.EmulatedOn));
+        Assert.That(copiedOwnershipInfo.CreatedAt, Is.EqualTo(createdAt));
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TransferGameListEntry_TargetContainsSameIgdbId_ReturnsAlreadyExists(bool move)
+    {
+        var user = CreateUser();
+        var source = CreateList(user, "Wishlist");
+        var target = CreateList(user, "Played");
+        var entry = CreateEntry(source, 123);
+        CreateEntry(target, 123);
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.AddRange(source, target);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().TransferGameListEntry(new TransferGameListEntryParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            GamesListId = source.Id,
+            Id = entry.Id,
+            TargetGamesListId = target.Id,
+            Move = move
+        });
+
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.GameListEntryAlreadyExists));
+        Assert.That(await _dbContext.GameListEntries.CountAsync(), Is.EqualTo(2));
+        Assert.That((await _dbContext.GameListEntries.SingleAsync(x => x.Id == entry.Id)).GamesListId, Is.EqualTo(source.Id));
+    }
+
+    [Test]
+    public async Task TransferGameListEntry_TargetListOwnedByAnotherUser_ReturnsListNotFound()
+    {
+        var user = CreateUser();
+        var otherUser = CreateUser();
+        var source = CreateList(user, "Wishlist");
+        var target = CreateList(otherUser, "Played");
+        var entry = CreateEntry(source, 123);
+        _dbContext.Users.AddRange(user, otherUser);
+        _dbContext.GamesLists.AddRange(source, target);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().TransferGameListEntry(new TransferGameListEntryParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            GamesListId = source.Id,
+            Id = entry.Id,
+            TargetGamesListId = target.Id,
+            Move = true
+        });
+
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.ListNotFound));
+        Assert.That((await _dbContext.GameListEntries.SingleAsync()).GamesListId, Is.EqualTo(source.Id));
+    }
+
+    [Test]
+    public async Task TransferGameListEntry_EntryOwnedByAnotherUser_ReturnsNotFound()
+    {
+        var user = CreateUser();
+        var source = CreateList(user, "Wishlist");
+        var target = CreateList(user, "Played");
+        var entry = CreateEntry(source, 123);
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.AddRange(source, target);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().TransferGameListEntry(new TransferGameListEntryParams
+        {
+            UserInformation = CreateUserInformation(Guid.NewGuid()),
+            GamesListId = source.Id,
+            Id = entry.Id,
+            TargetGamesListId = target.Id,
+            Move = true
+        });
+
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.GameListEntryNotFound));
+        Assert.That((await _dbContext.GameListEntries.SingleAsync()).GamesListId, Is.EqualTo(source.Id));
+    }
+
+    [Test]
+    public async Task TransferGameListEntry_EntryInDifferentList_ReturnsNotFound()
+    {
+        var user = CreateUser();
+        var source = CreateList(user, "Wishlist");
+        var otherList = CreateList(user, "Other");
+        var target = CreateList(user, "Played");
+        var entry = CreateEntry(source, 123);
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.AddRange(source, otherList, target);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().TransferGameListEntry(new TransferGameListEntryParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            GamesListId = otherList.Id,
+            Id = entry.Id,
+            TargetGamesListId = target.Id,
+            Move = false
+        });
+
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.GameListEntryNotFound));
+        Assert.That(await _dbContext.GameListEntries.CountAsync(), Is.EqualTo(1));
+    }
+
     #endregion
 
     #region OwnershipInfo

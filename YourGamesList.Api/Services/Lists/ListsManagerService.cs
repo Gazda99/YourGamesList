@@ -61,6 +61,12 @@ public interface IListsManagerService
     Task<ErrorResult<ListsError>> UpdateGameListEntry(UpdateGameListEntryParams updateParams);
 
     /// <summary>
+    /// Copies or moves a game entry (including its ownership info) to another list owned by the current user.
+    /// Returns the id of the entry in the target list.
+    /// </summary>
+    Task<CombinedResult<Guid, ListsError>> TransferGameListEntry(TransferGameListEntryParams transferParams);
+
+    /// <summary>
     /// Adds ownership info to a game entry in a list owned by the current user.
     /// </summary>
     Task<CombinedResult<Guid, ListsError>> AddOwnershipInfo(AddOwnershipInfoParams addParams);
@@ -407,6 +413,84 @@ public class ListsManagerService : IListsManagerService
         entry.ModifiedAt = _timeProvider.GetUtcNow();
         await _yglDbContext.SaveChangesAsync();
         return ErrorResult<ListsError>.Success();
+    }
+
+    public async Task<CombinedResult<Guid, ListsError>> TransferGameListEntry(TransferGameListEntryParams transferParams)
+    {
+        var userId = transferParams.UserInformation.UserId;
+        var entry = await _yglDbContext.GameListEntries
+            .Include(gameListEntry => gameListEntry.OwnershipInfo)
+            .FirstOrDefaultAsync(gameListEntry =>
+                gameListEntry.Id == transferParams.Id &&
+                gameListEntry.GamesListId == transferParams.GamesListId &&
+                gameListEntry.GamesList.UserId == userId);
+
+        if (entry == null)
+        {
+            _logger.LogInformation("Cannot find game list entry {EntryId} in list {GamesListId} for the requesting user.", transferParams.Id, transferParams.GamesListId);
+            return CombinedResult<Guid, ListsError>.Failure(ListsError.GameListEntryNotFound);
+        }
+
+        var targetListExists = await _yglDbContext.GamesLists.AnyAsync(list => list.Id == transferParams.TargetGamesListId && list.UserId == userId);
+
+        if (!targetListExists)
+        {
+            _logger.LogInformation("Cannot find target list {GamesListId} for the requesting user.", transferParams.TargetGamesListId);
+            return CombinedResult<Guid, ListsError>.Failure(ListsError.ListNotFound);
+        }
+
+        var entryAlreadyExists = await _yglDbContext.GameListEntries.AnyAsync(gameListEntry =>
+            gameListEntry.GamesListId == transferParams.TargetGamesListId &&
+            gameListEntry.IgdbId == entry.IgdbId);
+
+        if (entryAlreadyExists)
+        {
+            _logger.LogInformation("Game {IgdbId} already exists in target list {GamesListId}.", entry.IgdbId, transferParams.TargetGamesListId);
+            return CombinedResult<Guid, ListsError>.Failure(ListsError.GameListEntryAlreadyExists);
+        }
+
+        var now = _timeProvider.GetUtcNow();
+
+        if (transferParams.Move)
+        {
+            _logger.LogInformation("Moving game list entry {EntryId} to list {GamesListId}.", entry.Id, transferParams.TargetGamesListId);
+            entry.GamesListId = transferParams.TargetGamesListId;
+            entry.ModifiedAt = now;
+            await _yglDbContext.SaveChangesAsync();
+            return CombinedResult<Guid, ListsError>.Success(entry.Id);
+        }
+
+        var copiedEntry = new GamesListEntry
+        {
+            Id = Guid.NewGuid(),
+            CreatedAt = now,
+            CompletionStatus = entry.CompletionStatus,
+            Description = entry.Description,
+            IgdbId = entry.IgdbId,
+            Rating = entry.Rating,
+            GamesListId = transferParams.TargetGamesListId
+        };
+
+        foreach (var ownershipInfo in entry.OwnershipInfo)
+        {
+            copiedEntry.OwnershipInfo.Add(new OwnershipInfo
+            {
+                Id = Guid.NewGuid(),
+                CreatedAt = now,
+                IsLegit = ownershipInfo.IsLegit,
+                Platform = ownershipInfo.Platform,
+                GameDistribution = ownershipInfo.GameDistribution,
+                WasEmulated = ownershipInfo.WasEmulated,
+                EmulatedOn = ownershipInfo.EmulatedOn,
+                GameListEntryId = copiedEntry.Id
+            });
+        }
+
+        _logger.LogInformation("Copying game list entry {EntryId} to list {GamesListId} as {NewEntryId}.", entry.Id, transferParams.TargetGamesListId, copiedEntry.Id);
+        _yglDbContext.GameListEntries.Add(copiedEntry);
+        await _yglDbContext.SaveChangesAsync();
+
+        return CombinedResult<Guid, ListsError>.Success(copiedEntry.Id);
     }
 
     public async Task<CombinedResult<Guid, ListsError>> AddOwnershipInfo(AddOwnershipInfoParams addParams)
