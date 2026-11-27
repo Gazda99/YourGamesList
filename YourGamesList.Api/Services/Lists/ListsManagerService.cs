@@ -22,6 +22,11 @@ public interface IListsManagerService
     Task<CombinedResult<List<GamesListDto>, ListsError>> GetSelf(GetSelfListParams getSelfListParams);
 
     /// <summary>
+    /// Gets a single list with its entries. Private lists are returned only to their owner.
+    /// </summary>
+    Task<CombinedResult<GamesListDto, ListsError>> Get(GetListParams getListParams);
+
+    /// <summary>
     /// Searches visible lists by owner username or list name.
     /// </summary>
     Task<List<GamesListDto>> Search(SearchListsParams searchListsParams);
@@ -127,6 +132,28 @@ public class ListsManagerService : IListsManagerService
         var gamesLists = user.GamesLists.Select(list => MapGamesList(list, includeEntries: true)).ToList();
         
         return CombinedResult<List<GamesListDto>, ListsError>.Success(gamesLists);
+    }
+
+    public async Task<CombinedResult<GamesListDto, ListsError>> Get(GetListParams getListParams)
+    {
+        var userId = getListParams.UserInformation.UserId;
+
+        var gamesList = await _yglDbContext.GamesLists
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Include(list => list.GamesListEntries)
+            .ThenInclude(entry => entry.OwnershipInfo)
+            .FirstOrDefaultAsync(list =>
+                list.Id == getListParams.GamesListId &&
+                (!list.IsPrivate || list.UserId == userId));
+
+        if (gamesList == null)
+        {
+            _logger.LogInformation("Cannot find list {GamesListId} visible to the requesting user.", getListParams.GamesListId);
+            return CombinedResult<GamesListDto, ListsError>.Failure(ListsError.ListNotFound);
+        }
+
+        return CombinedResult<GamesListDto, ListsError>.Success(MapGamesList(gamesList, includeEntries: true));
     }
 
     public async Task<List<GamesListDto>> Search(SearchListsParams searchListsParams)

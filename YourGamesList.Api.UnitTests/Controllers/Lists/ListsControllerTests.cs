@@ -81,6 +81,69 @@ public class ListsControllerTests
     }
 
     [Test]
+    public async Task GetList_Success_ReturnsListAndPassesParams()
+    {
+        //ARRANGE
+        var userInformation = CreateUserInformation();
+        var listId = Guid.NewGuid();
+        var list = _fixture.Create<GamesListDto>();
+        _listsManagerService.Get(Arg.Any<GetListParams>()).Returns(CombinedResult<GamesListDto, ListsError>.Success(list));
+
+        //ACT
+        var result = await CreateController().GetList(new GetListRequest
+        {
+            UserInformation = userInformation,
+            ListId = listId
+        });
+
+        //ASSERT
+        var objectResult = result as ObjectResult;
+        Assert.That(objectResult?.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
+        Assert.That(objectResult?.Value, Is.SameAs(list));
+        await _listsManagerService.Received(1).Get(Arg.Is<GetListParams>(parameters =>
+            parameters.UserInformation == userInformation &&
+            parameters.GamesListId == listId));
+    }
+
+    [Test]
+    public async Task GetList_ListNotFound_ReturnsNotFoundWithMappedError()
+    {
+        //ARRANGE
+        var error = _fixture.Create<Error>();
+        _domainErrorMapper.Map(ListsError.ListNotFound).Returns(error);
+        _listsManagerService.Get(Arg.Any<GetListParams>()).Returns(CombinedResult<GamesListDto, ListsError>.Failure(ListsError.ListNotFound));
+
+        //ACT
+        var result = await CreateController().GetList(new GetListRequest
+        {
+            UserInformation = CreateUserInformation(),
+            ListId = Guid.NewGuid()
+        });
+
+        //ASSERT
+        var objectResult = result as ObjectResult;
+        Assert.That(objectResult?.StatusCode, Is.EqualTo(StatusCodes.Status404NotFound));
+        Assert.That(((ErrorResponse)objectResult!.Value!).Errors.Single(), Is.SameAs(error));
+    }
+
+    [Test]
+    public async Task GetList_UnexpectedFailure_ReturnsInternalServerError()
+    {
+        //ARRANGE
+        _listsManagerService.Get(Arg.Any<GetListParams>()).Returns(CombinedResult<GamesListDto, ListsError>.Failure(ListsError.InternalServerError));
+
+        //ACT
+        var result = await CreateController().GetList(new GetListRequest
+        {
+            UserInformation = CreateUserInformation(),
+            ListId = Guid.NewGuid()
+        });
+
+        //ASSERT
+        Assert.That((result as IStatusCodeActionResult)?.StatusCode, Is.EqualTo(StatusCodes.Status500InternalServerError));
+    }
+
+    [Test]
     public async Task Search_Success_ReturnsListsAndPassesFilters()
     {
         //ARRANGE
