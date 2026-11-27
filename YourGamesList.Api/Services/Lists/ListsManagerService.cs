@@ -51,6 +51,11 @@ public interface IListsManagerService
     #region Game list entries
 
     /// <summary>
+    /// Gets a single game entry. Entries of private lists are returned only to the list owner.
+    /// </summary>
+    Task<CombinedResult<GamesListEntryDto, ListsError>> GetGameListEntry(GetGameListEntryParams getParams);
+
+    /// <summary>
     /// Adds a game to a list owned by the current user.
     /// </summary>
     Task<CombinedResult<Guid, ListsError>> AddGameListEntry(AddGameListEntryParams addParams);
@@ -193,30 +198,39 @@ public class ListsManagerService : IListsManagerService
             CreatedAt = list.CreatedAt,
             Description = list.Description,
             Id = list.Id,
+            ModifiedAt = list.ModifiedAt,
+            Editable = list.Editable,
             IsPrivate = list.IsPrivate,
             Name = list.Name,
             GameListEntries = includeEntries
-                ? list.GamesListEntries.Select(entry => new GamesListEntryDto
-                {
-                    CompletionStatus = (CompletionStatusDto)entry.CompletionStatus,
-                    Description = entry.Description,
-                    Id = entry.Id,
-                    GamesListId = entry.GamesListId,
-                    IgdbId = entry.IgdbId,
-                    Rating = entry.Rating,
-                    OwnershipInfos = entry.OwnershipInfo.Select(ownership => new OwnershipInfoDto
-                    {
-                        Id = ownership.Id,
-                        IsLegit = ownership.IsLegit,
-                        Platform = (PlatformDto)ownership.Platform,
-                        GameDistribution = (GameDistributionDto)ownership.GameDistribution,
-                        WasEmulated = ownership.WasEmulated,
-                        EmulatedOn = ownership.EmulatedOn.HasValue
-                            ? (EmulatorDto)ownership.EmulatedOn.Value
-                            : null
-                    }).ToList()
-                }).ToList()
+                ? list.GamesListEntries.Select(MapGamesListEntry).ToList()
                 : []
+        };
+    }
+
+    private static GamesListEntryDto MapGamesListEntry(GamesListEntry entry)
+    {
+        return new GamesListEntryDto
+        {
+            CreatedAt = entry.CreatedAt,
+            ModifiedAt = entry.ModifiedAt,
+            CompletionStatus = (CompletionStatusDto)entry.CompletionStatus,
+            Description = entry.Description,
+            Id = entry.Id,
+            GamesListId = entry.GamesListId,
+            IgdbId = entry.IgdbId,
+            Rating = entry.Rating,
+            OwnershipInfos = entry.OwnershipInfo.Select(ownership => new OwnershipInfoDto
+            {
+                Id = ownership.Id,
+                IsLegit = ownership.IsLegit,
+                Platform = (PlatformDto)ownership.Platform,
+                GameDistribution = (GameDistributionDto)ownership.GameDistribution,
+                WasEmulated = ownership.WasEmulated,
+                EmulatedOn = ownership.EmulatedOn.HasValue
+                    ? (EmulatorDto)ownership.EmulatedOn.Value
+                    : null
+            }).ToList()
         };
     }
 
@@ -344,6 +358,26 @@ public class ListsManagerService : IListsManagerService
     #endregion
 
     #region Game list entries
+
+    public async Task<CombinedResult<GamesListEntryDto, ListsError>> GetGameListEntry(GetGameListEntryParams getParams)
+    {
+        var userId = getParams.UserInformation.UserId;
+        var entry = await _yglDbContext.GameListEntries
+            .AsNoTracking()
+            .Include(gameListEntry => gameListEntry.OwnershipInfo)
+            .FirstOrDefaultAsync(gameListEntry =>
+                gameListEntry.Id == getParams.EntryId &&
+                gameListEntry.GamesListId == getParams.GamesListId &&
+                (!gameListEntry.GamesList.IsPrivate || gameListEntry.GamesList.UserId == userId));
+
+        if (entry == null)
+        {
+            _logger.LogInformation("Cannot find game list entry {EntryId} in list {GamesListId} visible to the requesting user.", getParams.EntryId, getParams.GamesListId);
+            return CombinedResult<GamesListEntryDto, ListsError>.Failure(ListsError.GameListEntryNotFound);
+        }
+
+        return CombinedResult<GamesListEntryDto, ListsError>.Success(MapGamesListEntry(entry));
+    }
 
     public async Task<CombinedResult<Guid, ListsError>> AddGameListEntry(AddGameListEntryParams addParams)
     {

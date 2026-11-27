@@ -441,6 +441,78 @@ public class ListsControllerTests
     #region GameListEntry
 
     [Test]
+    public async Task GetGameListEntry_Success_ReturnsEntryAndPassesParams()
+    {
+        //ARRANGE
+        var userInformation = CreateUserInformation();
+        var listId = Guid.NewGuid();
+        var entryId = Guid.NewGuid();
+        var entry = _fixture.Create<GamesListEntryDto>();
+        _listsManagerService.GetGameListEntry(Arg.Any<GetGameListEntryParams>())
+            .Returns(CombinedResult<GamesListEntryDto, ListsError>.Success(entry));
+
+        //ACT
+        var result = await CreateController().GetGameListEntry(new GetGameListEntryRequest
+        {
+            UserInformation = userInformation,
+            ListId = listId,
+            EntryId = entryId
+        });
+
+        //ASSERT
+        var objectResult = result as ObjectResult;
+        Assert.That(objectResult?.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
+        Assert.That(objectResult?.Value, Is.SameAs(entry));
+        await _listsManagerService.Received(1).GetGameListEntry(
+            Arg.Is<GetGameListEntryParams>(parameters =>
+                parameters.UserInformation == userInformation &&
+                parameters.GamesListId == listId &&
+                parameters.EntryId == entryId));
+    }
+
+    [Test]
+    public async Task GetGameListEntry_NotFound_ReturnsNotFoundWithMappedError()
+    {
+        //ARRANGE
+        var error = _fixture.Create<Error>();
+        _domainErrorMapper.Map(ListsError.GameListEntryNotFound).Returns(error);
+        _listsManagerService.GetGameListEntry(Arg.Any<GetGameListEntryParams>())
+            .Returns(CombinedResult<GamesListEntryDto, ListsError>.Failure(ListsError.GameListEntryNotFound));
+
+        //ACT
+        var result = await CreateController().GetGameListEntry(new GetGameListEntryRequest
+        {
+            UserInformation = CreateUserInformation(),
+            ListId = Guid.NewGuid(),
+            EntryId = Guid.NewGuid()
+        });
+
+        //ASSERT
+        var objectResult = result as ObjectResult;
+        Assert.That(objectResult?.StatusCode, Is.EqualTo(StatusCodes.Status404NotFound));
+        Assert.That(((ErrorResponse)objectResult!.Value!).Errors.Single(), Is.SameAs(error));
+    }
+
+    [Test]
+    public async Task GetGameListEntry_UnexpectedFailure_ReturnsInternalServerError()
+    {
+        //ARRANGE
+        _listsManagerService.GetGameListEntry(Arg.Any<GetGameListEntryParams>())
+            .Returns(CombinedResult<GamesListEntryDto, ListsError>.Failure(ListsError.InternalServerError));
+
+        //ACT
+        var result = await CreateController().GetGameListEntry(new GetGameListEntryRequest
+        {
+            UserInformation = CreateUserInformation(),
+            ListId = Guid.NewGuid(),
+            EntryId = Guid.NewGuid()
+        });
+
+        //ASSERT
+        Assert.That((result as IStatusCodeActionResult)?.StatusCode, Is.EqualTo(StatusCodes.Status500InternalServerError));
+    }
+
+    [Test]
     public async Task AddGameListEntry_Success_ReturnsEntryId()
     {
         //ARRANGE

@@ -50,6 +50,8 @@ public class UsersService : IUsersService
             CreatedAt = x.CreatedAt,
             Description = x.Description,
             Id = x.Id,
+            ModifiedAt = x.ModifiedAt,
+            Editable = x.Editable,
             IsPrivate = x.IsPrivate,
             Name = x.Name,
         }).ToList();

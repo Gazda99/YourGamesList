@@ -238,6 +238,34 @@ public class ListsController : YourGamesListBaseController
 
     #region Game list entries
 
+    [HttpGet("{listId:guid}/entries/{entryId:guid}")]
+    [Authorize]
+    [ProducesResponseType(typeof(GamesListEntryDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetGameListEntry(GetGameListEntryRequest request)
+    {
+        _logger.LogInformation("Requested to get game list entry {EntryId} from list {GamesListId}.", request.EntryId, request.ListId);
+
+        var result = await _listsManagerService.GetGameListEntry(request.ToParams());
+        if (result.IsFailure)
+        {
+            if (result.Error is ListsError.GameListEntryNotFound)
+            {
+                return Result(StatusCodes.Status404NotFound, new ErrorResponse
+                {
+                    Errors = [_domainErrorMapper.Map(result.Error)]
+                });
+            }
+            else
+            {
+                return Result(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        return Result(StatusCodes.Status200OK, result.Value);
+    }
+
     [HttpPost("{listId:guid}/entries")]
     [Authorize]
     [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]

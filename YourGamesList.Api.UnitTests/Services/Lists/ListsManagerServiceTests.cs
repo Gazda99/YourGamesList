@@ -88,6 +88,8 @@ public class ListsManagerServiceTests
         Assert.That(result.Value, Has.Count.EqualTo(1));
         Assert.That(result.Value[0].Id, Is.EqualTo(list.Id));
         Assert.That(result.Value[0].Name, Is.EqualTo("My list"));
+        Assert.That(result.Value[0].Editable, Is.True);
+        Assert.That(result.Value[0].GameListEntries.Single().CreatedAt, Is.EqualTo(entry.CreatedAt));
         Assert.That(result.Value[0].GameListEntries.Single().Id, Is.EqualTo(list.GamesListEntries.Single().Id));
         Assert.That(result.Value[0].GameListEntries.Single().GamesListId, Is.EqualTo(list.Id));
         Assert.That(result.Value[0].GameListEntries.Single().IgdbId, Is.EqualTo(123));
@@ -112,8 +114,10 @@ public class ListsManagerServiceTests
     public async Task Get_OwnPrivateList_ReturnsListWithEntriesAndOwnershipInfos()
     {
         var user = CreateUser();
-        var list = CreateList(user, "My list");
+        var list = CreateList(user, "My list", editable: false);
+        list.ModifiedAt = DateTimeOffset.UtcNow.AddMinutes(1);
         var entry = CreateEntry(list, 123);
+        entry.ModifiedAt = DateTimeOffset.UtcNow.AddMinutes(2);
         var ownershipInfo = CreateOwnershipInfo(entry);
         _dbContext.Users.Add(user);
         _dbContext.GamesLists.Add(list);
@@ -129,6 +133,10 @@ public class ListsManagerServiceTests
         Assert.That(result.Value.Id, Is.EqualTo(list.Id));
         Assert.That(result.Value.Name, Is.EqualTo("My list"));
         Assert.That(result.Value.IsPrivate, Is.True);
+        Assert.That(result.Value.Editable, Is.False);
+        Assert.That(result.Value.ModifiedAt, Is.EqualTo(list.ModifiedAt));
+        Assert.That(result.Value.GameListEntries.Single().CreatedAt, Is.EqualTo(entry.CreatedAt));
+        Assert.That(result.Value.GameListEntries.Single().ModifiedAt, Is.EqualTo(entry.ModifiedAt));
         Assert.That(result.Value.GameListEntries.Single().Id, Is.EqualTo(entry.Id));
         Assert.That(result.Value.GameListEntries.Single().IgdbId, Is.EqualTo(123));
         Assert.That(result.Value.GameListEntries.Single().OwnershipInfos.Single().Id, Is.EqualTo(ownershipInfo.Id));
@@ -606,6 +614,141 @@ public class ListsManagerServiceTests
     #endregion
 
     #region GameListEntry
+
+    [Test]
+    public async Task GetGameListEntry_OwnPrivateList_ReturnsEntryWithOwnershipInfos()
+    {
+        var user = CreateUser();
+        var list = CreateList(user, "My list");
+        var entry = CreateEntry(list, 123);
+        entry.ModifiedAt = DateTimeOffset.UtcNow.AddMinutes(1);
+        var ownershipInfo = CreateOwnershipInfo(entry);
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().GetGameListEntry(new GetGameListEntryParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            GamesListId = list.Id,
+            EntryId = entry.Id
+        });
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value.Id, Is.EqualTo(entry.Id));
+        Assert.That(result.Value.GamesListId, Is.EqualTo(list.Id));
+        Assert.That(result.Value.IgdbId, Is.EqualTo(123));
+        Assert.That(result.Value.CompletionStatus, Is.EqualTo((CompletionStatusDto)entry.CompletionStatus));
+        Assert.That(result.Value.CreatedAt, Is.EqualTo(entry.CreatedAt));
+        Assert.That(result.Value.ModifiedAt, Is.EqualTo(entry.ModifiedAt));
+        Assert.That(result.Value.OwnershipInfos.Single().Id, Is.EqualTo(ownershipInfo.Id));
+    }
+
+    [Test]
+    public async Task GetGameListEntry_OtherUsersPublicList_ReturnsEntry()
+    {
+        var owner = CreateUser();
+        var list = CreateList(owner, "Public list");
+        list.IsPrivate = false;
+        var entry = CreateEntry(list, 123);
+        _dbContext.Users.Add(owner);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().GetGameListEntry(new GetGameListEntryParams
+        {
+            UserInformation = CreateUserInformation(Guid.NewGuid()),
+            GamesListId = list.Id,
+            EntryId = entry.Id
+        });
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value.Id, Is.EqualTo(entry.Id));
+    }
+
+    [Test]
+    public async Task GetGameListEntry_OtherUsersPrivateList_ReturnsNotFound()
+    {
+        var owner = CreateUser();
+        var list = CreateList(owner, "Private list");
+        var entry = CreateEntry(list, 123);
+        _dbContext.Users.Add(owner);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().GetGameListEntry(new GetGameListEntryParams
+        {
+            UserInformation = CreateUserInformation(Guid.NewGuid()),
+            GamesListId = list.Id,
+            EntryId = entry.Id
+        });
+
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.GameListEntryNotFound));
+    }
+
+    [Test]
+    public async Task GetGameListEntry_EntryInDifferentList_ReturnsNotFound()
+    {
+        var user = CreateUser();
+        var list = CreateList(user, "My list");
+        var otherList = CreateList(user, "Other list");
+        var entry = CreateEntry(list, 123);
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.AddRange(list, otherList);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().GetGameListEntry(new GetGameListEntryParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            GamesListId = otherList.Id,
+            EntryId = entry.Id
+        });
+
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.GameListEntryNotFound));
+    }
+
+    [Test]
+    public async Task GetGameListEntry_EntryDoesNotExist_ReturnsNotFound()
+    {
+        var user = CreateUser();
+        var list = CreateList(user, "My list");
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().GetGameListEntry(new GetGameListEntryParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            GamesListId = list.Id,
+            EntryId = Guid.NewGuid()
+        });
+
+        Assert.That(result.IsFailure, Is.True);
+        Assert.That(result.Error, Is.EqualTo(ListsError.GameListEntryNotFound));
+    }
+
+    [Test]
+    public async Task AddGameListEntry_PlayingStatus_StoresPlaying()
+    {
+        var user = CreateUser();
+        var list = CreateList(user, "My list");
+        _dbContext.Users.Add(user);
+        _dbContext.GamesLists.Add(list);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await CreateService().AddGameListEntry(new AddGameListEntryParams
+        {
+            UserInformation = CreateUserInformation(user.Id),
+            GamesListId = list.Id,
+            CompletionStatus = CompletionStatusDto.Playing,
+            IgdbId = 123
+        });
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That((await _dbContext.GameListEntries.SingleAsync()).CompletionStatus, Is.EqualTo(CompletionStatus.Playing));
+    }
 
     [Test]
     public async Task AddGameListEntry_OwnedList_CreatesEntryAndReturnsId()

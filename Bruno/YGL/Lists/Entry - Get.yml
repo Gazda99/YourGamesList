@@ -1,0 +1,16 @@
+info:
+  name: Entry - Get
+  type: http
+  seq: 13
+
+http:
+  method: GET
+  url: "{{ygl_url}}/lists/{{games_list_id}}/entries/{{game_list_entry_id}}"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
