@@ -1,7 +1,7 @@
 info:
   name: Entry - Transfer
   type: http
-  seq: 12
+  seq: 9
 
 http:
   method: POST
@@ -10,7 +10,7 @@ http:
     type: json
     data: |-
       {
-        "targetListId": "{{target_games_list_id}}",
+        "targetListId": "",
         "move": false
       }
   auth: inherit
