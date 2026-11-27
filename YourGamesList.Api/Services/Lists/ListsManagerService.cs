@@ -66,6 +66,10 @@ public interface IListsManagerService
     /// </summary>
     Task<CombinedResult<Guid, ListsError>> TransferGameListEntry(TransferGameListEntryParams transferParams);
 
+    #endregion
+
+    #region OwnershipInfo
+
     /// <summary>
     /// Adds ownership info to a game entry in a list owned by the current user.
     /// </summary>
@@ -493,6 +497,10 @@ public class ListsManagerService : IListsManagerService
         return CombinedResult<Guid, ListsError>.Success(copiedEntry.Id);
     }
 
+    #endregion
+
+    #region OwnershipInfo
+    
     public async Task<CombinedResult<Guid, ListsError>> AddOwnershipInfo(AddOwnershipInfoParams addParams)
     {
         var entryExists = await _yglDbContext.GameListEntries.AnyAsync(entry =>
